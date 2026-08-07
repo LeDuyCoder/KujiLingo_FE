@@ -1,0 +1,12 @@
+{
+  "name": "kujilingo-fe",
+  "private": true,
+  "packageManager": "pnpm@10",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:mobile": "pnpm --filter mobile start"
+  },
+  "devDependencies": {
+    "turbo": "^2.10.8"
+  }
+}
