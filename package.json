@@ -1,5 +1,6 @@
 {
   "name": "kujilingo-fe",
+  "version": "0.0.1",
   "private": true,
   "packageManager": "pnpm@11.20.0",
   "scripts": {
