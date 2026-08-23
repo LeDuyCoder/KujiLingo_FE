@@ -7,8 +7,8 @@ on:
     branches: [main, dev]
 
 jobs:
-  build:
-    name: Install, Lint and Build
+  ci-web:
+    name: Web — Lint, Type Check & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -18,29 +18,61 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
+          version: 11
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
+          cache-dependency-path: apps/web/pnpm-lock.yaml
 
-      - name: Install dependencies
+      - name: Install dependencies (web)
+        working-directory: apps/web
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
-        run: |
-          pnpm --filter web exec tsc --noEmit
-          pnpm --filter mobile exec tsc --noEmit
+      - name: Type check (web)
+        working-directory: apps/web
+        run: pnpm exec tsc --noEmit
 
-      - name: Lint
-        run: |
-          pnpm --filter web lint
-          pnpm --filter mobile lint
+      - name: Lint (web)
+        working-directory: apps/web
+        run: pnpm lint
 
-      - name: Build Web Application
-        run: pnpm --filter web build
+      - name: Build (web)
+        working-directory: apps/web
+        run: pnpm build
         env:
-          # Thêm các biến môi trường cần thiết cho build ở đây nếu có
           NODE_ENV: production
+
+  ci-mobile:
+    name: Mobile — Lint & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: apps/mobile/pnpm-lock.yaml
+
+      - name: Install dependencies (mobile)
+        working-directory: apps/mobile
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check (mobile)
+        working-directory: apps/mobile
+        run: pnpm exec tsc --noEmit
+
+      - name: Lint (mobile)
+        working-directory: apps/mobile
+        run: pnpm lint
