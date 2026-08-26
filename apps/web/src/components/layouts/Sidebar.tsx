@@ -1,6 +1,6 @@
 import React from "react";
 
-export interface SidebarProps extends React.HTMLAttributes<HTMLElement> {}
+export type SidebarProps = React.HTMLAttributes<HTMLElement>;
 
 interface NavItem {
   name: string;

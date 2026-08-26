@@ -1,7 +1,7 @@
 import React from "react";
 import { Input } from "@/components/ui/Input";
 
-export interface TopbarProps extends React.HTMLAttributes<HTMLElement> {}
+export type TopbarProps = React.HTMLAttributes<HTMLElement>;
 
 export const Topbar = React.forwardRef<HTMLElement, TopbarProps>(
   ({ className = "", ...props }, ref) => {

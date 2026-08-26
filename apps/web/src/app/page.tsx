@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
+import { authService } from "@/features/authentication/services/auth.service";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -16,10 +19,32 @@ export default function LoginPage() {
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+    if (error) setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await authService.login(formData.email, formData.password, formData.rememberMe);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Sign in failed");
+      }
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await authService.loginWithGoogle();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Google OAuth failed");
+      }
+    }
   };
 
   return (
@@ -94,6 +119,12 @@ export default function LoginPage() {
         <div className="w-full max-w-[380px]">
           <h2 className="text-3xl font-bold text-slate-900 mb-1.5">Welcome Back</h2>
           <p className="text-slate-500 text-xs mb-6">Sign in to continue your learning journey.</p>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-xs font-medium">
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -188,6 +219,7 @@ export default function LoginPage() {
           <div className="mt-5">
             <button
               type="button"
+              onClick={handleGoogleSignIn}
               className="w-full flex items-center justify-center gap-2.5 py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -201,10 +233,10 @@ export default function LoginPage() {
           </div>
 
           <p className="mt-6 text-center text-xs text-slate-600">
-            Don't have an account?{" "}
-            <a href="#" className="font-semibold text-[#B91C1C] hover:text-red-800">
+            Don&apos;t have an account?{" "}
+            <Link href="/register" className="font-semibold text-[#B91C1C] hover:text-red-800">
               Create Account
-            </a>
+            </Link>
           </p>
         </div>
       </div>
