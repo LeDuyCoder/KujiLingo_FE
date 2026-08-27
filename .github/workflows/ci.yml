@@ -71,4 +71,4 @@ jobs:
 
       - name: Lint (mobile)
         working-directory: apps/mobile
-        run: pnpm lint
+        run: pnpm lint     
