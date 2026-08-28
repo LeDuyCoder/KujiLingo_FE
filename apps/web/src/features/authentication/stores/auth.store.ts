@@ -19,6 +19,15 @@ interface AuthState {
   
   // Actions
   login: (email: string, password: string, deviceName?: string) => Promise<boolean>;
+  register: (payload: {
+    email: string;
+    password: string;
+    password_confirmation: string;
+    display_name: string;
+    accepted_terms: boolean;
+    jlpt_target_level?: string;
+  }) => Promise<{ success: boolean; code?: string }>;
+  verifyEmail: (token: string) => Promise<{ success: boolean; message?: string; code?: string }>;
   logout: () => void;
   clearError: () => void;
 }
@@ -83,9 +92,66 @@ export const useAuthStore = create<AuthState>()(
         }
       },
         
-      logout: () => 
+      register: async (payload) => {
+        set({ isLoading: true, error: null });
+        const targetUrl = `${API_URL}/auth/register`;
+        try {
+          const response = await fetch(targetUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
+          if (response.status === 201) {
+            set({ isLoading: false });
+            return { success: true, code: data.code };
+          } else {
+            let errorMessage = 'Registration failed.';
+            if (data.code === 'REGISTER_DUPLICATE_EMAIL') {
+              errorMessage = 'An account with this email already exists.';
+            } else if (data.code === 'REGISTER_INTERNAL_SERVER_ERROR') {
+              errorMessage = 'An unexpected error occurred. Please try again later.';
+            } else if (data.error?.message) {
+              errorMessage = data.error.message;
+            }
+            set({ error: errorMessage, isLoading: false });
+            return { success: false, code: data.code };
+          }
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : 'Unable to connect to the server.';
+          set({ error: errorMessage, isLoading: false });
+          return { success: false };
+        }
+      },
+
+      verifyEmail: async (token) => {
+        set({ isLoading: true, error: null });
+        const targetUrl = `${API_URL}/auth/verify-email`;
+        try {
+          const response = await fetch(targetUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            set({ isLoading: false });
+            return { success: true, message: data.message };
+          } else {
+            const errorMessage = data.error?.message || data.code || 'Email verification failed.';
+            set({ error: errorMessage, isLoading: false });
+            return { success: false, code: data.error?.code || data.code, message: errorMessage };
+          }
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : 'Unable to connect to the server.';
+          set({ error: errorMessage, isLoading: false });
+          return { success: false, message: errorMessage };
+        }
+      },
+
+      logout: () =>
         set({ user: null, accessToken: null, refreshToken: null, error: null }),
-        
+
       clearError: () => set({ error: null }),
     }),
     {
