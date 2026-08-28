@@ -29,7 +29,7 @@ export const RegisterForm = () => {
 
   useEffect(() => {
     if (user) {
-      router.push("/");
+      router.push("/courses");
     }
   }, [user, router]);
 

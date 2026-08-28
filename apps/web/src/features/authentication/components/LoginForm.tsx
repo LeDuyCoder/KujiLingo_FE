@@ -24,7 +24,7 @@ export const LoginForm = () => {
 
   useEffect(() => {
     if (user) {
-      router.push("/");
+      router.push("/courses");
     }
   }, [user, router]);
 
@@ -36,7 +36,7 @@ export const LoginForm = () => {
     const success = await login(email, password, deviceName);
     
     if (success) {
-      router.push("/");
+      router.push("/courses");
     }
   };
 

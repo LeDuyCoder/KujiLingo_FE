@@ -1,7 +1,7 @@
 import React from "react";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "outline" | "ghost";
+  variant?: "primary" | "outline" | "ghost" | "unstyled";
 }
 
 export const Button = ({
@@ -14,6 +14,7 @@ export const Button = ({
     primary: "bg-[#b7152b] text-white hover:bg-[#a01226]",
     outline: "border border-solid border-zinc-300 hover:bg-zinc-50 text-zinc-700",
     ghost: "hover:bg-zinc-50 text-zinc-700",
+    unstyled: "",
   };
 
   return (
