@@ -73,9 +73,10 @@ export const useAuthStore = create<AuthState>()(
             set({ error: 'Unexpected response format.', isLoading: false });
             return false;
           }
-        } catch (err: any) {
+        } catch (err: unknown) {
+          const errorMessage = err instanceof Error ? err.message : 'Unable to connect to the authentication server.';
           set({
-            error: err.message || 'Unable to connect to the authentication server.',
+            error: errorMessage,
             isLoading: false,
           });
           return false;

@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { Layers, Gamepad2, Trophy } from "lucide-react";
 
 export const FeatureBanner = () => {
@@ -17,9 +18,11 @@ export const FeatureBanner = () => {
       {/* Hero Illustration */}
       <div className="flex flex-col items-center text-center my-auto py-8">
         <div className="w-[180px] h-[180px] rounded-full bg-white flex items-center justify-center relative overflow-hidden shadow-md mb-8 group animate-float hover:scale-105 transition-transform duration-500">
-          <img
+          <Image
             src="/img/logo.png"
             alt="KujiLingo Logo"
+            width={180}
+            height={180}
             className="w-full h-full object-cover"
           />
         </div>
