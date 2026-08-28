@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
 import { Checkbox } from "@/shared/components/ui/Checkbox";
@@ -175,12 +176,12 @@ export const LoginForm = () => {
 
         <div className="mt-4 text-center text-sm text-zinc-500">
           Don&apos;t have an account?{" "}
-          <a
-            href="#"
+          <Link
+            href="/register"
             className="font-medium text-[#b7152b] hover:text-[#a01226] hover:underline"
           >
             Create Account
-          </a>
+          </Link>
         </div>
       </form>
     </div>
