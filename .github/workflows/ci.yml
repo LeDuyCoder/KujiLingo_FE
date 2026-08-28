@@ -23,23 +23,19 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: apps/web/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install dependencies (web)
-        working-directory: apps/web
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Type check (web)
-        working-directory: apps/web
-        run: pnpm exec tsc --noEmit
+        run: pnpm --filter web exec tsc --noEmit
 
       - name: Lint (web)
-        working-directory: apps/web
-        run: pnpm lint
+        run: pnpm --filter web lint
 
       - name: Build (web)
-        working-directory: apps/web
-        run: pnpm build
+        run: pnpm --filter web build
         env:
           NODE_ENV: production
 
@@ -59,16 +55,13 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: apps/mobile/pnpm-lock.yaml
+          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install dependencies (mobile)
-        working-directory: apps/mobile
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Type check (mobile)
-        working-directory: apps/mobile
-        run: pnpm exec tsc --noEmit
+        run: pnpm --filter mobile exec tsc --noEmit
 
       - name: Lint (mobile)
-        working-directory: apps/mobile
-        run: pnpm lint     
+        run: pnpm --filter mobile lint
