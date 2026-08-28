@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
 import { Checkbox } from "@/shared/components/ui/Checkbox";
-import { useAuthStore } from "../stores/authStore";
+import { useAuthStore } from "../stores/auth.store";
 
 export const LoginForm = () => {
   const router = useRouter();
