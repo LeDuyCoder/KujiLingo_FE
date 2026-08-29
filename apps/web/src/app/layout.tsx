@@ -1,15 +1,23 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Noto_Sans, M_PLUS_1p, Be_Vietnam_Pro } from "next/font/google";
 import "../shared/styles/globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const notoSans = Noto_Sans({
+  variable: "--font-noto-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const mPlus1p = M_PLUS_1p({
+  variable: "--font-m-plus-1p",
   subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
+
+const beVietnamPro = Be_Vietnam_Pro({
+  variable: "--font-be-vietnam-pro",
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "700"],
 });
 
 export const metadata: Metadata = {
@@ -21,7 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${notoSans.variable} ${mPlus1p.variable} ${beVietnamPro.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
