@@ -23,6 +23,8 @@ interface ApiCourse {
   lesson_count: number;
 }
 
+import { axiosClient } from "@/shared/api/axiosClient";
+
 export default function CourseCatalogPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -33,25 +35,18 @@ export default function CourseCatalogPage() {
         setLoading(true);
         
         // 1. Fetch courses list
-        const coursesResponse = await fetch("/api-proxy/courses");
-        if (!coursesResponse.ok) throw new Error("Failed to fetch courses");
-        const coursesResult = await coursesResponse.json();
+        const coursesResponse = await axiosClient.get("/courses");
+        const coursesResult = coursesResponse.data;
         
         // 2. Fetch learning progress overview (requires auth token)
         let progressData: Record<string, number> = { N5: 0, N4: 0, N3: 0, N2: 0, N1: 0 };
         try {
           const token = useAuthStore.getState().accessToken;
           if (token) {
-            const progressResponse = await fetch("/api-proxy/api/v1/learning-progress", {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
-            if (progressResponse.ok) {
-              const progressResult = await progressResponse.json();
-              if (progressResult.success && progressResult.data?.by_jlpt) {
-                progressData = progressResult.data.by_jlpt;
-              }
+            const progressResponse = await axiosClient.get("/api/v1/learning-progress");
+            const progressResult = progressResponse.data;
+            if (progressResult.success && progressResult.data?.by_jlpt) {
+              progressData = progressResult.data.by_jlpt;
             }
           }
         } catch (progressErr) {
