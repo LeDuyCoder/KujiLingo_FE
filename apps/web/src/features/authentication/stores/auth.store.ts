@@ -30,9 +30,10 @@ interface AuthState {
   verifyEmail: (token: string) => Promise<{ success: boolean; message?: string; code?: string }>;
   logout: () => void;
   clearError: () => void;
+  setTokens: (accessToken: string | null, refreshToken: string | null) => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -153,6 +154,7 @@ export const useAuthStore = create<AuthState>()(
         set({ user: null, accessToken: null, refreshToken: null, error: null }),
 
       clearError: () => set({ error: null }),
+      setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
     }),
     {
       name: 'auth-storage',
