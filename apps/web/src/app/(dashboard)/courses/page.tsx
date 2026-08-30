@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { Lock, FileText, ArrowRight } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
+import { useRouter } from "next/navigation";
 
 interface Course {
   id: string;
@@ -26,6 +27,7 @@ interface ApiCourse {
 import { axiosClient } from "@/shared/api/axiosClient";
 
 export default function CourseCatalogPage() {
+  const router = useRouter();
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -60,12 +62,13 @@ export default function CourseCatalogPage() {
             const level = levelMatch ? (levelMatch[0].toUpperCase() as Course["level"]) : "N5";
             
             const startedCount = progressData[level] || 0;
-            const totalForLevel = item.lesson_count || 100;
+            const totalLessons = item.lesson_count || 1;
+            // Calculate completed lessons based on vocab count (~10 words = 1 lesson)
+            const completedLessons = Math.floor(startedCount / 10);
             
-            // Calculate progress percentage based on startedCount
-            const progress = startedCount > 0 
-              ? Math.min(Math.round((startedCount / totalForLevel) * 100), 100)
-              : undefined;
+            const progress = totalLessons > 0 
+              ? Math.min(Math.round((completedLessons / totalLessons) * 100), 100)
+              : 0;
 
             // Determine status based on actual progress logic:
             // N5 is always unlocked. Others unlock if the previous one is started (progress > 0)
@@ -92,7 +95,7 @@ export default function CourseCatalogPage() {
               id: item.id,
               level,
               title: cleanTitle,
-              lesson_count: totalForLevel,
+              lesson_count: item.lesson_count || 0,
               progress: status === "locked" ? undefined : (progress || 0),
               status,
             };
@@ -293,6 +296,7 @@ export default function CourseCatalogPage() {
                 ) : (
                   <Button
                     variant="unstyled"
+                    onClick={() => router.push(`/courses/${course.id}`)}
                     className={`w-full h-11 rounded-xl font-bold transition-all ${colors.buttonBg}`}
                   >
                     {course.status === "active" ? "Continue" : "Start"}
