@@ -63,6 +63,11 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         return;
       }
 
+      // Optimization: Skip ping if today's study target goal has already been fully completed (100%)
+      if (dashboardData && dashboardData.daily_goal_progress.percent >= 100) {
+        return;
+      }
+
       try {
         const response = await axiosClient.post("/api/v1/statistics/ping");
         if (response.data && response.data.success && response.data.data) {
@@ -96,7 +101,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       clearTimeout(initialTimeout);
       clearInterval(intervalId);
     };
-  }, [mounted, user]);
+  }, [mounted, user, dashboardData?.daily_goal_progress.percent]);
 
   const displayName = mounted && user?.display_name ? user.display_name : "...";
   const isPremium = mounted && user?.is_premium ? user.is_premium : false;
