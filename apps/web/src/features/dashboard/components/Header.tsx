@@ -1,31 +1,109 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Flame, Bell, User, Menu } from "lucide-react";
+import { Search, Flame, Bell, User, Menu, Trophy, Zap } from "lucide-react";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
+import { axiosClient } from "@/shared/api/axiosClient";
 
 interface HeaderProps {
   onMenuClick?: () => void;
 }
 
+interface DashboardData {
+  streak: {
+    current_streak_days: number;
+    longest_streak_days: number;
+    is_at_risk: boolean;
+  };
+  daily_goal_progress: {
+    minutes_studied_today: number;
+    goal_minutes: number;
+    percent: number;
+  };
+}
+
 export const Header = ({ onMenuClick }: HeaderProps) => {
   const { user } = useAuthStore();
-  const [mounted, setMounted] = React.useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isPopoverVisible, setIsPopoverVisible] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handle = setTimeout(() => {
       setMounted(true);
     }, 0);
     return () => clearTimeout(handle);
   }, []);
 
+  useEffect(() => {
+    const fetchDashboardSummary = async () => {
+      try {
+        const response = await axiosClient.get("/dashboard");
+        if (response.data && response.data.success) {
+          setDashboardData(response.data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching dashboard summary for streak:", err);
+      }
+    };
+
+    if (mounted && user) {
+      fetchDashboardSummary();
+    }
+  }, [mounted, user]);
+
+  // Send activity ping to backend every 60 seconds to track study minutes & active streak
+  useEffect(() => {
+    if (!mounted || !user) return;
+
+    const sendPing = async () => {
+      // Optimization: Only ping if the browser window/tab is active and visible to the user
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return;
+      }
+
+      try {
+        const response = await axiosClient.post("/api/v1/statistics/ping");
+        if (response.data && response.data.success && response.data.data) {
+          const { streak: newStreak, minutes_studied_today: newMins, percent: newPercent } = response.data.data;
+          setDashboardData((prev) => {
+            if (!prev) return null;
+            return {
+              ...prev,
+              streak: {
+                ...prev.streak,
+                current_streak_days: newStreak
+              },
+              daily_goal_progress: {
+                ...prev.daily_goal_progress,
+                minutes_studied_today: newMins,
+                percent: newPercent
+              }
+            };
+          });
+        }
+      } catch (err) {
+        console.error("Error sending activity ping:", err);
+      }
+    };
+
+    // Send initial ping after 5 seconds of active session
+    const initialTimeout = setTimeout(sendPing, 5000);
+
+    const intervalId = setInterval(sendPing, 60000); // 60 seconds
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(intervalId);
+    };
+  }, [mounted, user]);
+
   const displayName = mounted && user?.display_name ? user.display_name : "...";
   const isPremium = mounted && user?.is_premium ? user.is_premium : false;
   const planStatus = isPremium ? "Pro Plan" : "Free Plan";
 
   return (
-    <header className="h-20 bg-white border-b border-zinc-100 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 w-full">
+    <header className="h-20 bg-white border-b border-zinc-100 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 w-full">
       {/* Mobile Menu Toggle & Search */}
       <div className="flex items-center flex-1 max-w-md mr-4">
         {onMenuClick && (
@@ -59,10 +137,78 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           </Link>
         )}
 
-        {/* Streak Button */}
-        <div className="flex items-center gap-1 px-2.5 py-1.5 md:gap-1.5 md:px-3.5 bg-amber-50 border border-amber-200/50 rounded-full text-amber-700 text-sm font-bold shadow-sm shadow-amber-50">
-          <Flame size={18} fill="currentColor" className="text-amber-500 animate-pulse" />
-          <span>12</span>
+        {/* Streak Button with Popover */}
+        <div
+          className="relative"
+          onMouseEnter={() => setIsPopoverVisible(true)}
+          onMouseLeave={() => setIsPopoverVisible(false)}
+        >
+          <button
+            onClick={() => setIsPopoverVisible(!isPopoverVisible)}
+            className="flex items-center gap-1 px-2.5 py-1.5 md:gap-1.5 md:px-3.5 bg-amber-50 hover:bg-amber-100/70 border border-amber-200/50 rounded-full text-amber-700 text-sm font-bold shadow-sm shadow-amber-50/30 transition-all duration-200 cursor-pointer"
+          >
+            <Flame size={18} fill="currentColor" className="text-amber-500" />
+            <span>{dashboardData?.streak?.current_streak_days ?? 0}</span>
+          </button>
+
+          {/* Interactive Streak & Goal Balloon */}
+          {isPopoverVisible && dashboardData && (
+            <div className="absolute right-0 top-12 w-80 bg-white/95 backdrop-blur-md border border-zinc-100 rounded-3xl p-5 shadow-2xl z-50 animate-scale-up space-y-4">
+              {/* Header section with big flame */}
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center shadow-inner">
+                  <Flame size={32} fill="currentColor" className="text-amber-500 animate-[sway_3s_ease-in-out_infinite]" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold text-[#b7152b] uppercase tracking-wider block">Chuỗi liên tục</span>
+                  <span className="text-2xl font-black text-zinc-950 leading-tight">
+                    {dashboardData.streak.current_streak_days} Ngày
+                  </span>
+                </div>
+              </div>
+
+              {/* Record / Best Streak */}
+              <div className="flex items-center gap-2 text-xs font-bold text-zinc-500 bg-zinc-50 border border-zinc-100 rounded-2xl px-4 py-2.5">
+                <Trophy size={14} className="text-yellow-500" />
+                <span>Kỷ lục học tập:</span>
+                <span className="text-zinc-800 ml-auto">{dashboardData.streak.longest_streak_days} ngày</span>
+              </div>
+
+              {/* Status indicator message */}
+              {dashboardData.streak.is_at_risk ? (
+                <div className="bg-rose-50 border border-rose-100 text-rose-700 text-[11px] font-bold rounded-2xl p-3.5 leading-relaxed">
+                  🔥 Chuỗi của bạn đang gặp nguy hiểm! Hãy luyện tập ngay hôm nay để duy trì đà học tập.
+                </div>
+              ) : (
+                <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 text-[11px] font-bold rounded-2xl p-3.5 leading-relaxed">
+                  🎉 Tuyệt vời! Chuỗi của bạn đã được bảo vệ hôm nay. Hãy duy trì thói quen học tập này!
+                </div>
+              )}
+
+              <hr className="border-zinc-100" />
+
+              {/* Daily progress tracking inside popover */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
+                  <div className="flex items-center gap-1">
+                    <Zap size={11} className="text-amber-500 fill-amber-500" />
+                    <span>Mục tiêu hàng ngày</span>
+                  </div>
+                  <span>{dashboardData.daily_goal_progress.percent}%</span>
+                </div>
+                <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-300"
+                    style={{ width: `${dashboardData.daily_goal_progress.percent}%` }}
+                  />
+                </div>
+                <div className="flex justify-between items-center text-[10px] font-bold text-zinc-500">
+                  <span>Hôm nay: {dashboardData.daily_goal_progress.minutes_studied_today} phút</span>
+                  <span>Mục tiêu: {dashboardData.daily_goal_progress.goal_minutes} phút</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Notification Bell */}

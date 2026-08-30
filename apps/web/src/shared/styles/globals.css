@@ -64,3 +64,11 @@ body {
   animation-delay: 400ms;
 }
 
+@keyframes sway {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-3px) rotate(2deg) scale(1.03);
+  }
+}
