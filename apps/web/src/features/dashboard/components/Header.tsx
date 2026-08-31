@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Flame, Bell, User, Menu, Trophy, Zap } from "lucide-react";
+import { Search, Flame, Bell, User, Menu, Trophy, Zap, Coins, Gem, LogOut } from "lucide-react";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
 
@@ -24,10 +24,45 @@ interface DashboardData {
 }
 
 export const Header = ({ onMenuClick }: HeaderProps) => {
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isPopoverVisible, setIsPopoverVisible] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [wallet, setWallet] = useState<{ coins: number; gems: number } | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Click outside dropdown logic
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const fetchWallet = async () => {
+    try {
+      const res = await axiosClient.get("/api/v1/shop/wallet");
+      if (res.data?.success) {
+        setWallet(res.data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching wallet inside header:", err);
+    }
+  };
+
+  const toggleProfileDropdown = () => {
+    const nextState = !isProfileDropdownOpen;
+    setIsProfileDropdownOpen(nextState);
+    if (nextState) {
+      fetchWallet();
+    }
+  };
 
   useEffect(() => {
     const handle = setTimeout(() => {
@@ -222,16 +257,86 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-600 rounded-full border-2 border-white" />
         </button>
 
-        {/* Profile Section */}
-        <div className="flex items-center gap-3 pl-3 md:pl-4 border-l border-zinc-100">
-          <div className="hidden md:flex flex-col items-end">
-            <span className="text-sm font-bold text-zinc-900 leading-none">{displayName}</span>
-            <span className="text-[10px] text-zinc-500 font-medium tracking-wide mt-1">{planStatus}</span>
+        {/* Profile Section with Dropdown Menu */}
+        <div 
+          ref={dropdownRef}
+          className="relative pl-3 md:pl-4 border-l border-zinc-100"
+        >
+          <div 
+            onClick={toggleProfileDropdown}
+            className="flex items-center gap-3 cursor-pointer select-none"
+          >
+            <div className="hidden md:flex flex-col items-end">
+              <span className="text-sm font-bold text-zinc-900 leading-none">{displayName}</span>
+              <span className="text-[10px] text-zinc-500 font-medium tracking-wide mt-1">{planStatus}</span>
+            </div>
+            
+            <button className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 border border-zinc-200/60 shadow-sm pointer-events-none">
+              <User size={18} strokeWidth={2.5} />
+            </button>
           </div>
-          
-          <button className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 border border-zinc-200/60 shadow-sm">
-            <User size={18} strokeWidth={2.5} />
-          </button>
+
+          {/* Profile Dropdown Box */}
+          {isProfileDropdownOpen && (
+            <div className="absolute right-0 top-12 w-56 bg-white border border-zinc-100 rounded-2xl p-4 shadow-xl z-50 animate-scale-up space-y-3.5 text-left">
+              <div>
+                <span className="text-[9px] font-black text-[#b7152b] uppercase tracking-wider block">Tài khoản</span>
+                <span className="text-sm font-bold text-zinc-900 leading-none block mt-0.5">{displayName}</span>
+              </div>
+
+              <hr className="border-zinc-50" />
+
+              {/* Wallet balances */}
+              <div className="space-y-2">
+                <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Ví KujiLingo</span>
+                
+                {/* Coins */}
+                <div className="flex items-center justify-between text-xs font-bold text-zinc-700 bg-amber-50/50 border border-amber-100/50 rounded-xl px-3 py-2">
+                  <span className="flex items-center gap-1.5">
+                    <Coins size={14} className="text-amber-500 fill-amber-500/10" />
+                    KujiCoins
+                  </span>
+                  <span className="text-zinc-950 font-black">
+                    {wallet ? wallet.coins.toLocaleString() : "..."}
+                  </span>
+                </div>
+
+                {/* Gems */}
+                <div className="flex items-center justify-between text-xs font-bold text-zinc-700 bg-red-50/30 border border-rose-100/50 rounded-xl px-3 py-2">
+                  <span className="flex items-center gap-1.5">
+                    <Gem size={14} className="text-[#b7152b] fill-[#b7152b]/10" />
+                    KujiGems
+                  </span>
+                  <span className="text-zinc-950 font-black">
+                    {wallet ? wallet.gems.toLocaleString() : "..."}
+                  </span>
+                </div>
+              </div>
+
+              <hr className="border-zinc-50" />
+
+              {/* Action buttons */}
+              <div className="space-y-1">
+                <Link href="/profile" onClick={() => setIsProfileDropdownOpen(false)}>
+                  <span className="w-full h-9 px-3 hover:bg-zinc-50 rounded-xl text-zinc-700 hover:text-zinc-950 font-bold text-xs transition-colors flex items-center gap-2 cursor-pointer">
+                    <User size={13} strokeWidth={2.5} />
+                    Xem trang cá nhân
+                  </span>
+                </Link>
+
+                <button 
+                  onClick={() => {
+                    setIsProfileDropdownOpen(false);
+                    logout();
+                  }}
+                  className="w-full h-9 px-3 hover:bg-rose-50 rounded-xl text-rose-600 hover:text-red-700 font-bold text-xs transition-colors flex items-center gap-2"
+                >
+                  <LogOut size={13} strokeWidth={2.5} />
+                  Đăng xuất
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
