@@ -8,6 +8,7 @@ interface User {
   role: string;
   is_premium: boolean;
   jlpt_target_level?: string;
+  learning_goal_minutes?: number;
 }
 
 interface AuthState {
@@ -31,6 +32,7 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   setTokens: (accessToken: string | null, refreshToken: string | null) => void;
+  updateUser: (data: Partial<User>) => void;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -155,6 +157,9 @@ export const useAuthStore = create<AuthState>()(
 
       clearError: () => set({ error: null }),
       setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
+      updateUser: (data) => set((state) => ({
+        user: state.user ? { ...state.user, ...data } : null
+      })),
     }),
     {
       name: 'auth-storage',

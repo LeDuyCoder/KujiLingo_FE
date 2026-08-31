@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { 
@@ -95,13 +96,17 @@ export default function ProfilePage() {
                 <Package size={14} />
                 <span className="hidden sm:inline">Túi đồ</span>
               </button>
-              <button className="h-10 px-5 flex items-center gap-2 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-full text-xs font-bold text-zinc-700 transition-colors shadow-sm cursor-pointer">
-                <Edit3 size={14} />
-                <span className="hidden sm:inline">Sửa hồ sơ</span>
-              </button>
-              <button className="w-10 h-10 flex items-center justify-center bg-white hover:bg-zinc-50 border border-zinc-200 rounded-full text-zinc-500 transition-colors shadow-sm cursor-pointer">
-                <SettingsIcon size={16} />
-              </button>
+              <Link href="/profile/edit">
+                <button className="h-10 px-5 flex items-center gap-2 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-full text-xs font-bold text-zinc-700 transition-colors shadow-sm cursor-pointer">
+                  <Edit3 size={14} />
+                  <span className="hidden sm:inline">Sửa hồ sơ</span>
+                </button>
+              </Link>
+              <Link href="/settings">
+                <button className="w-10 h-10 flex items-center justify-center bg-white hover:bg-zinc-50 border border-zinc-200 rounded-full text-zinc-500 transition-colors shadow-sm cursor-pointer">
+                  <SettingsIcon size={16} />
+                </button>
+              </Link>
             </div>
 
           </div>
