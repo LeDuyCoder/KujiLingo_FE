@@ -64,7 +64,9 @@ axiosClient.interceptors.response.use(
     const originalRequest = error.config;
 
     // Check if error response is 401 Unauthorized and not already retried
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Skip token refresh for change-password request as 401 represents invalid current password
+    const isChangePassword = originalRequest.url?.includes('change-password');
+    if (error.response?.status === 401 && !originalRequest._retry && !isChangePassword) {
       if (isRefreshing) {
         // Queue this request until refresh is complete
         return new Promise((resolve, reject) => {
