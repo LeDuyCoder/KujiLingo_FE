@@ -66,6 +66,7 @@ export default function AchievementsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
+    document.title = "Thành tựu | KujiLingo";
     const handle = setTimeout(() => {
       setMounted(true);
     }, 0);

@@ -40,6 +40,15 @@ export default function PublicShowcasePage() {
   const [data, setData] = useState<ShowcaseResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Update document title dynamically
+  useEffect(() => {
+    if (data?.display_name) {
+      document.title = `Thành tựu của ${data.display_name} | KujiLingo`;
+    } else {
+      document.title = "Tủ trưng bày thành tựu | KujiLingo";
+    }
+  }, [data?.display_name]);
+
   useEffect(() => {
     const fetchShowcase = async () => {
       if (!userId) return;
