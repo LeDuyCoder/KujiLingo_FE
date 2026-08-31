@@ -29,6 +29,15 @@ const processQueue = (error: Error | null, token: string | null = null) => {
 // Request Interceptor: Attach access token to authorization headers
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
+    // Strip redundant '/api/v1' prefix from URL if it's already defined in baseURL
+    if (config.url && !config.url.startsWith('http') && !config.url.startsWith('https')) {
+      if (config.url.startsWith('/api/v1')) {
+        config.url = config.url.substring(7);
+      } else if (config.url.startsWith('api/v1')) {
+        config.url = config.url.substring(6);
+      }
+    }
+
     const accessToken = useAuthStore.getState().accessToken;
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
