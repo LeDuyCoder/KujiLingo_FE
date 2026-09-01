@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -30,6 +31,8 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const [isPopoverVisible, setIsPopoverVisible] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [wallet, setWallet] = useState<{ coins: number; gems: number } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [equippedItems, setEquippedItems] = useState<any[] | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Click outside dropdown logic
@@ -74,12 +77,18 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   useEffect(() => {
     const fetchDashboardSummary = async () => {
       try {
-        const response = await axiosClient.get("/dashboard");
-        if (response.data && response.data.success) {
-          setDashboardData(response.data.data);
+        const [dashboardRes, equippedRes] = await Promise.all([
+          axiosClient.get("/dashboard"),
+          axiosClient.get("/api/v1/shop/equipped").catch(() => null)
+        ]);
+        if (dashboardRes.data && dashboardRes.data.success) {
+          setDashboardData(dashboardRes.data.data);
+        }
+        if (equippedRes?.data?.success) {
+          setEquippedItems(equippedRes.data.data);
         }
       } catch (err) {
-        console.error("Error fetching dashboard summary for streak:", err);
+        console.error("Error fetching dashboard data:", err);
       }
     };
 
@@ -136,6 +145,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       clearTimeout(initialTimeout);
       clearInterval(intervalId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, user, dashboardData?.daily_goal_progress.percent]);
 
   const displayName = mounted && user?.display_name ? user.display_name : "...";
@@ -271,8 +281,19 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
               <span className="text-[10px] text-zinc-500 font-medium tracking-wide mt-1">{planStatus}</span>
             </div>
             
-            <button className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 border border-zinc-200/60 shadow-sm pointer-events-none">
-              <User size={18} strokeWidth={2.5} />
+            <button className="w-10 h-10 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-500 border border-zinc-200/60 shadow-sm pointer-events-none relative">
+              {equippedItems?.find(e => e.item_type === "AVATAR") ? (
+                <img src={equippedItems.find(e => e.item_type === "AVATAR")?.image} alt="Avatar" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <User size={18} strokeWidth={2.5} />
+              )}
+              {equippedItems?.find(e => e.item_type === "FRAME") && (
+                <img 
+                  src={equippedItems.find(e => e.item_type === "FRAME")?.image} 
+                  alt="Frame" 
+                  className="absolute -inset-1.5 w-[130%] h-[130%] max-w-[130%] max-h-[130%] object-cover pointer-events-none scale-110 z-10" 
+                />
+              )}
             </button>
           </div>
 

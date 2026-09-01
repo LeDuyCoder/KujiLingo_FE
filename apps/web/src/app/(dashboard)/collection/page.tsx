@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -5,8 +6,8 @@ import Link from "next/link";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { 
-  Package, User, Globe, Flame, Shield, Compass, Sparkles, 
-  ArrowRight, Loader2, CheckCircle2, AlertCircle, Bookmark, Star, Gem
+  Package, User, Flame, Shield, Compass,
+  ArrowRight, Loader2, CheckCircle2, AlertCircle, Star, Gem
 } from "lucide-react";
 
   interface ShopItem {
@@ -86,7 +87,7 @@ import {
         if (walletRes?.data?.success) {
           setWallet(walletRes.data.data);
         }
-      } catch (err) {
+      } catch {
         showToast("Có lỗi xảy ra khi tải tủ đồ.", "error");
       } finally {
         setLoading(false);
@@ -96,6 +97,7 @@ import {
     useEffect(() => {
       document.title = "Tủ đồ của tôi | KujiLingo";
       setTimeout(() => fetchCollectionData(), 0);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
   const handleEquip = async (itemId: string) => {

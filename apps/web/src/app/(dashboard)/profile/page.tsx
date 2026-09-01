@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -22,6 +23,8 @@ export default function ProfilePage() {
   const { user } = useAuthStore();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [rank, setRank] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [equippedItems, setEquippedItems] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,9 +32,10 @@ export default function ProfilePage() {
     
     const fetchData = async () => {
       try {
-        const [statsRes, lbRes] = await Promise.all([
+        const [statsRes, lbRes, equippedRes] = await Promise.all([
           axiosClient.get("/api/v1/statistics/me"),
-          axiosClient.get("/api/v1/leaderboard", { params: { period_type: "all_time", limit: 1 } }).catch(() => null)
+          axiosClient.get("/api/v1/leaderboard", { params: { period_type: "all_time", limit: 1 } }).catch(() => null),
+          axiosClient.get("/api/v1/shop/equipped").catch(() => null)
         ]);
         
         if (statsRes.data?.success) {
@@ -39,6 +43,9 @@ export default function ProfilePage() {
         }
         if (lbRes?.data?.success && lbRes.data.data.current_user) {
           setRank(lbRes.data.data.current_user.rank);
+        }
+        if (equippedRes?.data?.success) {
+          setEquippedItems(equippedRes.data.data);
         }
       } catch (error) {
         console.error("Error fetching profile data:", error);
@@ -69,8 +76,11 @@ export default function ProfilePage() {
       
       {/* Top Banner Profile Section */}
       <div className="bg-white border border-zinc-200/60 rounded-3xl overflow-hidden shadow-sm">
-        {/* Solid Brand Red Banner */}
-        <div className="h-32 sm:h-40 bg-[#b7152b] relative" />
+        {/* Solid Brand Red Banner or Equipped Background */}
+        <div 
+          className="h-32 sm:h-40 bg-[#b7152b] relative bg-cover bg-center"
+          style={equippedItems?.find(e => e.item_type === "BACKGROUND") ? { backgroundImage: `url(${equippedItems.find(e => e.item_type === "BACKGROUND")?.image})` } : {}}
+        />
 
         {/* Profile Details Container */}
         <div className="px-6 pb-6 sm:px-8 sm:pb-8 relative">
@@ -80,10 +90,22 @@ export default function ProfilePage() {
             
             {/* Avatar & Level Badge */}
             <div className="relative flex flex-col items-center sm:items-start shrink-0 mx-auto sm:mx-0">
-              <div className="w-32 h-32 bg-white rounded-full p-1.5 shadow-md">
-                <div className="w-full h-full rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 border border-zinc-200 overflow-hidden">
-                  <User size={54} strokeWidth={1.5} />
+              <div className="w-32 h-32 bg-white rounded-full p-1.5 shadow-md relative">
+                <div className="w-full h-full rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 border border-zinc-200 overflow-hidden relative">
+                  {equippedItems?.find(e => e.item_type === "AVATAR") ? (
+                    <img src={equippedItems.find(e => e.item_type === "AVATAR")?.image} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={54} strokeWidth={1.5} />
+                  )}
                 </div>
+                {equippedItems?.find(e => e.item_type === "FRAME") && (
+                  <img 
+                    src={equippedItems.find(e => e.item_type === "FRAME")?.image} 
+                    alt="Frame" 
+                    className="absolute -inset-2 w-[115%] h-[115%] max-w-[115%] max-h-[115%] object-cover pointer-events-none z-10" 
+                    style={{ left: "-7.5%", top: "-7.5%" }}
+                  />
+                )}
               </div>
               <div className="absolute -bottom-2 px-3 py-1 bg-zinc-950 text-white text-[10px] font-black rounded-full border-2 border-white shadow-sm z-20">
                 Lvl {stats?.level || 1}
