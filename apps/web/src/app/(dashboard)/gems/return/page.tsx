@@ -24,21 +24,19 @@ function ReturnContent() {
   const [txData, setTxData] = useState<TransactionData | null>(null);
 
   useEffect(() => {
-    const txId = localStorage.getItem("pending_transaction_id");
-
     // If the user cancelled the payment
     if (cancel === "true") {
-      return;
-    }
-
-    if (!txId) {
-      setStatus("FAILED");
       return;
     }
 
     let isMounted = true;
 
     const verifyTransaction = async () => {
+      const txId = localStorage.getItem("pending_transaction_id");
+      if (!txId) {
+        if (isMounted) setStatus("FAILED");
+        return;
+      }
       try {
         const res = await axiosClient.get(`/api/v1/gems/transactions/${txId}`);
         if (res.data?.success && isMounted) {

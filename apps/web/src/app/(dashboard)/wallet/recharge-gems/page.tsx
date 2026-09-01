@@ -7,7 +7,6 @@ import {
   Gem, 
   Coins, 
   Award,
-  CreditCard,
   Lock,
   Zap,
   CheckCircle2,

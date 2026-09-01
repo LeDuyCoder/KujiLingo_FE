@@ -14,7 +14,6 @@ import {
   Settings,
   HelpCircle,
   X,
-  Gem,
 } from "lucide-react";
 
 interface SidebarProps {
