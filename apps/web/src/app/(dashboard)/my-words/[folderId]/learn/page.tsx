@@ -224,9 +224,12 @@ export default function LearnFolderPage() {
                     <Clock size={14} />
                     5 mins
                   </div>
-                  <button className="px-4 py-1.5 text-xs font-bold text-[#b7152b] border border-[#b7152b] rounded-xl hover:bg-red-50 transition-colors">
+                  <Link 
+                    href={`/my-words/${folderId}/learn/flashcards`}
+                    className="px-4 py-1.5 text-xs font-bold text-[#b7152b] border border-[#b7152b] rounded-xl hover:bg-red-50 transition-colors"
+                  >
                     Start
-                  </button>
+                  </Link>
                 </div>
               </div>
 
