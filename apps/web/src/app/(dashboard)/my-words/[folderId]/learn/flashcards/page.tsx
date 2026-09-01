@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
   Settings, 
   X, 
-  Folder as FolderIcon,
   ChevronLeft,
   ChevronRight,
   Target
@@ -54,7 +53,7 @@ export default function FlashcardsPage() {
   const [isFlipped, setIsFlipped] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [wrongCount, setWrongCount] = useState(0);
-  const [combo, setCombo] = useState(0);
+  const [, setCombo] = useState(0);
   const [maxCombo, setMaxCombo] = useState(0);
   const [xpGained, setXpGained] = useState(0);
   const [sessionStreak, setSessionStreak] = useState(0);
@@ -64,9 +63,6 @@ export default function FlashcardsPage() {
   const [dragOffset, setDragOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [exitDirection, setExitDirection] = useState(0);
-
-  // Audio Ref
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!folderId) return;
@@ -230,7 +226,7 @@ export default function FlashcardsPage() {
         </div>
         <h1 className="text-3xl font-extrabold text-zinc-900">Session Complete!</h1>
         <p className="text-zinc-500 font-medium max-w-sm">
-          You've reviewed all {cards.length} cards in this folder. Great job!
+          You&apos;ve reviewed all {cards.length} cards in this folder. Great job!
         </p>
         <div className="flex gap-4">
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-100 min-w-[120px]">
