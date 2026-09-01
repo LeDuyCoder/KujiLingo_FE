@@ -92,10 +92,12 @@ export default function ProfilePage() {
 
             {/* Action Buttons (Inventory, Edit, Gear) */}
             <div className="flex items-center justify-center gap-2.5 sm:mb-2">
-              <button className="h-10 px-5 flex items-center gap-2 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-full text-xs font-bold text-zinc-700 transition-colors shadow-sm cursor-pointer">
-                <Package size={14} />
-                <span className="hidden sm:inline">Túi đồ</span>
-              </button>
+              <Link href="/collection">
+                <button className="h-10 px-5 flex items-center gap-2 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-full text-xs font-bold text-zinc-700 transition-colors shadow-sm cursor-pointer">
+                  <Package size={14} />
+                  <span className="hidden sm:inline">Túi đồ</span>
+                </button>
+              </Link>
               <Link href="/profile/edit">
                 <button className="h-10 px-5 flex items-center gap-2 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-full text-xs font-bold text-zinc-700 transition-colors shadow-sm cursor-pointer">
                   <Edit3 size={14} />
