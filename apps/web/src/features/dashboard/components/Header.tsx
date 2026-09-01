@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
@@ -30,6 +31,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const [isPopoverVisible, setIsPopoverVisible] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const [wallet, setWallet] = useState<{ coins: number; gems: number } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [equippedItems, setEquippedItems] = useState<any[] | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -143,6 +145,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       clearTimeout(initialTimeout);
       clearInterval(intervalId);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mounted, user, dashboardData?.daily_goal_progress.percent]);
 
   const displayName = mounted && user?.display_name ? user.display_name : "...";

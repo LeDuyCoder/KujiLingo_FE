@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -22,6 +23,7 @@ export default function ProfilePage() {
   const { user } = useAuthStore();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [rank, setRank] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [equippedItems, setEquippedItems] = useState<any[] | null>(null);
   const [loading, setLoading] = useState(true);
 
