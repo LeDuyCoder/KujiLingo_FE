@@ -14,6 +14,7 @@ import {
   Settings,
   HelpCircle,
   X,
+  Gem,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -78,6 +79,7 @@ export const Sidebar = ({ className = "", isOpen = false, onClose }: SidebarProp
         {navigation.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
+
           return (
             <Link
               key={item.name}

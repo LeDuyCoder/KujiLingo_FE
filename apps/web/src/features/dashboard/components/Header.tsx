@@ -180,7 +180,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         {/* Upgrade Pro button if not premium */}
         {!isPremium && (
           <Link
-            href="/upgrade"
+            href="/premium"
             className="hidden sm:inline-block text-[#b7152b] text-sm font-semibold hover:text-[#9B1C1C] transition-colors"
           >
             Upgrade Pro
