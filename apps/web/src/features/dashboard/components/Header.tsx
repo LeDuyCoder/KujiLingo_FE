@@ -323,7 +323,11 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
                 </div>
 
                 {/* Gems */}
-                <div className="flex items-center justify-between text-xs font-bold text-zinc-700 bg-red-50/30 border border-rose-100/50 rounded-xl px-3 py-2">
+                <Link 
+                  href="/wallet/recharge-gems"
+                  onClick={() => setIsProfileDropdownOpen(false)}
+                  className="flex items-center justify-between text-xs font-bold text-zinc-700 bg-red-50/30 hover:bg-red-50 border border-rose-100/50 hover:border-rose-200 rounded-xl px-3 py-2 cursor-pointer transition-colors block w-full"
+                >
                   <span className="flex items-center gap-1.5">
                     <Gem size={14} className="text-[#b7152b] fill-[#b7152b]/10" />
                     KujiGems
@@ -331,7 +335,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
                   <span className="text-zinc-950 font-black">
                     {wallet ? wallet.gems.toLocaleString() : "..."}
                   </span>
-                </div>
+                </Link>
               </div>
 
               <hr className="border-zinc-50" />

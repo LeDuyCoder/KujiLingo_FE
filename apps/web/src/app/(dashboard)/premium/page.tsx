@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { CheckCircle2, ShieldCheck, XCircle, Infinity, Ban, Gem, ArrowRight } from "lucide-react";
+import { ShieldCheck, XCircle, Infinity, Ban, Gem, ArrowRight } from "lucide-react";
 import Image from "next/image";
 
 export default function PremiumLandingPage() {
