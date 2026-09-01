@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { Sidebar, Header } from "@/features/dashboard";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 
@@ -12,6 +12,7 @@ export default function DashboardLayout({
 }) {
   const { user } = useAuthStore();
   const router = useRouter();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -38,6 +39,12 @@ export default function DashboardLayout({
 
   if (!user) {
     return null;
+  }
+
+  const isFullScreenMode = pathname?.includes("/flashcards");
+
+  if (isFullScreenMode) {
+    return <>{children}</>;
   }
 
   return (
