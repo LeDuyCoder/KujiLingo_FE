@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { CheckCircle2, XCircle, Loader2, Gem, ArrowRight, Home } from "lucide-react";
 import Link from "next/link";
 import { axiosClient } from "@/shared/api/axiosClient";
@@ -18,12 +18,9 @@ interface TransactionData {
 
 function ReturnContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-  
-  const idFromUrl = searchParams.get("id");
   const cancel = searchParams.get("cancel");
   
-  const [status, setStatus] = useState<TransactionStatus>("LOADING");
+  const [status, setStatus] = useState<TransactionStatus>(cancel === "true" ? "CANCELLED" : "LOADING");
   const [txData, setTxData] = useState<TransactionData | null>(null);
 
   useEffect(() => {
@@ -31,7 +28,6 @@ function ReturnContent() {
 
     // If the user cancelled the payment
     if (cancel === "true") {
-      setStatus("CANCELLED");
       return;
     }
 
