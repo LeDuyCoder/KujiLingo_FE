@@ -33,9 +33,11 @@ import {
   Award,
   Music,
   Smile,
-  Coffee
+  Coffee,
+  Play
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
+import Link from "next/link";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { convertHiraganaToRomaji } from "@/shared/utils/romaji";
@@ -939,11 +941,45 @@ export default function MyWordsPage() {
 
               <button
                 onClick={() => setIsAddWordOpen(true)}
-                className="w-auto h-10 px-4 rounded-xl border border-red-200 hover:bg-red-50/50 text-[#b7152b] text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm"
+                className="w-auto h-10 px-4 rounded-xl border border-red-200 hover:bg-red-50/50 text-[#b7152b] text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap"
               >
                 <Plus size={14} />
                 Add Word
               </button>
+              {(() => {
+                const folderWordCount = folderContents ? folderContents.system_vocabularies.length + folderContents.user_vocabularies.length : 0;
+                const isLearnDisabled = folderWordCount < 10;
+                
+                if (isLearnDisabled) {
+                  return (
+                    <div className="relative flex items-center group">
+                      <button
+                        disabled
+                        className="w-auto h-10 px-4 rounded-xl bg-zinc-200 text-zinc-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap cursor-not-allowed"
+                      >
+                        <Play size={14} fill="currentColor" />
+                        Learn
+                      </button>
+                      {/* Custom Tooltip */}
+                      <div className="absolute top-full right-0 mt-2.5 w-max max-w-[200px] bg-zinc-800 text-white text-[11px] px-3 py-2 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-lg pointer-events-none text-center font-medium">
+                        Cần tối thiểu 10 từ vựng
+                        {/* Triangle pointer */}
+                        <div className="absolute -top-1 right-6 w-2 h-2 bg-zinc-800 transform rotate-45 rounded-sm"></div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                return (
+                  <Link
+                    href={`/my-words/${selectedFolderId}/learn`}
+                    className="w-auto h-10 px-4 rounded-xl bg-[#b7152b] hover:bg-[#9a1022] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap"
+                  >
+                    <Play size={14} fill="currentColor" />
+                    Learn
+                  </Link>
+                );
+              })()}
             </div>
           </div>
 
