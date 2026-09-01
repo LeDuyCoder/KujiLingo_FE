@@ -96,6 +96,7 @@ export default function RechargeGemsPage() {
         payment_method: paymentMethod
       });
       if (res.data?.success && res.data.data?.payment_url) {
+        localStorage.setItem("pending_transaction_id", res.data.data.transaction_id);
         window.location.href = res.data.data.payment_url;
       }
     } catch (err) {
