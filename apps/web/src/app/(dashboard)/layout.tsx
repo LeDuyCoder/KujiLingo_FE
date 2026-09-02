@@ -41,7 +41,7 @@ export default function DashboardLayout({
     return null;
   }
 
-  const isFullScreenMode = pathname?.includes("/flashcards");
+  const isFullScreenMode = pathname?.includes("/flashcards") || pathname?.includes("/quiz");
 
   if (isFullScreenMode) {
     return <>{children}</>;
