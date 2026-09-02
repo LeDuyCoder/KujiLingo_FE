@@ -252,9 +252,12 @@ export default function LearnFolderPage() {
                     <Clock size={14} />
                     60s
                   </div>
-                  <button className="px-4 py-1.5 text-xs font-bold text-white bg-[#b7152b] rounded-xl hover:bg-[#9a1022] transition-colors">
+                  <Link 
+                    href={`/my-words/${folderId}/learn/quiz`}
+                    className="px-4 py-1.5 text-xs font-bold text-white bg-[#b7152b] rounded-xl hover:bg-[#9a1022] transition-colors"
+                  >
                     Start
-                  </button>
+                  </Link>
                 </div>
               </div>
 
