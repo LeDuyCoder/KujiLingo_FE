@@ -1,18 +1,14 @@
 import React from "react";
 import Image from "next/image";
 import { Layers, Gamepad2, Trophy } from "lucide-react";
+import { BrandLogo } from "@/shared/components/BrandLogo";
 
 export const FeatureBanner = () => {
   return (
     <div className="flex flex-col justify-between h-full bg-[#fbf8f8] p-12 lg:p-16 border-r border-zinc-100">
       {/* Logo */}
-      <div className="flex items-center gap-2 mb-8">
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#b7152b] text-white font-bold text-xl">
-          <span className="text-sm font-sans">文A</span>
-        </div>
-        <span className="text-2xl font-bold tracking-tight text-zinc-900">
-          Kuji<span className="text-[#b7152b]">Lingo</span>
-        </span>
+      <div className="mb-8 flex items-center gap-2">
+        <BrandLogo />
       </div>
 
       {/* Hero Illustration */}

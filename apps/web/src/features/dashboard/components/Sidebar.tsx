@@ -15,6 +15,7 @@ import {
   HelpCircle,
   X,
 } from "lucide-react";
+import { BrandLogo } from "@/shared/components/BrandLogo";
 
 interface SidebarProps {
   className?: string;
@@ -53,16 +54,7 @@ export const Sidebar = ({ className = "", isOpen = false, onClose }: SidebarProp
     <aside className={`flex flex-col w-64 bg-white h-screen ${className}`}>
       {/* Logo Section */}
       <div className="flex items-center justify-between px-6 py-6 border-b border-zinc-50">
-        <div className="flex items-center gap-3">
-          <div className="relative w-10 h-10 flex-shrink-0 bg-[#b7152b] rounded-xl flex items-center justify-center shadow-md shadow-red-100">
-            <span className="text-white font-black text-xl tracking-tighter">K</span>
-            <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-300 rounded-full border border-[#b7152b]" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[#b7152b] text-xl font-extrabold tracking-tight leading-none">KujiLingo</span>
-            <span className="text-zinc-400 text-[10px] font-medium uppercase tracking-wider mt-1">Learn Japanese</span>
-          </div>
-        </div>
+        <BrandLogo showTagline />
         {onClose && (
           <button
             onClick={onClose}

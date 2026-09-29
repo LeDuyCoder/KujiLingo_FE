@@ -33,6 +33,7 @@ interface DashboardData {
     lesson_title: string;
     course_title: string;
     reason: "in_progress" | "next_up" | "recommended";
+    lesson_progress_percent: number;
   } | null;
   srs_due_count: number;
   recent_achievements: string[];
@@ -208,14 +209,17 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                {/* Simulated course progress bar */}
+                {/* Progress based on vocabulary studied in this lesson */}
                 <div className="space-y-1.5 w-64">
                   <div className="flex justify-between text-xs font-bold text-zinc-400">
                     <span>Tiến độ bài học</span>
-                    <span className="text-[#b7152b]">35%</span>
+                    <span className="text-[#b7152b]">{dashboardData.continue_learning.lesson_progress_percent}%</span>
                   </div>
                   <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-[#b7152b] to-[#e02424] w-[35%] rounded-full" />
+                    <div
+                      className="h-full bg-gradient-to-r from-[#b7152b] to-[#e02424] rounded-full transition-all duration-500"
+                      style={{ width: `${dashboardData.continue_learning.lesson_progress_percent}%` }}
+                    />
                   </div>
                 </div>
               </div>

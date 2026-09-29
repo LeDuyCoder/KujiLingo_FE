@@ -12,6 +12,22 @@ import { useAuthStore } from "../stores/auth.store";
 export const LoginForm = () => {
   const router = useRouter();
   const { login, isLoading, error, user, clearError } = useAuthStore();
+  const quickLoginAccounts = [
+    {
+      role: "user",
+      label: "Học viên",
+      email: process.env.NEXT_PUBLIC_DEMO_USER_EMAIL || "user_demo_1@example.com",
+      password: process.env.NEXT_PUBLIC_DEMO_USER_PASSWORD || "Password123",
+    },
+    ...(process.env.NEXT_PUBLIC_DEMO_ADMIN_EMAIL && process.env.NEXT_PUBLIC_DEMO_ADMIN_PASSWORD
+      ? [{
+          role: "admin",
+          label: "Quản trị viên",
+          email: process.env.NEXT_PUBLIC_DEMO_ADMIN_EMAIL,
+          password: process.env.NEXT_PUBLIC_DEMO_ADMIN_PASSWORD,
+        }]
+      : []),
+  ];
   
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -28,16 +44,20 @@ export const LoginForm = () => {
     }
   }, [user, router]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const signIn = async (loginEmail: string, loginPassword: string) => {
     if (isLoading) return;
 
     const deviceName = typeof window !== "undefined" ? window.navigator.userAgent : "Web Client";
-    const success = await login(email, password, deviceName);
+    const success = await login(loginEmail, loginPassword, deviceName);
     
     if (success) {
       router.push("/courses");
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await signIn(email, password);
   };
 
   if (user) {
@@ -173,6 +193,28 @@ export const LoginForm = () => {
           </svg>
           Continue with Google
         </Button>
+
+        {process.env.NODE_ENV === "development" && (
+          <div className="mt-2">
+            <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400">
+              Quick sign in
+            </p>
+            <div className={`grid gap-3 ${quickLoginAccounts.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+              {quickLoginAccounts.map((account) => (
+                <Button
+                  key={account.role}
+                  type="button"
+                  variant="outline"
+                  className="h-10 rounded-xl border-zinc-200 px-3 text-sm"
+                  disabled={isLoading}
+                  onClick={() => signIn(account.email, account.password)}
+                >
+                  {isLoading ? "Signing in..." : account.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 text-center text-sm text-zinc-500">
           Don&apos;t have an account?{" "}

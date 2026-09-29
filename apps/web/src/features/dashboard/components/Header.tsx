@@ -3,7 +3,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Flame, Bell, User, Menu, Trophy, Zap, Coins, Gem, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Search, Flame, Bell, User, Menu, Trophy, Zap, Coins, Gem, LogOut, Award, CheckCircle2, X } from "lucide-react";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
 
@@ -24,16 +25,52 @@ interface DashboardData {
   };
 }
 
+interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  kind: "achievement" | "streak" | "goal";
+  href: string;
+}
+
+interface AchievementNotice {
+  id: string;
+  title: string;
+  description: string;
+  is_unlocked: boolean;
+  unlocked_at: string | null;
+}
+
+function getVietnamDateKey(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const value = (type: string) => parts.find((part) => part.type === type)?.value || "";
+  return `${value("year")}-${value("month")}-${value("day")}`;
+}
+
 export const Header = ({ onMenuClick }: HeaderProps) => {
+  const router = useRouter();
   const { user, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [isPopoverVisible, setIsPopoverVisible] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [readNotificationIds, setReadNotificationIds] = useState<string[]>([]);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
+  const [notificationsReadLoaded, setNotificationsReadLoaded] = useState(false);
+  const [notificationsLoading, setNotificationsLoading] = useState(true);
   const [wallet, setWallet] = useState<{ coins: number; gems: number } | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [equippedItems, setEquippedItems] = useState<any[] | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const notificationRef = useRef<HTMLDivElement | null>(null);
 
   // Click outside dropdown logic
   useEffect(() => {
@@ -41,12 +78,32 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsProfileDropdownOpen(false);
       }
+      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+        setIsNotificationsOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setReadNotificationIds([]);
+      setNotificationsReadLoaded(false);
+      return;
+    }
+    try {
+      const storedIds = localStorage.getItem(`kujilingo-notifications-read:${user.id}`);
+      const parsed = storedIds ? JSON.parse(storedIds) : [];
+      setReadNotificationIds(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : []);
+    } catch {
+      setReadNotificationIds([]);
+    } finally {
+      setNotificationsReadLoaded(true);
+    }
+  }, [user?.id]);
 
   const fetchWallet = async () => {
     try {
@@ -67,6 +124,29 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     }
   };
 
+  const refreshAchievementNotifications = async () => {
+    try {
+      const response = await axiosClient.get("/api/v1/achievements/me", { params: { unlocked_only: true } });
+      const unlocked = response.data?.data?.items as AchievementNotice[] | undefined;
+      if (!unlocked) return;
+
+      const achievementNotifications = unlocked.filter((item) => item.is_unlocked).map((item) => ({
+        id: `achievement:${item.id}`,
+        title: `Mở khóa thành tựu: ${item.title}`,
+        message: item.description,
+        createdAt: item.unlocked_at || new Date().toISOString(),
+        kind: "achievement" as const,
+        href: "/achievements",
+      }));
+      setNotifications((current) => [
+        ...current.filter((item) => item.kind !== "achievement"),
+        ...achievementNotifications,
+      ].sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt)).slice(0, 12));
+    } catch (err) {
+      console.error("Error refreshing achievement notifications:", err);
+    }
+  };
+
   useEffect(() => {
     const handle = setTimeout(() => {
       setMounted(true);
@@ -77,23 +157,68 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   useEffect(() => {
     const fetchDashboardSummary = async () => {
       try {
-        const [dashboardRes, equippedRes] = await Promise.all([
+        const [dashboardRes, equippedRes, achievementsRes] = await Promise.all([
           axiosClient.get("/dashboard"),
-          axiosClient.get("/api/v1/shop/equipped").catch(() => null)
+          axiosClient.get("/api/v1/shop/equipped").catch(() => null),
+          axiosClient.get("/api/v1/achievements/me", { params: { unlocked_only: true } }).catch(() => null),
         ]);
+        const nextNotifications: AppNotification[] = [];
         if (dashboardRes.data && dashboardRes.data.success) {
-          setDashboardData(dashboardRes.data.data);
+          const summary = dashboardRes.data.data as DashboardData;
+          setDashboardData(summary);
+          const today = getVietnamDateKey();
+          if (summary?.streak?.is_at_risk) {
+            nextNotifications.push({
+              id: `streak-risk:${today}`,
+              title: "Giữ chuỗi học tập nhé!",
+              message: `Bạn đang có chuỗi ${summary.streak.current_streak_days} ngày. Hãy học một chút hôm nay để duy trì nhé.`,
+              createdAt: new Date().toISOString(),
+              kind: "streak",
+              href: "/home",
+            });
+          }
+          if (summary?.daily_goal_progress?.percent >= 100) {
+            nextNotifications.push({
+              id: `daily-goal:${today}`,
+              title: "Bạn đã hoàn thành mục tiêu hôm nay!",
+              message: `Bạn đã học đủ ${summary.daily_goal_progress.goal_minutes} phút. Tuyệt vời, tiếp tục giữ nhịp nhé!`,
+              createdAt: new Date().toISOString(),
+              kind: "goal",
+              href: "/home",
+            });
+          }
         }
         if (equippedRes?.data?.success) {
           setEquippedItems(equippedRes.data.data);
         }
+        const unlocked = achievementsRes?.data?.data?.items as AchievementNotice[] | undefined;
+        unlocked?.filter((item) => item.is_unlocked).forEach((item) => {
+          nextNotifications.push({
+            id: `achievement:${item.id}`,
+            title: `Mở khóa thành tựu: ${item.title}`,
+            message: item.description,
+            createdAt: item.unlocked_at || new Date().toISOString(),
+            kind: "achievement",
+            href: "/achievements",
+          });
+        });
+        nextNotifications.sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt));
+        setNotifications(nextNotifications.slice(0, 12));
+        setNotificationsLoaded(true);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
+        setNotificationsLoaded(true);
+      } finally {
+        setNotificationsLoading(false);
       }
     };
 
     if (mounted && user) {
+      setNotificationsLoading(true);
       fetchDashboardSummary();
+    } else if (mounted) {
+      setNotificationsLoading(false);
+      setNotificationsLoaded(true);
     }
   }, [mounted, user]);
 
@@ -116,6 +241,19 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         const response = await axiosClient.post("/api/v1/statistics/ping");
         if (response.data && response.data.success && response.data.data) {
           const { streak: newStreak, minutes_studied_today: newMins, percent: newPercent } = response.data.data;
+          if (newPercent >= 100) {
+            const today = getVietnamDateKey();
+            setNotifications((current) => current.some((item) => item.id === `daily-goal:${today}`)
+              ? current
+              : [{
+                  id: `daily-goal:${today}`,
+                  title: "Bạn đã hoàn thành mục tiêu hôm nay!",
+                  message: `Bạn đã học đủ ${dashboardData?.daily_goal_progress.goal_minutes ?? 15} phút. Tuyệt vời, tiếp tục giữ nhịp nhé!`,
+                  createdAt: new Date().toISOString(),
+                  kind: "goal" as const,
+                  href: "/home",
+                }, ...current].slice(0, 12));
+          }
           setDashboardData((prev) => {
             if (!prev) return null;
             return {
@@ -151,6 +289,26 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   const displayName = mounted && user?.display_name ? user.display_name : "...";
   const isPremium = mounted && user?.is_premium ? user.is_premium : false;
   const planStatus = isPremium ? "Pro Plan" : "Free Plan";
+  const unreadCount = notificationsLoaded && notificationsReadLoaded
+    ? notifications.filter((item) => !readNotificationIds.includes(item.id)).length
+    : 0;
+
+  const markNotificationRead = (notificationId: string) => {
+    const nextIds = Array.from(new Set([...readNotificationIds, notificationId])).slice(-300);
+    setReadNotificationIds(nextIds);
+    if (user?.id) localStorage.setItem(`kujilingo-notifications-read:${user.id}`, JSON.stringify(nextIds));
+  };
+
+  const markAllNotificationsRead = () => {
+    const nextIds = Array.from(new Set([...readNotificationIds, ...notifications.map((item) => item.id)])).slice(-300);
+    setReadNotificationIds(nextIds);
+    if (user?.id) localStorage.setItem(`kujilingo-notifications-read:${user.id}`, JSON.stringify(nextIds));
+  };
+
+  const formatNotificationDate = (value: string) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "" : date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+  };
 
   return (
     <header className="h-20 bg-white border-b border-zinc-100 flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 w-full">
@@ -261,11 +419,99 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
           )}
         </div>
 
-        {/* Notification Bell */}
-        <button className="relative w-10 h-10 flex items-center justify-center text-zinc-500 hover:text-zinc-900 bg-zinc-50 hover:bg-zinc-100 rounded-full transition-colors">
-          <Bell size={18} />
-          <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-600 rounded-full border-2 border-white" />
-        </button>
+        {/* Notifications */}
+        <div ref={notificationRef} className="relative">
+          <button
+            type="button"
+            aria-label={unreadCount ? `Thông báo, ${unreadCount} chưa đọc` : "Thông báo"}
+            aria-expanded={isNotificationsOpen}
+            onClick={() => {
+              const shouldOpen = !isNotificationsOpen;
+              setIsNotificationsOpen(shouldOpen);
+              setIsProfileDropdownOpen(false);
+              if (shouldOpen) void refreshAchievementNotifications();
+            }}
+            className={`relative flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${isNotificationsOpen ? "border-zinc-300 bg-zinc-100 text-zinc-900" : "border-transparent bg-zinc-50 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900"}`}
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute right-1.5 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full border-2 border-white bg-red-600 px-0.5 text-[8px] font-extrabold leading-none text-white">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
+
+          {isNotificationsOpen && (
+            <section aria-label="Danh sách thông báo" className="absolute right-0 top-12 z-[60] w-[min(360px,calc(100vw-1.5rem))] overflow-hidden rounded-2xl border border-zinc-100 bg-white text-left shadow-2xl animate-scale-up">
+              <header className="flex items-center justify-between border-b border-zinc-100 px-4 py-3.5">
+                <div>
+                  <h2 className="text-sm font-extrabold text-zinc-900">Thông báo</h2>
+                  <p className="mt-0.5 text-[10px] font-semibold text-zinc-400">
+                    {unreadCount ? `${unreadCount} thông báo chưa đọc` : "Bạn đã cập nhật"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {unreadCount > 0 && (
+                    <button type="button" onClick={markAllNotificationsRead} className="text-[10px] font-bold text-[#b7152b] hover:underline">
+                      Đọc tất cả
+                    </button>
+                  )}
+                  <button type="button" aria-label="Đóng thông báo" onClick={() => setIsNotificationsOpen(false)} className="rounded-lg p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700">
+                    <X size={15} />
+                  </button>
+                </div>
+              </header>
+
+              <div className="max-h-[min(420px,65vh)] overflow-y-auto">
+                {notificationsLoading ? (
+                  <div className="flex items-center justify-center gap-2 px-4 py-10 text-xs font-semibold text-zinc-400">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-zinc-300 border-t-[#b7152b]" /> Đang tải thông báo...
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <div className="px-5 py-10 text-center">
+                    <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-zinc-50 text-zinc-400"><Bell size={19} /></div>
+                    <p className="text-xs font-bold text-zinc-600">Chưa có thông báo</p>
+                    <p className="mt-1 text-[10px] text-zinc-400">Thành tựu và cập nhật học tập sẽ xuất hiện ở đây.</p>
+                  </div>
+                ) : (
+                  notifications.map((notification) => {
+                    const isRead = readNotificationIds.includes(notification.id);
+                    const NoticeIcon = notification.kind === "achievement" ? Award : notification.kind === "goal" ? CheckCircle2 : Flame;
+                    return (
+                      <button
+                        key={notification.id}
+                        type="button"
+                        onClick={() => {
+                          markNotificationRead(notification.id);
+                          setIsNotificationsOpen(false);
+                          router.push(notification.href);
+                        }}
+                        className={`flex w-full gap-3 border-b border-zinc-50 px-4 py-3.5 text-left transition hover:bg-zinc-50 ${isRead ? "bg-white" : "bg-rose-50/50"}`}
+                      >
+                        <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${notification.kind === "achievement" ? "bg-amber-50 text-amber-600" : notification.kind === "goal" ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-600"}`}>
+                          <NoticeIcon size={17} />
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="flex items-start justify-between gap-2">
+                            <span className={`text-xs leading-4 ${isRead ? "font-semibold text-zinc-700" : "font-extrabold text-zinc-900"}`}>{notification.title}</span>
+                            <span className="shrink-0 text-[9px] font-semibold text-zinc-400">{formatNotificationDate(notification.createdAt)}</span>
+                          </span>
+                          <span className="mt-1 block line-clamp-2 text-[10px] leading-4 text-zinc-500">{notification.message}</span>
+                        </span>
+                        {!isRead && <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-[#c8102e]" />}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+              <footer className="border-t border-zinc-100 bg-zinc-50/70 px-4 py-2.5 text-center">
+                <Link href="/achievements" onClick={() => setIsNotificationsOpen(false)} className="text-[10px] font-bold text-zinc-500 transition hover:text-[#b7152b]">
+                  Xem thành tựu
+                </Link>
+              </footer>
+            </section>
+          )}
+        </div>
 
         {/* Profile Section with Dropdown Menu */}
         <div 

@@ -1389,20 +1389,24 @@ export default function MyWordsPage() {
             {/* TAB CONTENT: Platform System Search */}
             {addWordTab === "system" && (
               <div className="space-y-4">
-                <form onSubmit={handleDictSearch} className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={14} />
+                <form onSubmit={handleDictSearch} className="flex items-center gap-2.5">
+                  <div className="relative min-w-0 flex-1">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
                     <input
                       type="text"
                       required
                       placeholder="Tìm chữ Hán, Hiragana, hoặc Nghĩa..."
                       value={dictSearchQuery}
                       onChange={(e) => setDictSearchQuery(e.target.value)}
-                      className="w-full pl-9 pr-4 py-2.5 text-xs bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] font-semibold"
+                      className="h-12 w-full rounded-full border border-zinc-200 bg-zinc-50 pl-11 pr-4 text-sm font-semibold text-zinc-800 placeholder:text-zinc-400 transition focus:border-[#b7152b] focus:outline-none focus:ring-4 focus:ring-[#b7152b]/10"
                     />
                   </div>
-                  <Button type="submit" disabled={dictSearchLoading} className="w-auto h-9 text-xs px-4">
-                    {dictSearchLoading ? <Loader2 size={14} className="animate-spin" /> : "Tìm kiếm"}
+                  <Button
+                    type="submit"
+                    disabled={dictSearchLoading}
+                    className="h-12 w-auto shrink-0 rounded-full px-6 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {dictSearchLoading ? <Loader2 size={16} className="animate-spin" /> : "Tìm kiếm"}
                   </Button>
                 </form>
 

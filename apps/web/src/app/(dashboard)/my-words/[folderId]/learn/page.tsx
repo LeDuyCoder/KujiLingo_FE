@@ -13,7 +13,9 @@ import {
   Layers, 
   BrainCircuit, 
   Gamepad2,
-  Folder as FolderIcon
+  Folder as FolderIcon,
+  Shuffle,
+  PenLine
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
 
@@ -203,7 +205,7 @@ export default function LearnFolderPage() {
           {/* Learning Modes */}
           <div>
             <h2 className="text-xl font-bold text-zinc-900 font-sans mb-4">Choose Your Learning Mode</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               
               {/* Flashcards */}
               <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm hover:shadow-md hover:border-zinc-200 transition-all flex flex-col justify-between group cursor-pointer">
@@ -261,6 +263,34 @@ export default function LearnFolderPage() {
                 </div>
               </div>
 
+              {/* Randomized Practice */}
+              <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm hover:shadow-md hover:border-zinc-200 transition-all flex flex-col justify-between group cursor-pointer">
+                <div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
+                      <Shuffle size={24} />
+                    </div>
+                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">Dynamic</span>
+                  </div>
+                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">Random Practice</h3>
+                  <p className="text-xs text-zinc-500 font-semibold line-clamp-2">
+                    Mixed exercises (listening, writing, matching) to boost memory.
+                  </p>
+                </div>
+                <div className="flex items-center justify-between mt-6">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
+                    <Clock size={14} />
+                    Dynamic
+                  </div>
+                  <Link 
+                    href={`/my-words/${folderId}/learn/practice`}
+                    className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors"
+                  >
+                    Start
+                  </Link>
+                </div>
+              </div>
+
               {/* Mini Games */}
               <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm hover:shadow-md hover:border-zinc-200 transition-all flex flex-col justify-between group cursor-pointer">
                 <div>
@@ -283,6 +313,34 @@ export default function LearnFolderPage() {
                   <button className="px-4 py-1.5 text-xs font-bold text-blue-600 border border-blue-200 rounded-xl hover:bg-blue-50 transition-colors">
                     Play
                   </button>
+                </div>
+              </div>
+
+              {/* Kanji Writing */}
+              <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm hover:shadow-md hover:border-violet-200 transition-all flex flex-col justify-between group">
+                <div>
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-12 h-12 bg-violet-50 rounded-2xl flex items-center justify-center text-violet-600">
+                      <PenLine size={24} />
+                    </div>
+                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-violet-50 text-violet-600 rounded-lg border border-violet-100">Writing</span>
+                  </div>
+                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">Kanji Writing</h3>
+                  <p className="text-xs text-zinc-500 font-semibold line-clamp-2">
+                    Recall Kanji vocabulary from this folder and write it by hand.
+                  </p>
+                </div>
+                <div className="flex items-center justify-between mt-6">
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-600">
+                    <PenLine size={14} />
+                    From this folder
+                  </div>
+                  <Link
+                    href={`/my-words/${folderId}/learn/kanji-writing`}
+                    className="px-4 py-1.5 text-xs font-bold text-white bg-violet-600 rounded-xl hover:bg-violet-700 transition-colors"
+                  >
+                    Start
+                  </Link>
                 </div>
               </div>
 

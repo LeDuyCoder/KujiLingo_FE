@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { BrandLogo } from "@/shared/components/BrandLogo";
 
 export const Footer = () => {
   return (
@@ -8,12 +9,7 @@ export const Footer = () => {
         
         {/* Logo */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#b7152b] text-white font-bold text-lg">
-            <span className="text-[10px] font-sans">文A</span>
-          </div>
-          <span className="text-xl font-bold tracking-tight text-zinc-900">
-            KujiLingo
-          </span>
+          <BrandLogo size="small" />
         </div>
 
         {/* Links */}

@@ -41,7 +41,8 @@ export default function DashboardLayout({
     return null;
   }
 
-  const isFullScreenMode = pathname?.includes("/flashcards") || pathname?.includes("/quiz");
+  const isFullScreenMode = pathname?.includes("/flashcards") || pathname?.includes("/quiz") || pathname?.includes("/practice");
+  const isHelpPage = pathname === "/help";
 
   if (isFullScreenMode) {
     return <>{children}</>;
@@ -61,8 +62,8 @@ export default function DashboardLayout({
         <Header onMenuClick={() => setIsSidebarOpen(true)} />
 
         {/* Dynamic Page Content */}
-        <main className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-8">
-          <div className="max-w-6xl mx-auto w-full">
+        <main className={`flex-1 overflow-y-auto px-4 py-6 md:py-8 ${isHelpPage ? "md:px-12 lg:px-[4vw]" : "md:px-8"}`}>
+          <div className={`mx-auto w-full ${isHelpPage ? "max-w-none" : "max-w-6xl"}`}>
             {children}
           </div>
         </main>

@@ -1,5 +1,6 @@
 import React from "react";
 import Link from "next/link";
+import { BrandLogo } from "@/shared/components/BrandLogo";
 
 export const Header = () => {
   return (
@@ -7,12 +8,7 @@ export const Header = () => {
       <div className="mx-auto flex max-w-7xl h-20 items-center justify-between px-6 lg:px-8">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2 group">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-[#b7152b] text-white font-bold text-xl shadow-md shadow-red-100 group-hover:scale-105 transition-transform duration-300">
-            <span className="text-sm font-sans">文A</span>
-          </div>
-          <span className="text-2xl font-bold tracking-tight text-zinc-900">
-            Kuji<span className="text-[#b7152b]">Lingo</span>
-          </span>
+          <BrandLogo />
         </Link>
 
         {/* Navigation Links */}

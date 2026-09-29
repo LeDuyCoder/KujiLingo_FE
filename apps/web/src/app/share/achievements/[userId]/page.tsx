@@ -12,6 +12,7 @@ import {
   Loader2
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { BrandLogo } from "@/shared/components/BrandLogo";
 import Link from "next/link";
 
 interface SharedAchievement {
@@ -151,12 +152,7 @@ export default function PublicShowcasePage() {
         
         {/* Branding header */}
         <div className="flex items-center justify-between border-b border-zinc-100 pb-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#b7152b] flex items-center justify-center font-bold text-sm text-white shadow-sm">
-              K
-            </div>
-            <span className="font-extrabold text-sm tracking-tight text-zinc-900">KujiLingo</span>
-          </div>
+          <BrandLogo size="small" />
           <span className="text-[10px] font-black tracking-widest text-[#b7152b] bg-rose-50 px-3 py-1.5 rounded-full uppercase border border-rose-100">
             Showcase
           </span>
