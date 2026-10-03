@@ -1,0 +1,103 @@
+name: Frontend CD - Deploy Web to Vercel
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  # =======================================================
+  # BƯỚC 1: KIỂM TRA CHẤT LƯỢNG CODE TRƯỚC KHI DEPLOY
+  # =======================================================
+  pre-deploy-check:
+    name: Pre-deploy Verification (Web)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check (web)
+        run: pnpm --filter web exec tsc --noEmit
+
+      - name: Lint (web)
+        run: pnpm --filter web lint
+
+      - name: Build (web)
+        run: pnpm --filter web build
+        env:
+          NODE_ENV: production
+
+  # =======================================================
+  # BƯỚC 2: KÍCH HOẠT DEPLOY LÊN VERCEL
+  # =======================================================
+  deploy:
+    name: Deploy Web to Vercel
+    needs: pre-deploy-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository (nếu cần cho Vercel CLI)
+        uses: actions/checkout@v4
+
+      # Cách 1: Sử dụng Vercel Deploy Hook (Khuyến nghị cho Monorepo)
+      - name: Trigger Deploy via Vercel Deploy Hook
+        if: ${{ env.VERCEL_DEPLOY_HOOK_URL != '' }}
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: |
+          echo "========================================================"
+          echo "🚀 Đang kích hoạt Vercel Deploy Hook..."
+          echo "========================================================"
+          HTTP_STATUS=$(curl -s -o /tmp/vercel_response.txt -w "%{http_code}" -X POST "$VERCEL_DEPLOY_HOOK_URL")
+          cat /tmp/vercel_response.txt
+          echo ""
+          if [ "$HTTP_STATUS" -eq 200 ] || [ "$HTTP_STATUS" -eq 201 ]; then
+            echo "✅ Kích hoạt Vercel Production Deployment thành công!"
+          else
+            echo "❌ Gọi Vercel Deploy Hook thất bại (HTTP Status: $HTTP_STATUS)"
+            exit 1
+          fi
+
+      # Cách 2: Sử dụng Vercel Token & Action (dự phòng)
+      - name: Deploy via Vercel Action
+        if: ${{ env.VERCEL_DEPLOY_HOOK_URL == '' && env.VERCEL_TOKEN != '' }}
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      # Thông báo hướng dẫn nếu chưa cấu hình Secret
+      - name: Thông báo cấu hình Vercel
+        if: ${{ env.VERCEL_DEPLOY_HOOK_URL == '' && env.VERCEL_TOKEN == '' }}
+        env:
+          VERCEL_DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          echo "========================================================"
+          echo "ℹ️ THÔNG TIN VỀ VERCEL DEPLOYMENT:"
+          echo "1. Nếu bạn đã kết nối GitHub Repo trực tiếp trên Vercel (Git Integration):"
+          echo "   Vercel sẽ tự động build và deploy khi có commit mới trên nhánh 'main'."
+          echo "2. Để GitHub Actions quản lý và kích hoạt deploy sau khi kiểm tra xong:"
+          echo "   Hãy thêm Secret 'VERCEL_DEPLOY_HOOK_URL' trong GitHub Repository Settings > Secrets."
+          echo "========================================================"
