@@ -215,11 +215,11 @@ export const RegisterForm = () => {
             />
             <label htmlFor="register-terms" className="text-xs text-zinc-500 leading-relaxed cursor-pointer">
               I agree to the{" "}
-              <Link href="#" className="text-[#b7152b] font-medium hover:underline">
+              <Link href="/terms" className="text-[#b7152b] font-medium hover:underline">
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link href="#" className="text-[#b7152b] font-medium hover:underline">
+              <Link href="/privacy" className="text-[#b7152b] font-medium hover:underline">
                 Privacy Policy
               </Link>
               .

@@ -14,9 +14,8 @@ export const Footer = () => {
 
         {/* Links */}
         <div className="flex items-center gap-8 text-sm font-medium text-zinc-500">
-          <Link href="#" className="hover:text-zinc-900 transition-colors">Privacy</Link>
-          <Link href="#" className="hover:text-zinc-900 transition-colors">Terms</Link>
-          <Link href="#" className="hover:text-zinc-900 transition-colors">Contact</Link>
+          <Link href="/privacy" className="hover:text-zinc-900 transition-colors">Privacy</Link>
+          <Link href="/terms" className="hover:text-zinc-900 transition-colors">Terms</Link>
         </div>
 
         {/* Copyright */}
