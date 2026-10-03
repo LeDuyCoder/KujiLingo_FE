@@ -89,20 +89,25 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   }, []);
 
   useEffect(() => {
-    if (!user?.id) {
-      setReadNotificationIds([]);
-      setNotificationsReadLoaded(false);
-      return;
-    }
-    try {
-      const storedIds = localStorage.getItem(`kujilingo-notifications-read:${user.id}`);
-      const parsed = storedIds ? JSON.parse(storedIds) : [];
-      setReadNotificationIds(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : []);
-    } catch {
-      setReadNotificationIds([]);
-    } finally {
-      setNotificationsReadLoaded(true);
-    }
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      if (!user?.id) {
+        setReadNotificationIds([]);
+        setNotificationsReadLoaded(false);
+        return;
+      }
+      try {
+        const storedIds = localStorage.getItem(`kujilingo-notifications-read:${user.id}`);
+        const parsed = storedIds ? JSON.parse(storedIds) : [];
+        setReadNotificationIds(Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : []);
+      } catch {
+        setReadNotificationIds([]);
+      } finally {
+        setNotificationsReadLoaded(true);
+      }
+    });
+    return () => { cancelled = true; };
   }, [user?.id]);
 
   const fetchWallet = async () => {
@@ -214,11 +219,17 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
     };
 
     if (mounted && user) {
-      setNotificationsLoading(true);
-      fetchDashboardSummary();
+      const handle = setTimeout(() => {
+        setNotificationsLoading(true);
+        fetchDashboardSummary();
+      }, 0);
+      return () => clearTimeout(handle);
     } else if (mounted) {
-      setNotificationsLoading(false);
-      setNotificationsLoaded(true);
+      const handle = setTimeout(() => {
+        setNotificationsLoading(false);
+        setNotificationsLoaded(true);
+      }, 0);
+      return () => clearTimeout(handle);
     }
   }, [mounted, user]);
 

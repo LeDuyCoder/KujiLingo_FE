@@ -124,31 +124,35 @@ export default function KanjiWritingPage() {
   useEffect(() => {
     if (!currentPrompt) return;
     let cancelled = false;
-    const characters = Array.from(currentPrompt.answer);
-    const japaneseCharacter = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
-
-    setStrokeDataStatus("loading");
-    setTargetStrokes([]);
-    setCompletedStrokeIndexes([]);
-    setStrokeFeedback(null);
-    temporaryUserStrokeRef.current = [];
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (canvas && context) context.clearRect(0, 0, canvas.width, canvas.height);
 
-    Promise.all(
-      characters.map((character, index) => japaneseCharacter.test(character)
-        ? loadTargetStrokes(character, index)
-        : Promise.resolve([])),
-    ).then((strokeGroups) => {
+    queueMicrotask(() => {
       if (cancelled) return;
-      const strokes = strokeGroups.flat();
-      if (strokes.length === 0) throw new Error("No stroke paths found for this answer");
-      setTargetStrokes(strokes);
-      setStrokeDataStatus("ready");
-    }).catch((error: unknown) => {
-      console.error("Could not load KanjiVG stroke paths:", error);
-      if (!cancelled) setStrokeDataStatus("error");
+      const characters = Array.from(currentPrompt.answer);
+      const japaneseCharacter = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u;
+
+      setStrokeDataStatus("loading");
+      setTargetStrokes([]);
+      setCompletedStrokeIndexes([]);
+      setStrokeFeedback(null);
+      temporaryUserStrokeRef.current = [];
+
+      Promise.all(
+        characters.map((character, index) => japaneseCharacter.test(character)
+          ? loadTargetStrokes(character, index)
+          : Promise.resolve([])),
+      ).then((strokeGroups) => {
+        if (cancelled) return;
+        const strokes = strokeGroups.flat();
+        if (strokes.length === 0) throw new Error("No stroke paths found for this answer");
+        setTargetStrokes(strokes);
+        setStrokeDataStatus("ready");
+      }).catch((error: unknown) => {
+        console.error("Could not load KanjiVG stroke paths:", error);
+        if (!cancelled) setStrokeDataStatus("error");
+      });
     });
 
     return () => { cancelled = true; };

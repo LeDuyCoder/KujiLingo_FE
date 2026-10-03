@@ -16,7 +16,7 @@ export default function PrivacyPolicyPage() {
       sections={[
         {
           title: "Who we are and scope",
-          content: <p>KujiLingo ("we", "us", or "our") provides online tools for studying Japanese, including lessons, vocabulary practice, learning progress, achievements, and multiplayer activities. This policy applies to the KujiLingo website and related services that link to it.</p>,
+          content: <p>KujiLingo (&quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides online tools for studying Japanese, including lessons, vocabulary practice, learning progress, achievements, and multiplayer activities. This policy applies to the KujiLingo website and related services that link to it.</p>,
         },
         {
           title: "Information we collect",
@@ -49,7 +49,7 @@ export default function PrivacyPolicyPage() {
         },
         {
           title: "Cookies, storage, and security",
-          content: <p>KujiLingo stores account state and authentication tokens in your browser's local storage so you can stay signed in. This storage is necessary for the web app to work. We apply reasonable technical and organizational safeguards, including access controls and protected authentication data. No internet service can guarantee absolute security, so please keep your credentials private and contact us if you suspect unauthorized access.</p>,
+          content: <p>KujiLingo stores account state and authentication tokens in your browser&apos;s local storage so you can stay signed in. This storage is necessary for the web app to work. We apply reasonable technical and organizational safeguards, including access controls and protected authentication data. No internet service can guarantee absolute security, so please keep your credentials private and contact us if you suspect unauthorized access.</p>,
         },
         {
           title: "Retention and deletion requests",
