@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { 
-  X, Volume2, CheckCircle2, Zap, Target, Flame, HelpCircle, 
-  Mic, Trophy, RefreshCcw, BookOpen, Clock, Star
+  X, Volume2, Zap, Flame, Mic, Trophy, RefreshCcw, Clock
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
 
@@ -14,8 +13,42 @@ type Vocabulary = {
   kanji: string | null;
   hiragana: string | null;
   romaji: string | null;
+  meaning?: string | null;
   vocabulary_meanings?: { meaning: string }[];
 };
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+}
+
+interface SpeechRecognitionResult {
+  readonly length: number;
+  readonly [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionResultEvent {
+  readonly results: {
+    readonly length: number;
+    readonly [index: number]: SpeechRecognitionResult;
+  };
+}
+
+interface SpeechRecognitionErrorEvent {
+  readonly error: string;
+}
+
+interface SpeechRecognitionInstance {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionResultEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
 
 type QuestionType = 'AUDIO' | 'TYPING' | 'MATCH' | 'SPEAKING' | 'BUILDER';
 
@@ -49,7 +82,6 @@ export default function PracticePage() {
   const [isChecking, setIsChecking] = useState(false);
   const [checkResult, setCheckResult] = useState<'correct' | 'wrong' | null>(null);
   const [isListening, setIsListening] = useState(false);
-  const [spokenText, setSpokenText] = useState("");
   const [speechFeedback, setSpeechFeedback] = useState<{isCorrect: boolean, text: string} | null>(null);
   const [builderSlots, setBuilderSlots] = useState<{id: number, char: string}[]>([]);
   const [builderOptions, setBuilderOptions] = useState<{id: number, char: string, used: boolean}[]>([]);
@@ -82,7 +114,7 @@ export default function PracticePage() {
           const randomWord = all[Math.floor(Math.random() * all.length)];
           const randomType = types[Math.floor(Math.random() * types.length)];
           
-          let q: Question = { id: `q-${i}`, type: randomType, word: randomWord };
+          const q: Question = { id: `q-${i}`, type: randomType, word: randomWord };
           
           if (randomType === 'AUDIO') {
             const options = [randomWord];
@@ -117,14 +149,18 @@ export default function PracticePage() {
   // Setup builder state when question changes
   useEffect(() => {
     if (questions.length === 0) return;
-    const q = questions[currentIdx];
-    if (q.type === 'BUILDER') {
-      const targetWord = (q.word.kanji || q.word.hiragana || q.word.romaji || "").trim();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const question = questions[currentIdx];
+      if (question.type !== 'BUILDER') return;
+      const targetWord = (question.word.kanji || question.word.hiragana || question.word.romaji || "").trim();
       const chars = targetWord.split('');
       const shuffled = chars.map((char, i) => ({ id: i, char, used: false })).sort(() => Math.random() - 0.5);
       setBuilderOptions(shuffled);
       setBuilderSlots([]);
-    }
+    });
+    return () => { cancelled = true; };
   }, [currentIdx, questions]);
 
   const playAudio = (text: string) => {
@@ -152,7 +188,6 @@ export default function PracticePage() {
     setIsChecking(false);
     setCheckResult(null);
     setIsListening(false);
-    setSpokenText("");
     setSpeechFeedback(null);
     if (currentIdx < questions.length - 1) {
       setCurrentIdx(prev => prev + 1);
@@ -175,7 +210,7 @@ export default function PracticePage() {
         vocabulary_id: vocabId,
         correct: isCorrect
       });
-    } catch (e) {}
+    } catch {}
   };
 
   const checkTyping = () => {
@@ -208,7 +243,11 @@ export default function PracticePage() {
   };
 
   const startSpeaking = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const speechWindow = window as Window & {
+      SpeechRecognition?: SpeechRecognitionConstructor;
+      webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    };
+    const SpeechRecognition = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert("Trình duyệt của bạn không hỗ trợ tính năng nhận diện giọng nói (Khuyên dùng Chrome/Edge).");
       return;
@@ -221,11 +260,10 @@ export default function PracticePage() {
 
     recognition.onstart = () => {
       setIsListening(true);
-      setSpokenText("");
       setSpeechFeedback(null);
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event) => {
       let defaultTranscript = "";
       for (let i = 0; i < event.results.length; i++) {
         defaultTranscript += event.results[i][0].transcript;
@@ -234,7 +272,6 @@ export default function PracticePage() {
       setIsListening(false);
       
       if (!defaultTranscript.trim()) {
-        setSpokenText("(Không nghe rõ)");
         setSpeechFeedback({ isCorrect: false, text: "(Không nghe rõ)" });
         return;
       }
@@ -305,8 +342,6 @@ export default function PracticePage() {
         }
       }
 
-      setSpokenText(matchedTranscript);
-      
       setSpeechFeedback({ isCorrect, text: matchedTranscript });
       
       if (isCorrect) {
@@ -319,7 +354,7 @@ export default function PracticePage() {
       }
     };
 
-    recognition.onerror = (event: any) => {
+    recognition.onerror = (event) => {
       setIsListening(false);
       alert("Lỗi nhận diện giọng nói: " + event.error);
     };
@@ -426,8 +461,8 @@ export default function PracticePage() {
     setTimeout(handleNext, 1500);
   };
 
-  const getMeaning = (w: Vocabulary | any) => w.vocabulary_meanings?.[0]?.meaning || w.meaning || "Unknown";
-  const getJp = (w: Vocabulary | any) => w.kanji || w.hiragana || w.romaji || "";
+  const getMeaning = (w: Vocabulary) => w.vocabulary_meanings?.[0]?.meaning || w.meaning || "Unknown";
+  const getJp = (w: Vocabulary) => w.kanji || w.hiragana || w.romaji || "";
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading practice data...</div>;
   if (questions.length === 0) return <div className="min-h-screen flex items-center justify-center">No vocabularies found in this folder.</div>;
@@ -523,7 +558,7 @@ export default function PracticePage() {
         return (
           <div className="bg-white rounded-3xl p-12 shadow-xl w-full text-center">
             <div className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-6">Translate to Japanese</div>
-            <h2 className="text-4xl font-black text-zinc-900 mb-10">"{getMeaning(currentQ.word)}"</h2>
+            <h2 className="text-4xl font-black text-zinc-900 mb-10">&quot;{getMeaning(currentQ.word)}&quot;</h2>
             <div className="relative max-w-md mx-auto mb-6">
               <input 
                 type="text" 
@@ -599,7 +634,7 @@ export default function PracticePage() {
               ) : speechFeedback ? (
                 <div className="flex flex-col items-center gap-4 mt-2">
                   <div className={`text-lg font-bold ${speechFeedback.isCorrect ? "text-emerald-500" : "text-rose-500"}`}>
-                    Bạn đọc là: "{speechFeedback.text}" {speechFeedback.isCorrect ? "✅ Đúng!" : "❌ Sai"}
+                    Bạn đọc là: &quot;{speechFeedback.text}&quot; {speechFeedback.isCorrect ? "✅ Đúng!" : "❌ Sai"}
                   </div>
                   {!speechFeedback.isCorrect && (
                     <button 
@@ -622,7 +657,7 @@ export default function PracticePage() {
           <div className="bg-white rounded-3xl p-10 shadow-xl w-full text-center">
             <h2 className="text-3xl font-black text-zinc-900 mb-8 leading-tight">Spell the word correctly</h2>
              <div className="bg-zinc-100 px-6 py-4 rounded-2xl relative mb-10 max-w-xs mx-auto">
-                <span className="text-lg font-bold text-zinc-700">"{getMeaning(currentQ.word)}"</span>
+                <span className="text-lg font-bold text-zinc-700">&quot;{getMeaning(currentQ.word)}&quot;</span>
               </div>
             
             <div 
