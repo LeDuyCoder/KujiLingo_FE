@@ -28,6 +28,7 @@ import { axiosClient } from "@/shared/api/axiosClient";
 
 export default function CourseCatalogPage() {
   const router = useRouter();
+  const isPremium = useAuthStore((state) => state.user?.is_premium ?? false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -71,10 +72,12 @@ export default function CourseCatalogPage() {
               : 0;
 
             // Determine status based on actual progress logic:
-            // N5 is always unlocked. Others unlock if the previous one is started (progress > 0)
+            // N5 and N4 are always unlocked. Higher levels require progress in the previous level.
             let status: Course["status"] = "locked";
             
-            if (level === "N5") {
+            if (["N3", "N2", "N1"].includes(level) && !isPremium) {
+              status = "locked";
+            } else if (level === "N5" || level === "N4") {
               status = progress !== undefined && progress > 0 ? "active" : "not_started";
             } else {
               const levelsOrder: Course["level"][] = ["N5", "N4", "N3", "N2", "N1"];
@@ -110,7 +113,7 @@ export default function CourseCatalogPage() {
     };
 
     fetchCourses();
-  }, []);
+  }, [isPremium]);
 
   const getLevelColors = (level: string) => {
     switch (level) {
@@ -229,6 +232,7 @@ export default function CourseCatalogPage() {
         {courses.map((course) => {
           const colors = getLevelColors(course.level);
           const isLocked = course.status === "locked";
+          const proRequired = ["N3", "N2", "N1"].includes(course.level) && !isPremium;
 
           return (
             <div
@@ -286,12 +290,13 @@ export default function CourseCatalogPage() {
               <div>
                 {isLocked ? (
                   <Button
-                    disabled
+                    disabled={!proRequired}
+                    onClick={() => proRequired && router.push("/premium/plans")}
                     variant="unstyled"
                     className="w-full h-11 rounded-xl text-zinc-400 border border-zinc-200 bg-zinc-50/50 flex items-center justify-center gap-2 cursor-not-allowed"
                   >
                     <Lock size={14} className="text-zinc-400" />
-                    Locked
+                    {proRequired ? "Upgrade to Pro" : "Locked"}
                   </Button>
                 ) : (
                   <Button
