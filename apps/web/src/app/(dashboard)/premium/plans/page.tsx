@@ -1,11 +1,19 @@
 "use client";
 
 import React, { useState } from "react";
+import axios from "axios";
 import { CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
+
+interface PurchaseErrorResponse {
+  error?: {
+    code?: string;
+    message?: string;
+  };
+}
 
 export default function PremiumPlansPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
@@ -25,11 +33,14 @@ export default function PremiumPlansPage() {
       } else {
         setPurchaseError("Could not complete the purchase. Please try again.");
       }
-    } catch (error: any) {
-      if (error.response?.data?.error?.code === "INSUFFICIENT_GEMS") {
+    } catch (error: unknown) {
+      const apiError = axios.isAxiosError<PurchaseErrorResponse>(error)
+        ? error.response?.data?.error
+        : undefined;
+      if (apiError?.code === "INSUFFICIENT_GEMS") {
         setPurchaseError("You do not have enough Gems. Recharge your wallet to continue.");
       } else {
-        setPurchaseError(error.response?.data?.error?.message || "Could not complete the purchase. Please try again.");
+        setPurchaseError(apiError?.message || "Could not complete the purchase. Please try again.");
       }
     } finally {
       setPurchasing(null);
