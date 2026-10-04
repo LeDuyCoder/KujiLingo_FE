@@ -1,11 +1,51 @@
 "use client";
 
 import React, { useState } from "react";
+import axios from "axios";
 import { CheckCircle2, XCircle, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { axiosClient } from "@/shared/api/axiosClient";
+import { useAuthStore } from "@/features/authentication/stores/auth.store";
+
+interface PurchaseErrorResponse {
+  error?: {
+    code?: string;
+    message?: string;
+  };
+}
 
 export default function PremiumPlansPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
+  const [purchasing, setPurchasing] = useState<"monthly" | "yearly" | null>(null);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
+  const router = useRouter();
+  const updateUser = useAuthStore((state) => state.updateUser);
+
+  const purchasePlan = async (plan: "monthly" | "yearly") => {
+    setPurchasing(plan);
+    setPurchaseError(null);
+    try {
+      const response = await axiosClient.post("/api/v1/premium/purchase", { plan });
+      if (response.data?.success) {
+        updateUser({ is_premium: true });
+        router.push("/courses");
+      } else {
+        setPurchaseError("Could not complete the purchase. Please try again.");
+      }
+    } catch (error: unknown) {
+      const apiError = axios.isAxiosError<PurchaseErrorResponse>(error)
+        ? error.response?.data?.error
+        : undefined;
+      if (apiError?.code === "INSUFFICIENT_GEMS") {
+        setPurchaseError("You do not have enough Gems. Recharge your wallet to continue.");
+      } else {
+        setPurchaseError(apiError?.message || "Could not complete the purchase. Please try again.");
+      }
+    } finally {
+      setPurchasing(null);
+    }
+  };
 
   return (
     <div className="flex flex-col items-center justify-center py-8 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -132,8 +172,8 @@ export default function PremiumPlansPage() {
             </div>
           </div>
           
-          <button className="w-full py-4 rounded-2xl bg-[#b7152b] hover:bg-rose-700 text-white font-bold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-red-200">
-            Upgrade Now
+          <button onClick={() => purchasePlan("yearly")} disabled={purchasing !== null} className="w-full py-4 rounded-2xl bg-[#b7152b] hover:bg-rose-700 disabled:opacity-60 text-white font-bold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-red-200">
+            {purchasing === "yearly" ? "Processing…" : "Upgrade Now"}
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -168,12 +208,19 @@ export default function PremiumPlansPage() {
             </div>
           </div>
           
-          <button className="w-full py-4 rounded-2xl bg-zinc-50 hover:bg-zinc-100 text-zinc-700 font-bold transition-colors">
-            Choose Monthly
+          <button onClick={() => purchasePlan("monthly")} disabled={purchasing !== null} className="w-full py-4 rounded-2xl bg-zinc-50 hover:bg-zinc-100 disabled:opacity-60 text-zinc-700 font-bold transition-colors">
+            {purchasing === "monthly" ? "Processing…" : "Choose Monthly"}
           </button>
         </div>
 
       </div>
+
+      {purchaseError && (
+        <div role="alert" className="mt-6 text-center text-sm font-semibold text-red-700">
+          {purchaseError}{" "}
+          {purchaseError.includes("Recharge") && <Link className="underline" href="/wallet/recharge-gems">Recharge Gems</Link>}
+        </div>
+      )}
       
       <div className="mt-12">
          <Link href="/premium" className="text-zinc-400 hover:text-zinc-700 font-medium text-sm underline underline-offset-4">
