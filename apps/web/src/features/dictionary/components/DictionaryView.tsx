@@ -30,6 +30,15 @@ interface KanjiDetail {
   kunyomi?: string;
 }
 
+interface KanjiRecord {
+  character?: string;
+  kanji?: string;
+  onyomi?: string;
+  kunyomi?: string;
+  meaning_en?: string;
+  meaning_vi?: string;
+}
+
 interface DictionaryEntry {
   id: string;
   term_jp: string;
@@ -167,7 +176,7 @@ export const DictionaryView = () => {
     }
 
     await executeSearch(query, selectedLevel);
-  }, [executeSearch, searchQuery, selectedLevel]);
+  }, [executeSearch, searchQuery, selectedLevel, showToast]);
 
   // Perform search automatically when level filter changes and there's a query
   const previousSelectedLevel = React.useRef(selectedLevel);
@@ -216,17 +225,10 @@ export const DictionaryView = () => {
   // Fetch breakdown kanji details when selectedEntry changes
   useEffect(() => {
     let active = true;
-    setKanjiDetails({});
-
     const kanjiChars = selectedEntry ? getKanjiBreakdown(selectedEntry.term_jp) : [];
-    if (kanjiChars.length === 0) {
-      setKanjiDetailsLoading(false);
-      return () => {
-        active = false;
-      };
-    }
 
     const fetchKanjiDetails = async () => {
+      setKanjiDetails({});
       setKanjiDetailsLoading(true);
       const detailsMap: Record<string, { reading: string; meaning: string }> = {};
       
@@ -235,8 +237,8 @@ export const DictionaryView = () => {
           try {
             const response = await axiosClient.get(`/api/v1/kanji?search=${encodeURIComponent(char)}`, { timeout: 8000 });
             const data = response.data?.data;
-            const records = Array.isArray(data) ? data : data ? [data] : [];
-            const kanjiData = records.find((item: any) => item.character === char || item.kanji === char) ?? records[0];
+            const records: KanjiRecord[] = Array.isArray(data) ? data : data ? [data] : [];
+            const kanjiData = records.find((item) => item.character === char || item.kanji === char) ?? records[0];
             if (response.data?.success && kanjiData) {
               const reading = kanjiData.onyomi || kanjiData.kunyomi || "";
               const meaning = kanjiData.meaning_en || kanjiData.meaning_vi || "";
