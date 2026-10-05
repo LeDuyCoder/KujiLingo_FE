@@ -45,8 +45,17 @@ export default function LessonDetailPage({ params }: PageProps) {
         } else {
           setError("Không thể tải thông tin bài học.");
         }
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Error fetching lesson detail:", err);
+        const code = (err as { response?: { data?: { error?: { code?: string } } } }).response?.data?.error?.code;
+        if (code === "LESSON_LOCKED") {
+          setError("Hoàn thành quiz của bài học trước để mở khóa bài này.");
+          return;
+        }
+        if (code === "PRO_REQUIRED") {
+          setError("Bạn cần nâng cấp Pro để truy cập bài học này.");
+          return;
+        }
         setError("Có lỗi xảy ra khi kết nối tới hệ thống.");
       } finally {
         setLoading(false);
