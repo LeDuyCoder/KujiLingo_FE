@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -14,8 +14,15 @@ import {
   Settings,
   HelpCircle,
   X,
+  User,
+  LogOut,
+  ChevronRight,
+  Coins,
+  Gem,
 } from "lucide-react";
 import { BrandLogo } from "@/shared/components/BrandLogo";
+import { useAuthStore } from "@/features/authentication/stores/auth.store";
+import { axiosClient } from "@/shared/api/axiosClient";
 
 interface SidebarProps {
   className?: string;
@@ -25,12 +32,40 @@ interface SidebarProps {
 
 export const Sidebar = ({ className = "", isOpen = false, onClose }: SidebarProps) => {
   const pathname = usePathname();
+  const { user, logout } = useAuthStore();
+  const displayName = user?.display_name?.trim() || "TÃ i khoáº£n";
+  const [wallet, setWallet] = useState<{ coins: number; gems: number } | null>(null);
 
-  const navigation = [
+  useEffect(() => {
+    if (!isOpen || !user?.id) return;
+
+    let active = true;
+    axiosClient.get("/api/v1/shop/wallet")
+      .then((response) => {
+        const data = response.data?.data;
+        if (!active || !response.data?.success || !data) return;
+        setWallet({
+          coins: Number(data.coins ?? 0),
+          gems: Number(data.gems ?? 0),
+        });
+      })
+      .catch((error) => {
+        console.error("Error fetching wallet for mobile navigation:", error);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [isOpen, user?.id]);
+
+  const primaryNavigation = [
     { name: "Home", href: "/home", icon: Home },
     { name: "Courses", href: "/courses", icon: GraduationCap },
     { name: "Dictionary", href: "/dictionary", icon: BookOpen },
     { name: "My Words", href: "/my-words", icon: Bookmark },
+  ];
+
+  const secondaryNavigation = [
     { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
     { name: "Shop", href: "/shop", icon: ShoppingBag },
     { name: "Achievements", href: "/achievements", icon: Award },
@@ -51,9 +86,9 @@ export const Sidebar = ({ className = "", isOpen = false, onClose }: SidebarProp
   };
 
   const sidebarContent = (
-    <aside className={`flex flex-col w-64 bg-white h-screen ${className}`}>
+    <aside className={`flex h-dvh min-h-0 w-[80vw] max-w-[300px] flex-col bg-white lg:h-screen lg:w-64 ${className}`}>
       {/* Logo Section */}
-      <div className="flex items-center justify-between px-6 py-6 border-b border-zinc-50">
+      <div className="flex shrink-0 items-center justify-between px-4 py-4 lg:px-6 lg:py-6">
         <BrandLogo showTagline />
         {onClose && (
           <button
@@ -66,50 +101,113 @@ export const Sidebar = ({ className = "", isOpen = false, onClose }: SidebarProp
       </div>
 
       {/* Main Navigation */}
-      <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
-        {navigation.map((item) => {
-          const active = isActive(item.href);
-          const Icon = item.icon;
+      <nav aria-label="Main navigation" className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-2 lg:space-y-1.5 lg:px-4 lg:py-6">
+        <div className="space-y-1">
+          {primaryNavigation.map((item) => {
+            const active = isActive(item.href);
+            const Icon = item.icon;
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={handleNavClick}
-              className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
-                active
-                  ? "bg-red-50/70 text-[#b7152b]"
-                  : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50/80"
-              }`}
-            >
-              <Icon size={20} strokeWidth={active ? 2.5 : 2} className={active ? "text-[#b7152b]" : "text-zinc-400"} />
-              {item.name}
-            </Link>
-          );
-        })}
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={handleNavClick}
+                className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-semibold transition-colors lg:gap-3.5 lg:px-4 lg:py-3 lg:text-sm ${
+                  active
+                    ? "bg-red-50/80 text-[#b7152b]"
+                    : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
+                }`}
+              >
+                <Icon size={18} strokeWidth={active ? 2.5 : 2} className={`shrink-0 lg:h-5 lg:w-5 ${active ? "text-[#b7152b]" : "text-zinc-400"}`} />
+                <span className="min-w-0 flex-1">{item.name}</span>
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="space-y-1 border-t border-zinc-100 pt-3 lg:border-0 lg:pt-0">
+          {secondaryNavigation.map((item) => {
+            const active = isActive(item.href);
+            const Icon = item.icon;
+
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={handleNavClick}
+                className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-semibold transition-colors lg:gap-3.5 lg:px-4 lg:py-3 lg:text-sm ${
+                  active
+                    ? "bg-red-50/80 text-[#b7152b]"
+                    : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
+                }`}
+              >
+                <Icon size={18} strokeWidth={active ? 2.5 : 2} className={`shrink-0 lg:h-5 lg:w-5 ${active ? "text-[#b7152b]" : "text-zinc-400"}`} />
+                {item.name}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
-      {/* Footer Navigation */}
-      <div className="px-4 py-4 border-t border-zinc-50 space-y-1">
+      {/* Pinned bottom navigation */}
+      <div className="shrink-0 space-y-1 border-t border-zinc-100 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 lg:space-y-1 lg:px-4 lg:py-4">
+        <section className="shrink-0 px-3 pb-1 lg:hidden">
+          <Link
+            href="/profile"
+            onClick={handleNavClick}
+            aria-label={`Account details for ${displayName}. Coins ${wallet?.coins.toLocaleString("en-US") ?? 0}, gems ${wallet?.gems.toLocaleString("en-US") ?? 0}`}
+            className="flex min-h-11 min-w-0 items-center gap-2 rounded-xl transition-colors hover:bg-zinc-50"
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-50 text-sm font-bold text-[#b7152b]">
+              {!user?.display_name?.trim() ? <User size={17} /> : displayName.charAt(0).toUpperCase()}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-xs font-semibold leading-tight text-zinc-900">{displayName}</span>
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1.5 text-[10px] font-medium tabular-nums text-zinc-500">
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                <Coins size={12} className="text-amber-500" />
+                {wallet?.coins.toLocaleString("en-US") ?? "0"}
+              </span>
+              <span className="inline-flex items-center gap-1 whitespace-nowrap">
+                <Gem size={12} className="text-[#b7152b]" />
+                {wallet?.gems.toLocaleString("en-US") ?? "0"}
+              </span>
+            </span>
+            <ChevronRight size={15} className="shrink-0 text-zinc-400" />
+          </Link>
+        </section>
         {footNavigation.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
+
           return (
             <Link
               key={item.name}
               href={item.href}
               onClick={handleNavClick}
-              className={`flex items-center gap-3.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+              className={`flex min-h-11 items-center gap-3 rounded-xl px-3 text-[13px] font-semibold transition-colors lg:gap-3.5 lg:px-4 lg:py-3 lg:text-sm ${
                 active
-                  ? "bg-red-50/70 text-[#b7152b]"
-                  : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-50/80"
+                  ? "bg-red-50/80 text-[#b7152b]"
+                  : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
               }`}
             >
-              <Icon size={20} strokeWidth={active ? 2.5 : 2} className={active ? "text-[#b7152b]" : "text-zinc-400"} />
-              {item.name}
+              <Icon size={18} strokeWidth={active ? 2.5 : 2} className={`shrink-0 lg:h-5 lg:w-5 ${active ? "text-[#b7152b]" : "text-zinc-400"}`} />
+              <span className="min-w-0 flex-1">{item.name}</span>
             </Link>
           );
         })}
+        <button
+          type="button"
+          onClick={() => {
+            logout();
+            handleNavClick();
+          }}
+          className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-[13px] font-semibold text-zinc-500 transition-colors hover:bg-rose-50 hover:text-rose-600 lg:hidden"
+        >
+          <LogOut size={18} className="shrink-0 text-zinc-400" />
+          Log out
+        </button>
       </div>
     </aside>
   );
@@ -134,7 +232,7 @@ export const Sidebar = ({ className = "", isOpen = false, onClose }: SidebarProp
         />
         {/* Drawer panel */}
         <div
-          className={`absolute left-0 top-0 h-full w-64 shadow-2xl transition-transform duration-300 ease-out ${
+          className={`absolute left-0 top-0 h-full w-[80vw] max-w-[300px] shadow-2xl transition-transform duration-300 ease-out ${
             isOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
