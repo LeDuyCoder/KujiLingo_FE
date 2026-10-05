@@ -249,7 +249,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       }
 
       try {
-        const response = await axiosClient.post("/api/v1/statistics/ping");
+        const response = await axiosClient.post("/api/v1/statistics/ping", {});
         if (response.data && response.data.success && response.data.data) {
           const { streak: newStreak, minutes_studied_today: newMins, percent: newPercent } = response.data.data;
           if (newPercent >= 100) {
