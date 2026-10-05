@@ -5,23 +5,23 @@ import {
   ChevronLeft, 
   FileText, 
   Play, 
-  ArrowRight, 
   Loader2, 
   Award, 
   Check, 
   Lock, 
-  BookOpen 
+  BookOpen,
+  ClipboardList
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/shared/components/ui/Button";
 import { axiosClient } from "@/shared/api/axiosClient";
-import { useAuthStore } from "@/features/authentication/stores/auth.store";
 
 interface Lesson {
   id: string;
   title: string;
   description: string;
   order_no: number;
+  quiz_count: number;
 }
 
 interface CourseDetail {
@@ -30,6 +30,12 @@ interface CourseDetail {
   description: string;
   image?: string;
   lessons: Lesson[];
+}
+
+interface LessonProgress {
+  id: string;
+  is_completed: boolean;
+  is_unlocked: boolean;
 }
 
 interface PageProps {
@@ -45,6 +51,7 @@ export default function CourseDetailPage({ params }: PageProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [lessonProgress, setLessonProgress] = useState<LessonProgress[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [hoveredLessonId, setHoveredLessonId] = useState<string | null>(null);
 
@@ -53,7 +60,10 @@ export default function CourseDetailPage({ params }: PageProps) {
       try {
         setLoading(true);
         // 1. Fetch course details
-        const courseResponse = await axiosClient.get(`/courses/${courseId}`);
+        const [courseResponse, progressResponse] = await Promise.all([
+          axiosClient.get(`/courses/${courseId}`),
+          axiosClient.get(`/api/v1/courses/${courseId}/progress`),
+        ]);
         if (!courseResponse.data || !courseResponse.data.success) {
           setError("Không thể tải thông tin khóa học.");
           setLoading(false);
@@ -62,39 +72,10 @@ export default function CourseDetailPage({ params }: PageProps) {
 
         const courseData = courseResponse.data.data;
         setCourse(courseData);
-
-        // Determine level
-        const levelMatch = courseData.title ? courseData.title.match(/N[1-5]/i) : null;
-        const lvl = levelMatch ? levelMatch[0].toUpperCase() : "N5";
-
-        // 2. Fetch progress overview
-        let progressPercentage = 0;
-        try {
-          const token = useAuthStore.getState().accessToken;
-          if (token) {
-            const progressResponse = await axiosClient.get("/api/v1/learning-progress");
-            const progressResult = progressResponse.data;
-            if (progressResult.success && progressResult.data?.by_jlpt) {
-              const progressData = progressResult.data.by_jlpt;
-              const startedCount = progressData[lvl] || 0;
-              const totalLessons = courseData.lessons?.length || 1;
-              const completedLessons = Math.floor(startedCount / 10);
-              
-              progressPercentage = totalLessons > 0 
-                ? Math.min(completedLessons / totalLessons, 1)
-                : 0;
-            }
-          }
-        } catch (progressErr) {
-          console.error("Error fetching learning progress:", progressErr);
-        }
-
-        const lessonsCount = courseData.lessons?.length || 0;
-        const computedActive = Math.min(
-          Math.floor(lessonsCount * progressPercentage),
-          Math.max(0, lessonsCount - 1)
-        );
-        setActiveIndex(computedActive);
+        const progressData: LessonProgress[] = progressResponse.data.data.lessons || [];
+        setLessonProgress(progressData);
+        const firstIncompleteUnlocked = progressData.findIndex((lesson) => lesson.is_unlocked && !lesson.is_completed);
+        setActiveIndex(firstIncompleteUnlocked >= 0 ? firstIncompleteUnlocked : Math.max(0, (courseData.lessons?.length || 1) - 1));
 
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -210,7 +191,7 @@ export default function CourseDetailPage({ params }: PageProps) {
   }
 
   // Sort lessons by order_no or fallback index
-  const sortedLessons = [...course.lessons].sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0));
+  const sortedLessons = [...course.lessons].sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0) || a.id.localeCompare(b.id));
 
   // Tighter node spacing keeps the learning path compact.
   const spacing = 144;
@@ -238,9 +219,10 @@ export default function CourseDetailPage({ params }: PageProps) {
     return d;
   };
 
-  const getLessonStatus = (index: number) => {
-    if (index < activeIndex) return "completed";
-    if (index === activeIndex) return "active";
+  const getLessonStatus = (lessonId: string) => {
+    const progress = lessonProgress.find((lesson) => lesson.id === lessonId);
+    if (progress?.is_completed) return "completed";
+    if (progress?.is_unlocked) return "active";
     return "locked";
   };
 
@@ -360,7 +342,7 @@ export default function CourseDetailPage({ params }: PageProps) {
               {/* Zigzag Nodes list positioned absolutely using exact coordinates */}
               {sortedLessons.map((lesson, idx) => {
                 const pt = points[idx];
-                const status = getLessonStatus(idx);
+                const status = getLessonStatus(lesson.id);
                 const isSelected = selectedLessonId === lesson.id;
                 const isHovered = hoveredLessonId === lesson.id;
                 const isVisible = isSelected || isHovered;
@@ -418,14 +400,25 @@ export default function CourseDetailPage({ params }: PageProps) {
                             Chưa mở khóa
                           </div>
                         ) : (
+                          <div className="flex gap-2">
                           <Button
                             onClick={() => router.push(`/lessons/${lesson.id}`)}
-                            className={`w-full h-9 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 ${colors.btnBg}`}
+                            className={`h-9 flex-1 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 ${colors.btnBg}`}
                           >
                             <Play size={10} fill="currentColor" />
                             Học ngay
-                            <ArrowRight size={10} />
                           </Button>
+                          {lesson.quiz_count > 0 && (
+                            <Button
+                              variant="unstyled"
+                              onClick={() => router.push(`/lessons/${lesson.id}/quiz`)}
+                              className="h-9 flex-1 rounded-xl border border-zinc-200 bg-white text-xs font-bold text-zinc-700 hover:border-[#b7152b] hover:text-[#b7152b] flex items-center justify-center gap-1.5 transition-colors"
+                            >
+                              <ClipboardList size={13} />
+                              Quiz
+                            </Button>
+                          )}
+                          </div>
                         )}
                       </div>
                     )}
