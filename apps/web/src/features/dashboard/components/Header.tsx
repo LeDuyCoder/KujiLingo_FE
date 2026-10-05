@@ -527,7 +527,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
         {/* Profile Section with Dropdown Menu */}
         <div 
           ref={dropdownRef}
-          className="relative pl-3 md:pl-4 border-l border-zinc-100"
+          className="relative hidden border-l border-zinc-100 pl-3 md:pl-4 lg:block"
         >
           <div 
             onClick={toggleProfileDropdown}

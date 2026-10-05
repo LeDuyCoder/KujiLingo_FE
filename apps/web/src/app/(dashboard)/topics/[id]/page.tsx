@@ -339,72 +339,55 @@ export default function TopicDetailPage({ params }: PageProps) {
               return (
                 <div
                   key={vocab.id}
-                  className="bg-white border border-zinc-100 hover:border-zinc-200 rounded-2xl p-5 flex items-center justify-between gap-4 transition-all duration-200 hover:shadow-sm group"
+                  className="w-full rounded-2xl border border-zinc-100 bg-white px-3.5 py-3.5 transition-colors duration-200 hover:border-zinc-200 sm:px-4 sm:py-3.5"
                 >
-                  <div className="flex items-center gap-5 min-w-0">
-                    {/* Kanji display */}
-                    <div 
-                      className="min-w-[56px] h-14 px-3.5 bg-zinc-50 border border-zinc-100 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ width: "fit-content" }}
-                    >
-                      <span 
-                        className="text-xl font-extrabold text-zinc-900 select-all"
-                        style={{ whiteSpace: "nowrap", wordBreak: "keep-all" }}
-                      >
-                        {vocab.kanji || vocab.hiragana || "—"}
-                      </span>
-                    </div>
-
-                    {/* Word info */}
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                        <span className="text-lg font-extrabold text-zinc-900 leading-tight">
-                          {vocab.kanji || vocab.hiragana || "—"}
+                  <div className="flex min-w-0 items-center justify-between gap-2">
+                    <span className="inline-flex min-w-0 max-w-[58%] items-center justify-center truncate rounded-xl border border-zinc-200/70 bg-zinc-50 px-3 py-1.5 text-center text-xl font-extrabold leading-tight text-zinc-900 select-all sm:text-2xl">
+                      {vocab.kanji || vocab.hiragana || "—"}
+                    </span>
+                    <div className="flex max-w-[42%] shrink-0 items-center justify-end gap-1">
+                      {vocab.jlpt && (
+                        <span className={`whitespace-nowrap rounded-md px-1.5 py-0.5 text-[9px] font-bold ${getJlptColor(vocab.jlpt)}`}>
+                          {vocab.jlpt}
                         </span>
-                        {vocab.jlpt && (
-                          <span className={`px-1.5 py-0.5 text-[9px] font-extrabold rounded ${getJlptColor(vocab.jlpt)}`}>
-                            {vocab.jlpt}
-                          </span>
-                        )}
-                        {vocab.word_type && (
-                          <span className="text-[9px] text-zinc-400 font-semibold uppercase">
-                            {vocab.word_type}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-sm text-zinc-500 font-medium">
-                        {vocab.hiragana && vocab.kanji && (
-                          <span>{vocab.hiragana}</span>
-                        )}
-                        {vocab.romaji && (
-                          <span className="text-zinc-400">• {vocab.romaji}</span>
-                        )}
-                      </div>
-                      <p className="text-xs text-zinc-600 mt-0.5 font-medium truncate max-w-md">
-                        {vocab.meaning || "—"}
-                      </p>
+                      )}
+                      {vocab.word_type && (
+                        <span className="truncate rounded-md bg-zinc-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-zinc-500">
+                          {vocab.word_type}
+                        </span>
+                      )}
                     </div>
                   </div>
+                  <p className="mt-2 text-sm font-medium leading-snug text-zinc-600">
+                    {vocab.hiragana || vocab.romaji || vocab.kanji || "—"}
+                  </p>
+                  <p className="mt-1 line-clamp-2 text-xs font-medium leading-relaxed text-zinc-500">
+                    {vocab.meaning || "—"}
+                  </p>
 
-                  {/* Action items */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold border ${statusBadge.color}`}>
+                  {/* Actions */}
+                  <div className="mt-2.5 flex items-center justify-end gap-1.5">
+                    <span className={`inline-flex h-7 items-center rounded-lg border px-2 text-[9px] font-semibold ${statusBadge.color}`}>
                       {statusBadge.label}
                     </span>
                     <button
+                      type="button"
+                      aria-label={`Play pronunciation for ${vocab.kanji || vocab.hiragana || "word"}`}
                       onClick={() => speakWord(vocab.kanji || vocab.hiragana || "")}
-                      className="w-8 h-8 rounded-full bg-zinc-50 hover:bg-zinc-100 flex items-center justify-center transition-colors"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-zinc-100 bg-zinc-50 text-zinc-500 transition-colors hover:bg-zinc-100"
                     >
-                      <Volume2 size={14} className="text-zinc-400" />
+                      <Volume2 size={13} />
                     </button>
                     <button
+                      type="button"
+                      aria-label={vocab.is_favorited ? "Remove from favorites" : "Add to favorites"}
                       onClick={() => toggleFavorite(vocab.id, vocab.is_favorited)}
                       disabled={favoritingIds.has(vocab.id)}
-                      className="w-8 h-8 rounded-full bg-zinc-50 hover:bg-red-50 flex items-center justify-center transition-colors"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg border border-zinc-100 bg-zinc-50 transition-colors hover:bg-red-50"
                     >
                       <Heart
-                        size={14}
-                        className={vocab.is_favorited ? "text-red-500 fill-red-500" : "text-zinc-400"}
+                        size={13}
+                        className={vocab.is_favorited ? "fill-red-500 text-red-500" : "text-zinc-400"}
                       />
                     </button>
                   </div>

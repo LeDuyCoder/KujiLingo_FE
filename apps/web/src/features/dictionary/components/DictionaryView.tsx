@@ -30,6 +30,15 @@ interface KanjiDetail {
   kunyomi?: string;
 }
 
+interface KanjiRecord {
+  character?: string;
+  kanji?: string;
+  onyomi?: string;
+  kunyomi?: string;
+  meaning_en?: string;
+  meaning_vi?: string;
+}
+
 interface DictionaryEntry {
   id: string;
   term_jp: string;
@@ -68,6 +77,7 @@ export const DictionaryView = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [actionProcessing, setActionProcessing] = useState<Record<string, boolean>>({});
   const [kanjiDetails, setKanjiDetails] = useState<Record<string, { reading: string; meaning: string }>>({});
+  const [kanjiDetailsLoading, setKanjiDetailsLoading] = useState(false);
 
   const fetchFolders = React.useCallback(async () => {
     try {
@@ -91,13 +101,13 @@ export const DictionaryView = () => {
     }
   }, [accessToken, fetchFolders]);
 
-  const showToast = (message: string) => {
+  const showToast = React.useCallback((message: string) => {
     setToastMessage(message);
     const timer = setTimeout(() => {
       setToastMessage(null);
     }, 3000);
     return () => clearTimeout(timer);
-  };
+  }, []);
 
   const getOrCreateDefaultFolderId = async (): Promise<string | null> => {
     if (folders.length > 0) {
@@ -124,13 +134,7 @@ export const DictionaryView = () => {
     return null;
   };
 
-  const handleSearch = React.useCallback(async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!searchQuery.trim()) {
-      showToast("Vui lòng nhập từ khóa tìm kiếm.");
-      return;
-    }
-
+  const executeSearch = React.useCallback(async (query: string, level: string) => {
     setLoading(true);
     setResults([]);
     // Close detail pane on new search
@@ -138,16 +142,16 @@ export const DictionaryView = () => {
     setSelectedEntry(null);
 
     try {
-      let url = `/dictionary/search?q=${encodeURIComponent(searchQuery.trim())}`;
-      if (selectedLevel !== "All") {
-        url += `&jlpt_level=${selectedLevel}`;
+      const params = new URLSearchParams({ q: query });
+      if (level !== "All") {
+        params.set("jlpt_level", level);
       }
 
-      const response = await axiosClient.get(url);
+      const response = await axiosClient.get(`/dictionary/search?${params.toString()}`);
       const result = response.data;
       if (result.success && result.data) {
         setResults(result.data);
-        setLastQuery(searchQuery.trim());
+        setLastQuery(query);
       } else {
         showToast("Đã xảy ra lỗi khi tìm kiếm.");
       }
@@ -157,17 +161,32 @@ export const DictionaryView = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedLevel]);
+  }, [showToast]);
+
+  const handleSearch = React.useCallback(async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) {
+      showToast("Vui lòng nhập từ khóa tìm kiếm.");
+      return;
+    }
+    if (query.length > 100) {
+      showToast("Từ khóa tìm kiếm không được dài quá 100 ký tự.");
+      return;
+    }
+
+    await executeSearch(query, selectedLevel);
+  }, [executeSearch, searchQuery, selectedLevel, showToast]);
 
   // Perform search automatically when level filter changes and there's a query
+  const previousSelectedLevel = React.useRef(selectedLevel);
   useEffect(() => {
-    if (lastQuery) {
-      const timer = setTimeout(() => {
-        handleSearch();
-      }, 0);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedLevel, lastQuery, handleSearch]);
+    const levelChanged = previousSelectedLevel.current !== selectedLevel;
+    previousSelectedLevel.current = selectedLevel;
+    if (!levelChanged || !lastQuery) return;
+
+    void executeSearch(lastQuery, selectedLevel);
+  }, [selectedLevel, lastQuery, executeSearch]);
 
   // Fetch detailed entry details when selectedEntryId changes
   useEffect(() => {
@@ -205,38 +224,45 @@ export const DictionaryView = () => {
 
   // Fetch breakdown kanji details when selectedEntry changes
   useEffect(() => {
-    if (!selectedEntry) {
-      const timer = setTimeout(() => setKanjiDetails({}), 0);
-      return () => clearTimeout(timer);
-    }
-
-    const kanjiChars = getKanjiBreakdown(selectedEntry.term_jp);
-    if (kanjiChars.length === 0) return;
+    let active = true;
+    const kanjiChars = selectedEntry ? getKanjiBreakdown(selectedEntry.term_jp) : [];
 
     const fetchKanjiDetails = async () => {
+      setKanjiDetails({});
+      setKanjiDetailsLoading(true);
       const detailsMap: Record<string, { reading: string; meaning: string }> = {};
       
       await Promise.all(
         kanjiChars.map(async (char) => {
           try {
-            const response = await axiosClient.get(`/api/v1/kanji?search=${encodeURIComponent(char)}`);
-            const result = response.data;
-            if (result.success && result.data && result.data.length > 0) {
-              const kanjiData = result.data[0];
+            const response = await axiosClient.get(`/api/v1/kanji?search=${encodeURIComponent(char)}`, { timeout: 8000 });
+            const data = response.data?.data;
+            const records: KanjiRecord[] = Array.isArray(data) ? data : data ? [data] : [];
+            const kanjiData = records.find((item) => item.character === char || item.kanji === char) ?? records[0];
+            if (response.data?.success && kanjiData) {
               const reading = kanjiData.onyomi || kanjiData.kunyomi || "";
               const meaning = kanjiData.meaning_en || kanjiData.meaning_vi || "";
               detailsMap[char] = { reading, meaning };
+            } else {
+              detailsMap[char] = { reading: "", meaning: "" };
             }
           } catch (err) {
             console.error(`Error fetching kanji detail for ${char}:`, err);
+            detailsMap[char] = { reading: "", meaning: "" };
           }
         })
       );
       
-      setKanjiDetails(detailsMap);
+      if (active) {
+        setKanjiDetails(detailsMap);
+        setKanjiDetailsLoading(false);
+      }
     };
 
-    fetchKanjiDetails();
+    void fetchKanjiDetails();
+    return () => {
+      active = false;
+    };
   }, [selectedEntry]);
 
   const handleFavoriteToggle = async (entry: DictionaryEntry, e: React.MouseEvent) => {
@@ -419,7 +445,7 @@ export const DictionaryView = () => {
 
 
   return (
-    <div className="space-y-8 animate-fade-in-up relative pb-20">
+    <div className={`space-y-8 relative pb-20 ${selectedEntryId ? "" : "animate-fade-in-up"}`}>
       {/* Toast Alert */}
       {toastMessage && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-zinc-900 text-white px-4 py-3 rounded-2xl shadow-xl animate-fade-in-up">
@@ -448,6 +474,7 @@ export const DictionaryView = () => {
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400" size={20} />
                 <input
                   type="text"
+                  maxLength={100}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Nhập từ vựng cần tra cứu..."
@@ -615,20 +642,21 @@ export const DictionaryView = () => {
 
         {/* Right Column: Word Detail Pane */}
         {/* Desktop Sticky Container */}
-        <div className={`w-full lg:w-[450px] flex-shrink-0 lg:sticky lg:top-24 z-50 lg:z-20 ${
+        <div className={`w-full lg:w-[450px] flex-shrink-0 lg:sticky lg:top-6 z-50 lg:z-20 ${
           selectedEntryId 
-            ? "fixed inset-0 lg:relative lg:inset-auto bg-white lg:bg-transparent overflow-y-auto lg:overflow-visible block" 
+            ? "fixed inset-0 flex items-center justify-center overflow-y-auto bg-black/30 p-3 lg:sticky lg:top-6 lg:inset-auto lg:block lg:overflow-visible lg:bg-transparent lg:p-0"
             : "hidden"
         }`}>
           {selectedEntryId && (
-            <div className="bg-white border border-zinc-100 lg:rounded-3xl p-6 lg:p-8 shadow-xl lg:shadow-sm min-h-screen lg:h-[calc(100vh-120px)] lg:overflow-y-auto flex flex-col justify-between relative">
+            <div className="lg:flex lg:min-h-[calc(100dvh-8rem)] lg:items-start lg:justify-center">
+            <div className="dictionary-detail-scrollbar relative max-h-[calc(100dvh-1.5rem)] w-full max-w-[450px] overflow-y-auto rounded-2xl border border-zinc-100 bg-white p-4 pt-5 pb-8 shadow-xl lg:max-h-[calc(100dvh-8rem)] lg:max-w-none lg:rounded-3xl lg:p-8 lg:shadow-sm">
               {/* Close button */}
               <button
                 onClick={() => {
                   setSelectedEntryId(null);
                   setSelectedEntry(null);
                 }}
-                className="absolute top-6 right-6 z-50 w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-zinc-950 rounded-xl hover:bg-zinc-50 transition-colors"
+                className="absolute top-4 right-4 lg:top-6 lg:right-6 z-50 w-9 h-9 flex items-center justify-center text-zinc-400 hover:text-zinc-950 rounded-xl hover:bg-zinc-50 transition-colors"
               >
                 <X size={20} />
               </button>
@@ -641,7 +669,7 @@ export const DictionaryView = () => {
               )}
 
               {!detailLoading && selectedEntry && (
-                <div className="space-y-8 animate-fade-in-up">
+                <div className="space-y-5 lg:space-y-8 animate-fade-in-up">
                   {/* Badges */}
                   <div className="flex items-center gap-2">
                     {selectedEntry.jlpt_level && (
@@ -703,13 +731,15 @@ export const DictionaryView = () => {
                   )}
 
                   {/* Meanings */}
+                  {(selectedEntry.meaning_vi || selectedEntry.meaning_en) && (
                   <div>
-                    <span className="text-[10px] font-extrabold tracking-widest text-[#b7152b]/80 uppercase block mb-3.5">
+                    <span className="text-[10px] font-extrabold tracking-widest text-[#b7152b]/80 uppercase block mb-2.5">
                       MEANING
                     </span>
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {/* Vietnamese meaning */}
-                      <div className="bg-zinc-50/50 border border-zinc-100 rounded-2xl p-4">
+                      {selectedEntry.meaning_vi && (
+                      <div className="bg-zinc-50/50 border border-zinc-100 rounded-2xl p-3 lg:p-4">
                         <span className="text-[9px] font-extrabold text-zinc-400 block tracking-wider uppercase mb-1">
                           Tiếng Việt
                         </span>
@@ -717,9 +747,11 @@ export const DictionaryView = () => {
                           {selectedEntry.meaning_vi}
                         </p>
                       </div>
+                      )}
 
                       {/* English meaning */}
-                      <div className="bg-zinc-50/50 border border-zinc-100 rounded-2xl p-4">
+                      {selectedEntry.meaning_en && (
+                      <div className="bg-zinc-50/50 border border-zinc-100 rounded-2xl p-3 lg:p-4">
                         <span className="text-[9px] font-extrabold text-zinc-400 block tracking-wider uppercase mb-1">
                           English
                         </span>
@@ -727,13 +759,15 @@ export const DictionaryView = () => {
                           {selectedEntry.meaning_en}
                         </p>
                       </div>
+                      )}
                     </div>
                   </div>
+                  )}
 
                   {/* Example sentences */}
                   {selectedEntry.vocabulary && (selectedEntry.vocabulary.example_sentence_jp || selectedEntry.vocabulary.example_sentence_vi) && (
                     <div>
-                      <span className="text-[10px] font-extrabold tracking-widest text-[#b7152b]/80 uppercase block mb-3.5">
+                      <span className="text-[10px] font-extrabold tracking-widest text-[#b7152b]/80 uppercase block mb-2.5">
                         EXAMPLES
                       </span>
                       <div className="bg-zinc-50/30 border border-zinc-100 rounded-2xl p-4 space-y-2">
@@ -754,25 +788,25 @@ export const DictionaryView = () => {
                   {/* Kanji breakdown */}
                   {getKanjiBreakdown(selectedEntry.term_jp).length > 0 && (
                     <div>
-                      <span className="text-[10px] font-extrabold tracking-widest text-[#b7152b]/80 uppercase block mb-3.5">
+                      <span className="text-[10px] font-extrabold tracking-widest text-[#b7152b]/80 uppercase block mb-2.5">
                         KANJI BREAKDOWN
                       </span>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-2 gap-2.5">
                         {getKanjiBreakdown(selectedEntry.term_jp).map((kanjiChar) => {
                           const detail = kanjiDetails[kanjiChar];
                           return (
                             <div 
                               key={kanjiChar}
-                              className="bg-zinc-50/50 border border-zinc-100 rounded-2xl p-4 text-center space-y-1"
+                              className="bg-zinc-50/50 border border-zinc-100 rounded-2xl p-3 lg:p-4 text-center space-y-1"
                             >
                               <span className="text-3xl font-extrabold text-zinc-900 block font-sans">
                                 {kanjiChar}
                               </span>
                               <span className="text-xs text-zinc-500 font-bold block">
-                                {detail ? detail.reading : "..."}
+                                {detail?.reading || (kanjiDetailsLoading ? "..." : "—")}
                               </span>
                               <span className="text-[10px] text-zinc-400 font-medium block">
-                                {detail ? detail.meaning : "Loading..."}
+                                {detail?.meaning || (kanjiDetailsLoading ? "Loading..." : "No details found")}
                               </span>
                             </div>
                           );
@@ -782,6 +816,7 @@ export const DictionaryView = () => {
                   )}
                 </div>
               )}
+            </div>
             </div>
           )}
         </div>

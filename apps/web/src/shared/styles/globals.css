@@ -20,6 +20,32 @@ body {
   font-family: var(--font-be-vietnam-pro), var(--font-m-plus-1p), var(--font-noto-sans), sans-serif;
 }
 
+.dictionary-detail-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.dictionary-detail-scrollbar:hover {
+  scrollbar-color: #d4d4d8 transparent;
+}
+
+.dictionary-detail-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.dictionary-detail-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dictionary-detail-scrollbar::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: transparent;
+}
+
+.dictionary-detail-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: #d4d4d8;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;

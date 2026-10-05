@@ -212,8 +212,8 @@ export default function CourseDetailPage({ params }: PageProps) {
   // Sort lessons by order_no or fallback index
   const sortedLessons = [...course.lessons].sort((a, b) => (a.order_no ?? 0) - (b.order_no ?? 0));
 
-  // Visual layout config: distance between nodes is now 160px
-  const spacing = 160;
+  // Tighter node spacing keeps the learning path compact.
+  const spacing = 144;
   
   // Calculate center X and offsets: Left (96px), Right (224px), Center (160px) in a 320px SVG container
   const points = sortedLessons.map((_, idx) => {
@@ -265,12 +265,12 @@ export default function CourseDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="space-y-8 pb-16 animate-fade-in-up">
+    <div className="space-y-5 pb-20 animate-fade-in-up sm:space-y-7 md:space-y-8 md:pb-16">
       {/* Top Navigation & Action Header */}
       <div className="flex items-center justify-between">
         <button
           onClick={() => router.push("/courses")}
-          className="flex items-center gap-2 text-zinc-500 hover:text-zinc-950 font-bold text-sm group transition-colors"
+          className="flex min-h-9 items-center gap-1.5 pr-2 text-xs font-bold text-zinc-500 transition-colors group hover:text-zinc-950 sm:gap-2 sm:text-sm"
         >
           <ChevronLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
           Quay lại khóa học
@@ -278,21 +278,21 @@ export default function CourseDetailPage({ params }: PageProps) {
       </div>
 
       {/* Course Detail Hero Block */}
-      <div className={`relative bg-gradient-to-br ${colors.gradient} border border-zinc-100 rounded-3xl p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6 overflow-hidden`}>
-        <div className="space-y-3 z-10 max-w-3xl">
+      <div className={`relative flex flex-col items-start justify-between gap-5 overflow-hidden rounded-3xl border border-zinc-100 bg-gradient-to-br ${colors.gradient} p-5 shadow-sm sm:gap-6 sm:p-7 md:flex-row md:items-center md:p-8`}>
+        <div className="z-10 max-w-3xl space-y-3 sm:space-y-4">
           <span className={`${colors.bg} text-white font-extrabold px-3.5 py-1 text-[11px] rounded-lg tracking-wider uppercase block w-fit`}>
             JLPT {level}
           </span>
-          <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight leading-tight">
+          <h1 className="max-w-2xl text-[clamp(1.65rem,6vw,2rem)] font-extrabold leading-[1.12] tracking-tight text-zinc-900 md:text-3xl">
             {course.title}
           </h1>
-          <p className="text-zinc-500 text-sm leading-relaxed font-medium">
+          <p className="max-w-2xl text-[13px] font-medium leading-relaxed text-zinc-500 sm:text-sm">
             {course.description || "Khóa học được biên soạn có lộ trình chi tiết giúp học viên làm chủ kiến thức từ vựng hiệu quả."}
           </p>
         </div>
 
-        <div className="bg-white border border-zinc-100 p-4 rounded-2xl shadow-sm text-center min-w-[140px] flex-shrink-0 z-10">
-          <div className="flex items-center justify-center gap-1.5 text-zinc-400 mb-1">
+        <div className="z-10 flex w-fit min-w-[124px] flex-col items-center rounded-2xl border border-zinc-100 bg-white px-4 py-3 text-center shadow-sm md:min-w-[140px] md:p-5">
+          <div className="mb-0.5 flex items-center justify-center gap-1.5 text-zinc-400 md:mb-1">
             <FileText size={14} />
             <span className="text-[10px] font-extrabold uppercase tracking-wider">Bài học</span>
           </div>
@@ -306,12 +306,12 @@ export default function CourseDetailPage({ params }: PageProps) {
       </div>
 
       {/* Lessons Roadmap / Learning Path Section */}
-      <div className="bg-white border border-zinc-100 rounded-[32px] p-6 md:p-12 shadow-sm space-y-8">
+      <div className="space-y-6 rounded-3xl border border-zinc-100 bg-white p-4 shadow-sm sm:space-y-8 sm:p-6 md:rounded-[32px] md:p-12">
         <div>
-          <h2 className="text-xl font-bold text-zinc-900 font-sans tracking-tight">
+          <h2 className="font-sans text-lg font-bold tracking-tight text-zinc-900 sm:text-xl">
             Lộ trình học tập (Roadmap)
           </h2>
-          <p className="text-zinc-400 text-xs mt-1 font-semibold">
+          <p className="mt-1 max-w-xl text-[11px] font-semibold leading-relaxed text-zinc-400 sm:text-xs">
             Bấm vào từng bài học để xem thông tin chi tiết và bắt đầu học.
           </p>
         </div>
@@ -321,10 +321,10 @@ export default function CourseDetailPage({ params }: PageProps) {
             Khóa học này hiện chưa có bài học nào được tạo.
           </div>
         ) : (
-          /* Duolingo style zigzag roadmap track with CURVED SVG PATH and 160px Spacing */
-          <div className="flex flex-col items-center py-8 relative">
+          /* Duolingo style zigzag roadmap track with a curved SVG path */
+          <div className="relative flex flex-col items-center py-5 sm:py-8">
             <div 
-              className="relative w-[320px] mx-auto select-none"
+              className="relative mx-auto w-full max-w-[320px] select-none"
               style={{ height: `${(sortedLessons.length - 1) * spacing + 80}px` }}
             >
               {/* SVG Curved Paths */}
@@ -365,19 +365,30 @@ export default function CourseDetailPage({ params }: PageProps) {
                 const isHovered = hoveredLessonId === lesson.id;
                 const isVisible = isSelected || isHovered;
                 const circleStyles = getCircleStyles(status);
+                const tooltipSide = idx % 3 === 0 ? "left" : idx % 3 === 1 ? "right" : "center";
+                const tooltipPosition = tooltipSide === "left"
+                  ? "left-0 translate-x-0"
+                  : tooltipSide === "right"
+                    ? "right-0 translate-x-0"
+                    : "left-1/2 -translate-x-1/2";
+                const pointerPosition = tooltipSide === "left"
+                  ? "left-1/4"
+                  : tooltipSide === "right"
+                    ? "left-3/4"
+                    : "left-1/2";
 
                 return (
                   <div 
                     key={lesson.id} 
                     className={`absolute -translate-x-1/2 -translate-y-1/2 transition-all duration-200 ${isVisible ? "z-30" : "z-10"}`}
-                    style={{ left: `${pt.x}px`, top: `${pt.y}px` }}
+                    style={{ left: `${(pt.x / 320) * 100}%`, top: `${pt.y}px` }}
                     onMouseEnter={() => setHoveredLessonId(lesson.id)}
                     onMouseLeave={() => setHoveredLessonId(null)}
                   >
                     {/* Node Circle Button */}
                     <button
                       onClick={() => setSelectedLessonId(isSelected ? null : lesson.id)}
-                      className={`w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center cursor-pointer transition-all duration-150 transform hover:scale-105 active:scale-95 ${circleStyles.container}`}
+                      className={`flex h-14 w-14 transform cursor-pointer items-center justify-center rounded-full transition-all duration-150 hover:scale-105 active:scale-95 sm:h-16 sm:w-16 md:h-20 md:w-20 ${circleStyles.container}`}
                     >
                       {status === "completed" && <Check size={28} strokeWidth={3} className={circleStyles.iconColor} />}
                       {status === "active" && <BookOpen size={26} strokeWidth={2.5} className={circleStyles.iconColor} />}
@@ -386,10 +397,10 @@ export default function CourseDetailPage({ params }: PageProps) {
 
                     {/* Tooltip Balloon */}
                     {isVisible && (
-                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-4 z-20 w-64 bg-white border border-zinc-100 rounded-2xl p-4 shadow-xl text-center animate-scale-up">
+                      <div className={`absolute top-full z-20 mt-3 w-[min(14rem,calc(100vw-3rem))] rounded-2xl border border-zinc-100 bg-white p-3.5 text-center shadow-xl animate-scale-up sm:mt-4 sm:w-64 sm:p-4 ${tooltipPosition}`}>
                         {/* Triangle pointer pointing up */}
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-white" />
-                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[9px] border-l-transparent border-r-[9px] border-r-transparent border-b-[9px] border-b-zinc-100 -z-10" />
+                        <div className={`absolute bottom-full -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-white ${pointerPosition}`} />
+                        <div className={`absolute bottom-full -z-10 -translate-x-1/2 w-0 h-0 border-l-[9px] border-l-transparent border-r-[9px] border-r-transparent border-b-[9px] border-b-zinc-100 ${pointerPosition}`} />
 
                         <span className={`text-[10px] font-extrabold uppercase tracking-wider block mb-1 ${status === "locked" ? "text-zinc-400" : colors.text}`}>
                           Bài học {idx + 1}
