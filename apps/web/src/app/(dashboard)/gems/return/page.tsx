@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { CheckCircle2, XCircle, Loader2, Gem, ArrowRight, Home } from "lucide-react";
 import Link from "next/link";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useLanguage } from "@/shared/i18n/language";
 
 type TransactionStatus = "LOADING" | "SUCCESS" | "FAILED" | "CANCELLED";
 
@@ -17,6 +18,7 @@ interface TransactionData {
 }
 
 function ReturnContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const cancel = searchParams.get("cancel");
   
@@ -88,9 +90,9 @@ function ReturnContent() {
               <div className="w-20 h-20 bg-zinc-50 rounded-full flex items-center justify-center mb-6">
                 <Loader2 size={32} className="text-[#b7152b] animate-spin" />
               </div>
-              <h1 className="text-2xl font-black text-zinc-900 mb-2">Verifying Payment...</h1>
+              <h1 className="text-2xl font-black text-zinc-900 mb-2">{t("payment.verifying")}</h1>
               <p className="text-zinc-500 text-sm mb-8">
-                Please wait while we confirm your transaction with the payment gateway.
+                {t("payment.verifyHint")}
               </p>
             </>
           )}
@@ -100,14 +102,14 @@ function ReturnContent() {
               <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mb-6 shadow-inner shadow-emerald-100">
                 <CheckCircle2 size={40} className="text-emerald-500" />
               </div>
-              <h1 className="text-2xl font-black text-zinc-900 mb-2">Payment Successful!</h1>
+              <h1 className="text-2xl font-black text-zinc-900 mb-2">{t("payment.success")}</h1>
               <p className="text-zinc-500 text-sm mb-6">
-                Thank you for your purchase. Your account has been credited with:
+                {t("payment.thankYou")}
               </p>
               
               {txData && (
                 <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4 w-full mb-8 flex items-center justify-between">
-                  <span className="font-bold text-zinc-600">Added to Wallet</span>
+                  <span className="font-bold text-zinc-600">{t("payment.addedWallet")}</span>
                   <div className="flex items-center gap-1.5 text-xl font-black text-zinc-900">
                     +{txData.total_gem} <Gem size={20} className="text-[#b7152b] fill-[#b7152b]/10" />
                   </div>
@@ -118,7 +120,7 @@ function ReturnContent() {
                 href="/wallet/recharge-gems"
                 className="w-full bg-[#b7152b] hover:bg-rose-700 text-white font-bold text-sm py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-200 transition-all duration-300 hover:scale-[1.02]"
               >
-                Return to Wallet <ArrowRight size={16} />
+                {t("payment.returnWallet")} <ArrowRight size={16} />
               </Link>
             </>
           )}
@@ -128,15 +130,15 @@ function ReturnContent() {
               <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mb-6 shadow-inner shadow-amber-100">
                 <XCircle size={40} className="text-amber-500" />
               </div>
-              <h1 className="text-2xl font-black text-zinc-900 mb-2">Payment Cancelled</h1>
+              <h1 className="text-2xl font-black text-zinc-900 mb-2">{t("payment.cancelled")}</h1>
               <p className="text-zinc-500 text-sm mb-8">
-                You have cancelled the payment process. No charges were made.
+                {t("payment.cancelHint")}
               </p>
               <Link 
                 href="/wallet/recharge-gems"
                 className="w-full bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-sm py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-zinc-200 transition-all duration-300 hover:scale-[1.02]"
               >
-                Try Again <ArrowRight size={16} />
+                {t("payment.tryAgain")} <ArrowRight size={16} />
               </Link>
             </>
           )}
@@ -146,22 +148,22 @@ function ReturnContent() {
               <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-6 shadow-inner shadow-rose-100">
                 <XCircle size={40} className="text-rose-500" />
               </div>
-              <h1 className="text-2xl font-black text-zinc-900 mb-2">Payment Failed</h1>
+              <h1 className="text-2xl font-black text-zinc-900 mb-2">{t("payment.failed")}</h1>
               <p className="text-zinc-500 text-sm mb-8">
-                We couldn&apos;t process your transaction. Please check your payment method and try again.
+                {t("payment.failedHint")}
               </p>
               <div className="flex flex-col gap-3 w-full">
                 <Link 
                   href="/wallet/recharge-gems"
                   className="w-full bg-[#b7152b] hover:bg-rose-700 text-white font-bold text-sm py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-200 transition-all duration-300 hover:scale-[1.02]"
                 >
-                  Try Again <ArrowRight size={16} />
+                  {t("payment.tryAgain")} <ArrowRight size={16} />
                 </Link>
                 <Link 
                   href="/home"
                   className="w-full bg-zinc-50 hover:bg-zinc-100 text-zinc-600 font-bold text-sm py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all duration-300"
                 >
-                  <Home size={16} /> Back to Home
+                  <Home size={16} /> {t("payment.backHome")}
                 </Link>
               </div>
             </>

@@ -11,8 +11,8 @@ const supportEmail = "REPLACE_WITH_SUPPORT_EMAIL";
 export default function PrivacyPolicyPage() {
   return (
     <LegalDocument
-      title="Privacy Policy"
-      description="This policy explains how KujiLingo handles information when you use our Japanese learning website and services."
+      documentType="privacy"
+      supportEmail={supportEmail}
       sections={[
         {
           title: "Who we are and scope",

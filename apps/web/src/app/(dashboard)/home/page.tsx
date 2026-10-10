@@ -16,6 +16,7 @@ import {
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { Button } from "@/shared/components/ui/Button";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface DashboardData {
   streak: {
@@ -41,6 +42,7 @@ interface DashboardData {
 
 export default function HomePage() {
   const { user } = useAuthStore();
+  const { t } = useLanguage();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -119,7 +121,7 @@ export default function HomePage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-400 font-semibold">Đang tải trang tổng quan của bạn...</span>
+        <span className="text-sm text-zinc-400 font-semibold">{t("home.loading")}</span>
       </div>
     );
   }
@@ -168,32 +170,32 @@ export default function HomePage() {
   const strokeDashoffset = circumference - (dailyGoalPercent / 100) * circumference;
 
   return (
-    <div className="space-y-8 animate-fade-in-up">
+    <div className="space-y-6 animate-fade-in-up sm:space-y-7">
       {/* Greetings Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-extrabold text-zinc-900 tracking-tight">
-          Chào mừng quay lại, {displayName}!
+          {t("home.welcome")}, {displayName}!
         </h1>
         <p className="text-zinc-500 text-sm md:text-base mt-1">
-          Hãy tiếp tục hành trình học tiếng Nhật của bạn hôm nay.
+          {t("home.subtitle")}
         </p>
       </div>
 
-      <div className="grid grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-4 sm:gap-5">
         {/* LEFT COLUMN: Main Learning Flow (8 cols) */}
-        <div className="col-span-12 lg:col-span-8 space-y-6">
+        <div className="col-span-12 space-y-5 lg:col-span-8">
           {/* Continue Learning Course Card */}
           {dashboardData?.continue_learning ? (
-            <div className="bg-white border border-zinc-100 rounded-3xl p-6 md:p-8 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="relative flex flex-col items-start justify-between gap-5 overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm transition-shadow md:flex-row md:items-center md:p-6">
               {/* Background watermark icon */}
               <div className="absolute right-0 bottom-0 translate-x-8 translate-y-8 text-zinc-50/70 pointer-events-none -z-10">
                 <Trophy size={180} strokeWidth={1} />
               </div>
 
-              <div className="space-y-4 max-w-lg">
+              <div className="max-w-lg space-y-3.5">
                 <div className="flex items-center gap-2.5">
                   <span className="px-3.5 py-1 rounded-full text-[10px] font-extrabold bg-[#b7152b]/5 text-[#b7152b] uppercase tracking-wider">
-                    {dashboardData.continue_learning.reason === "in_progress" ? "ĐANG HỌC" : "BÀI TIẾP THEO"}
+                    {dashboardData.continue_learning.reason === "in_progress" ? t("home.currentlyLearning") : t("home.nextLesson")}
                   </span>
                   <span className="text-xs font-bold text-zinc-400">
                     {dashboardData.continue_learning.course_title}
@@ -205,19 +207,19 @@ export default function HomePage() {
                     {dashboardData.continue_learning.lesson_title}
                   </h2>
                   <p className="text-zinc-500 text-sm leading-relaxed">
-                    Tiếp tục học các từ vựng mới và củng cố các kỹ năng tiếng Nhật của bạn ngay bây giờ.
+                    {t("home.continueDescription")}
                   </p>
                 </div>
 
                 {/* Progress based on vocabulary studied in this lesson */}
-                <div className="space-y-1.5 w-64">
+                <div className="w-full max-w-64 space-y-1.5">
                   <div className="flex justify-between text-xs font-bold text-zinc-400">
-                    <span>Tiến độ bài học</span>
+                    <span>{t("home.lessonProgress")}</span>
                     <span className="text-[#b7152b]">{dashboardData.continue_learning.lesson_progress_percent}%</span>
                   </div>
                   <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-[#b7152b] to-[#e02424] rounded-full transition-all duration-500"
+                      className="h-full rounded-full bg-[#b7152b] transition-[width] duration-500"
                       style={{ width: `${dashboardData.continue_learning.lesson_progress_percent}%` }}
                     />
                   </div>
@@ -226,36 +228,36 @@ export default function HomePage() {
 
               <Button 
                 onClick={() => router.push(`/lessons/${dashboardData.continue_learning?.lesson_id}`)}
-                className="h-12 px-6 bg-gradient-to-r from-[#b7152b] to-[#9b1c1c] hover:from-[#9b1c1c] hover:to-[#7f1d1d] text-white font-bold rounded-2xl shadow-lg shadow-red-500/10 shrink-0 flex items-center gap-2 group w-full md:w-auto justify-center"
+                className="flex h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#b7152b] px-5 font-bold text-white transition-colors hover:bg-[#a01226] group md:w-auto"
               >
-                Tiếp tục học
+                {t("home.continueLesson")}
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
           ) : (
             // Fallback if no course is active
-            <div className="bg-white border border-zinc-100 rounded-3xl p-8 shadow-sm text-center space-y-4">
+            <div className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-6 text-center shadow-sm">
               <div className="w-16 h-16 bg-red-50 text-[#b7152b] rounded-full flex items-center justify-center mx-auto">
                 <BookOpen size={28} />
               </div>
-              <h3 className="text-xl font-bold text-zinc-900">Bắt đầu học ngay hôm nay!</h3>
+              <h3 className="text-xl font-bold text-zinc-900">{t("home.startToday")}</h3>
               <p className="text-zinc-500 text-sm max-w-sm mx-auto leading-relaxed">
-                Bạn chưa kích hoạt khóa học nào. Hãy đăng ký một khóa học N5 - N1 để bắt đầu học tập.
+                {t("home.noActiveCourse")}
               </p>
               <Button onClick={() => router.push("/courses")} className="h-11 px-6 mx-auto">
-                Xem danh sách khóa học
+                {t("home.browseCourses")}
               </Button>
             </div>
           )}
 
           {/* Quick Stats Summary Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             {/* Review Due Card */}
-            <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[160px] relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="group relative flex min-h-[148px] flex-col justify-between overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <h3 className="font-bold text-zinc-900 text-base">Đến lịch ôn tập</h3>
-                  <p className="text-zinc-400 text-xs">Củng cố trí nhớ dài hạn của bạn.</p>
+                  <h3 className="font-bold text-zinc-900 text-base">{t("home.reviewDue")}</h3>
+                  <p className="text-zinc-400 text-xs">{t("home.reviewHint")}</p>
                 </div>
                 <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center">
                   <Layers size={18} />
@@ -264,7 +266,7 @@ export default function HomePage() {
 
               <div className="flex justify-between items-end mt-4">
                 <span className="text-2xl font-black text-zinc-900">
-                  {dashboardData?.srs_due_count ?? 0} <span className="text-xs font-bold text-zinc-400">thẻ từ</span>
+                  {dashboardData?.srs_due_count ?? 0} <span className="text-xs font-bold text-zinc-400">{t("home.wordCards")}</span>
                 </span>
                 
                 <button 
@@ -283,11 +285,11 @@ export default function HomePage() {
             </div>
 
             {/* Daily Practice Card */}
-            <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[160px] relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="group relative flex min-h-[148px] flex-col justify-between overflow-hidden rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <h3 className="font-bold text-zinc-900 text-base">Luyện tập hàng ngày</h3>
-                  <p className="text-zinc-400 text-xs">Các bài tập nhanh để rèn luyện phản xạ.</p>
+                  <h3 className="font-bold text-zinc-900 text-base">{t("home.dailyPractice")}</h3>
+                  <p className="text-zinc-400 text-xs">{t("home.dailyPracticeHint")}</p>
                 </div>
                 <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                   <CheckCircle2 size={18} />
@@ -296,7 +298,7 @@ export default function HomePage() {
 
               <div className="flex justify-between items-end mt-4">
                 <span className="px-3.5 py-1.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 uppercase tracking-wider">
-                  Khuyên dùng
+                  {t("home.recommended")}
                 </span>
                 
                 <button 
@@ -317,13 +319,13 @@ export default function HomePage() {
         </div>
 
         {/* RIGHT COLUMN: Gamification & Streak (4 cols) */}
-        <div className="col-span-12 lg:col-span-4 space-y-6">
+        <div className="col-span-12 space-y-5 lg:col-span-4">
           {/* Current Streak Card */}
           {dashboardData && (
-            <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm space-y-4">
+            <div className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm sm:p-6">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <h3 className="font-bold text-zinc-900 text-base">Chuỗi liên tục</h3>
+                  <h3 className="font-bold text-zinc-900 text-base">{t("home.streak")}</h3>
                   <p className="text-[10px] font-bold text-amber-600">
                     {dashboardData.streak.is_at_risk 
                       ? "🔥 Nguy hiểm! Hãy online học ngay hôm nay để bảo vệ chuỗi."
@@ -337,7 +339,7 @@ export default function HomePage() {
               </div>
 
               <div className="text-3xl font-black text-zinc-950">
-                {dashboardData.streak.current_streak_days} <span className="text-sm font-bold text-zinc-400">ngày</span>
+                {dashboardData.streak.current_streak_days} <span className="text-sm font-bold text-zinc-400">{t("home.days")}</span>
               </div>
 
               {/* Weekly Calendar */}
@@ -366,9 +368,9 @@ export default function HomePage() {
 
           {/* Daily Goal Progress Card */}
           {dashboardData && (
-            <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm space-y-4">
+            <div className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm sm:p-6">
               <div className="flex justify-between items-center">
-                <h3 className="font-bold text-zinc-900 text-base">Mục tiêu hàng ngày</h3>
+                <h3 className="font-bold text-zinc-900 text-base">{t("home.dailyGoal")}</h3>
                 <span className="px-2.5 py-1 text-[10px] font-extrabold bg-rose-50 text-[#b7152b] rounded-full uppercase tracking-wider">
                   {dailyGoalPercent}%
                 </span>
@@ -423,11 +425,11 @@ export default function HomePage() {
           )}
 
           {/* Recent Achievements Card */}
-          <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="space-y-4 rounded-2xl border border-zinc-200/80 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex justify-between items-center">
-              <h3 className="font-bold text-zinc-900 text-base">Thành tích</h3>
+              <h3 className="font-bold text-zinc-900 text-base">{t("home.achievements")}</h3>
               <Link href="/achievements" className="text-xs font-bold text-[#b7152b] hover:underline">
-                Xem tất cả
+                {t("home.viewAll")}
               </Link>
             </div>
 
@@ -444,7 +446,7 @@ export default function HomePage() {
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-zinc-400">Chưa có thành tích nào gần đây.</p>
+                <p className="text-xs text-zinc-400">{t("home.noAchievements")}</p>
               )}
             </div>
           </div>

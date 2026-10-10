@@ -9,6 +9,7 @@ import {
   Flame, Globe, Flag, TrendingUp, BookOpen, Target, 
   Edit3, Settings as SettingsIcon, Package, User, Loader2, Star
 } from "lucide-react";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface UserStats {
   level: number;
@@ -21,6 +22,8 @@ interface UserStats {
 
 export default function ProfilePage() {
   const { user } = useAuthStore();
+  const { t, language } = useLanguage();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
   const [stats, setStats] = useState<UserStats | null>(null);
   const [rank, setRank] = useState<number | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,7 +31,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "Trang cá nhân | KujiLingo";
+    document.title = `${t("profile.title")} | KujiLingo`;
     
     const fetchData = async () => {
       try {
@@ -57,19 +60,19 @@ export default function ProfilePage() {
     if (user) {
       fetchData();
     }
-  }, [user]);
+  }, [user, t]);
 
   if (!user || loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-500 font-semibold">Đang tải hồ sơ...</span>
+        <span className="text-sm text-zinc-500 font-semibold">{t("profile.loading")}</span>
       </div>
     );
   }
 
   const isPremium = user.is_premium;
-  const targetJLPT = user.jlpt_target_level || "Chưa chọn";
+  const targetJLPT = user.jlpt_target_level || t("profile.noTarget");
 
   return (
     <div className="w-full space-y-6 animate-fade-in-up pb-10">
@@ -117,13 +120,13 @@ export default function ProfilePage() {
               <Link href="/collection">
                 <button className="h-10 px-5 flex items-center gap-2 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-full text-xs font-bold text-zinc-700 transition-colors shadow-sm cursor-pointer">
                   <Package size={14} />
-                  <span className="hidden sm:inline">Túi đồ</span>
+                  <span className="hidden sm:inline">{t("profile.inventory")}</span>
                 </button>
               </Link>
               <Link href="/profile/edit">
                 <button className="h-10 px-5 flex items-center gap-2 bg-white hover:bg-zinc-50 border border-zinc-200 rounded-full text-xs font-bold text-zinc-700 transition-colors shadow-sm cursor-pointer">
                   <Edit3 size={14} />
-                  <span className="hidden sm:inline">Sửa hồ sơ</span>
+                  <span className="hidden sm:inline">{t("profile.edit")}</span>
                 </button>
               </Link>
               <Link href="/settings">
@@ -142,7 +145,7 @@ export default function ProfilePage() {
                 <h1 className="text-2xl sm:text-3xl font-black text-zinc-950">{user.display_name}</h1>
                 <span className={`self-center px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center gap-1 ${isPremium ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-zinc-100 text-zinc-500 border border-zinc-200"}`}>
                   {isPremium ? <Star size={9} className="fill-amber-500 text-amber-500" /> : null}
-                  {isPremium ? "Pro Member" : "Free Plan"}
+                  {isPremium ? t("premium.membership") : t("wallet.freePlan")}
                 </span>
               </div>
               
@@ -151,7 +154,7 @@ export default function ProfilePage() {
                 <span className="hidden sm:inline-block text-zinc-300">•</span>
                 <span className="text-emerald-600 flex items-center justify-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Hoạt động
+                  {t("profile.active")}
                 </span>
               </div>
             </div>
@@ -165,9 +168,9 @@ export default function ProfilePage() {
                   <Flame size={16} className="fill-amber-500/10 text-amber-500" />
                 </div>
                 <div className="text-left">
-                  <span className="text-[10px] font-black text-amber-600/90 uppercase tracking-wider block">Chuỗi học</span>
+                  <span className="text-[10px] font-black text-amber-600/90 uppercase tracking-wider block">{t("profile.streak")}</span>
                   <span className="text-sm font-extrabold text-zinc-900 leading-tight block mt-0.5">
-                    {stats?.streak || 0} Ngày
+                    {(stats?.streak || 0).toLocaleString(locale)} {t("home.days")}
                   </span>
                 </div>
               </div>
@@ -178,9 +181,9 @@ export default function ProfilePage() {
                   <Globe size={16} className="text-indigo-500" />
                 </div>
                 <div className="text-left">
-                  <span className="text-[10px] font-black text-indigo-600/90 uppercase tracking-wider block">Xếp hạng</span>
+                  <span className="text-[10px] font-black text-indigo-600/90 uppercase tracking-wider block">{t("profile.rank")}</span>
                   <span className="text-sm font-extrabold text-zinc-900 leading-tight block mt-0.5">
-                    {rank ? `#${rank} Global` : "Chưa có"}
+                    {rank ? t("profile.globalRank").replace("{rank}", rank.toLocaleString(locale)) : t("profile.unranked")}
                   </span>
                 </div>
               </div>
@@ -191,7 +194,7 @@ export default function ProfilePage() {
                   <Flag size={16} className="text-emerald-500" />
                 </div>
                 <div className="text-left">
-                  <span className="text-[10px] font-black text-emerald-600/90 uppercase tracking-wider block">Mục tiêu</span>
+                  <span className="text-[10px] font-black text-emerald-600/90 uppercase tracking-wider block">{t("profile.goal")}</span>
                   <span className="text-sm font-extrabold text-zinc-900 leading-tight block mt-0.5">
                     {targetJLPT}
                   </span>
@@ -208,7 +211,7 @@ export default function ProfilePage() {
       {/* Learning Overview Section */}
       <div className="space-y-4">
         <h2 className="text-lg font-black text-zinc-900 flex items-center gap-2 pl-2">
-          Tổng quan học tập
+          {t("profile.learningOverview")}
         </h2>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
@@ -219,7 +222,7 @@ export default function ProfilePage() {
               <TrendingUp size={20} />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-zinc-400 block mb-0.5">Tổng điểm EXP</span>
+              <span className="text-[10px] font-bold text-zinc-400 block mb-0.5">{t("profile.totalExp")}</span>
               <span className="text-lg font-black text-zinc-950 leading-none block">
                 {stats?.exp ? (stats.exp >= 1000 ? `${(stats.exp / 1000).toFixed(1)}k` : stats.exp) : "0"}
               </span>
@@ -232,7 +235,7 @@ export default function ProfilePage() {
               <Target size={20} />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-zinc-400 block mb-0.5">Tỷ lệ chính xác</span>
+              <span className="text-[10px] font-bold text-zinc-400 block mb-0.5">{t("profile.accuracy")}</span>
               <span className="text-lg font-black text-zinc-950 leading-none block">
                 {stats?.accuracy_percent ? `${stats.accuracy_percent}%` : "0%"}
               </span>
@@ -245,9 +248,9 @@ export default function ProfilePage() {
               <BookOpen size={20} />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-zinc-400 block mb-0.5">Từ vựng đã thuộc</span>
+              <span className="text-[10px] font-bold text-zinc-400 block mb-0.5">{t("profile.mastered")}</span>
               <span className="text-lg font-black text-zinc-950 leading-none block">
-                {stats?.total_mastered?.toLocaleString() || "0"}
+                {stats?.total_mastered?.toLocaleString(locale) || "0"}
               </span>
             </div>
           </div>
@@ -258,9 +261,9 @@ export default function ProfilePage() {
               <BookOpen size={20} />
             </div>
             <div>
-              <span className="text-[10px] font-bold text-zinc-400 block mb-0.5">Tổng số lượt ôn tập</span>
+              <span className="text-[10px] font-bold text-zinc-400 block mb-0.5">{t("profile.reviews")}</span>
               <span className="text-lg font-black text-zinc-950 leading-none block">
-                {stats?.total_reviews?.toLocaleString() || "0"}
+                {stats?.total_reviews?.toLocaleString(locale) || "0"}
               </span>
             </div>
           </div>

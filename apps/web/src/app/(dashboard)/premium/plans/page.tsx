@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface PurchaseErrorResponse {
   error?: {
@@ -19,28 +20,33 @@ export default function PremiumPlansPage() {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("yearly");
   const [purchasing, setPurchasing] = useState<"monthly" | "yearly" | null>(null);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
+  const [needsRecharge, setNeedsRecharge] = useState(false);
   const router = useRouter();
   const updateUser = useAuthStore((state) => state.updateUser);
+  const { language, t } = useLanguage();
+  const formatNumber = (value: number) => new Intl.NumberFormat(language === "vi" ? "vi-VN" : "en-US").format(value);
 
   const purchasePlan = async (plan: "monthly" | "yearly") => {
     setPurchasing(plan);
     setPurchaseError(null);
+    setNeedsRecharge(false);
     try {
       const response = await axiosClient.post("/api/v1/premium/purchase", { plan });
       if (response.data?.success) {
         updateUser({ is_premium: true });
         router.push("/courses");
       } else {
-        setPurchaseError("Could not complete the purchase. Please try again.");
+        setPurchaseError(t("plans.purchaseError"));
       }
     } catch (error: unknown) {
       const apiError = axios.isAxiosError<PurchaseErrorResponse>(error)
         ? error.response?.data?.error
         : undefined;
       if (apiError?.code === "INSUFFICIENT_GEMS") {
-        setPurchaseError("You do not have enough Gems. Recharge your wallet to continue.");
+        setPurchaseError(t("plans.insufficientGems"));
+        setNeedsRecharge(true);
       } else {
-        setPurchaseError(apiError?.message || "Could not complete the purchase. Please try again.");
+        setPurchaseError(t("plans.purchaseError"));
       }
     } finally {
       setPurchasing(null);
@@ -53,10 +59,10 @@ export default function PremiumPlansPage() {
       {/* Header */}
       <div className="text-center max-w-2xl mx-auto mb-12">
         <h1 className="text-4xl lg:text-5xl font-black text-zinc-900 tracking-tight mb-4">
-          Master Japanese Faster
+          {t("plans.title")}
         </h1>
         <p className="text-zinc-500 font-medium text-lg leading-relaxed">
-          Unlock unlimited practice, remove ads, and access exclusive JLPT resources tailored to your proficiency level.
+          {t("plans.description")}
         </p>
       </div>
 
@@ -69,7 +75,7 @@ export default function PremiumPlansPage() {
               billingCycle === "monthly" ? "text-white" : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            Monthly
+            {t("plans.monthly")}
           </button>
           <button
             onClick={() => setBillingCycle("yearly")}
@@ -77,7 +83,7 @@ export default function PremiumPlansPage() {
               billingCycle === "yearly" ? "text-white" : "text-zinc-500 hover:text-zinc-900"
             }`}
           >
-            Yearly
+            {t("plans.yearly")}
           </button>
           
           {/* Animated background pill */}
@@ -90,7 +96,7 @@ export default function PremiumPlansPage() {
         
         {/* Save Badge */}
         <div className="absolute -top-4 -right-12 bg-rose-200 text-[#b7152b] text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wider rotate-[15deg] shadow-sm border border-rose-300">
-          Save 35%
+          {t("plans.save")}
         </div>
       </div>
 
@@ -100,80 +106,80 @@ export default function PremiumPlansPage() {
         {/* Free Plan */}
         <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm flex flex-col h-full hover:shadow-lg transition-all">
           <div className="mb-6">
-            <h3 className="text-xl font-bold text-zinc-900 mb-2">Free</h3>
+            <h3 className="text-xl font-bold text-zinc-900 mb-2">{t("plans.free")}</h3>
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-black text-zinc-900">0 Gem</span>
-              <span className="text-zinc-400 font-medium">/mãi mãi</span>
+              <span className="text-4xl font-black text-zinc-900">{formatNumber(0)} {t("plans.gemUnit")}</span>
+              <span className="text-zinc-400 font-medium">{t("plans.forever")}</span>
             </div>
-            <p className="text-sm text-zinc-500 mt-2">Basic access for casual learners.</p>
+            <p className="text-sm text-zinc-500 mt-2">{t("plans.freeDescription")}</p>
           </div>
           
           <div className="flex-1 space-y-4 mb-8">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-              <span className="text-zinc-700 font-medium text-sm">Basic JLPT N5 Vocabulary</span>
+              <span className="text-zinc-700 font-medium text-sm">{t("plans.basicVocab")}</span>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
-              <span className="text-zinc-700 font-medium text-sm">Daily Streak Tracking</span>
+              <span className="text-zinc-700 font-medium text-sm">{t("plans.streakTracking")}</span>
             </div>
             <div className="flex items-start gap-3 opacity-50">
               <XCircle className="w-5 h-5 text-zinc-400 shrink-0" />
-              <span className="text-zinc-400 font-medium text-sm">Ad-supported experience</span>
+              <span className="text-zinc-400 font-medium text-sm">{t("plans.adSupported")}</span>
             </div>
             <div className="flex items-start gap-3 opacity-50">
               <XCircle className="w-5 h-5 text-zinc-400 shrink-0" />
-              <span className="text-zinc-400 font-medium text-sm">Limited Daily Hearts</span>
+              <span className="text-zinc-400 font-medium text-sm">{t("plans.dailyHearts")}</span>
             </div>
           </div>
           
           <button className="w-full py-4 rounded-2xl bg-zinc-50 text-zinc-400 font-bold cursor-not-allowed">
-            Current Plan
+            {t("plans.currentPlan")}
           </button>
         </div>
 
         {/* Yearly Pro (Highlighted) */}
         <div className="bg-white p-8 rounded-[2.5rem] border-2 border-[#b7152b] shadow-2xl shadow-red-100 flex flex-col h-full transform md:-translate-y-4 relative">
           <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#b7152b] text-white text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-md">
-            ★ Best Value
+            ★ {t("plans.bestValue")}
           </div>
           
           <div className="mb-6 mt-2">
-            <h3 className="text-xl font-bold text-[#b7152b] mb-2">Yearly Pro</h3>
+            <h3 className="text-xl font-bold text-[#b7152b] mb-2">{t("plans.yearlyPro")}</h3>
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-black text-zinc-900">1.990 Gem</span>
-              <span className="text-zinc-400 font-medium">/năm</span>
+              <span className="text-4xl font-black text-zinc-900">{formatNumber(1990)} {t("plans.gemUnit")}</span>
+              <span className="text-zinc-400 font-medium">{t("plans.perYear")}</span>
             </div>
             <p className="text-sm text-zinc-500 mt-2">
-              Thanh toán hàng năm. Chỉ khoảng <strong className="text-zinc-700">165 Gem/tháng</strong>.
+              {t("plans.yearlyPriceHint")} <strong className="text-zinc-700">{formatNumber(165)} {t("plans.perMonth")}</strong>.
             </p>
           </div>
           
           <div className="flex-1 space-y-4 mb-8">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-[#b7152b] shrink-0" />
-              <span className="text-zinc-800 font-bold text-sm">Unlimited Everything</span>
+              <span className="text-zinc-800 font-bold text-sm">{t("plans.unlimited")}</span>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-[#b7152b] shrink-0" />
-              <span className="text-zinc-700 font-medium text-sm">Zero Ads, Zero Interruptions</span>
+              <span className="text-zinc-700 font-medium text-sm">{t("plans.noAds")}</span>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-[#b7152b] shrink-0" />
-              <span className="text-zinc-700 font-medium text-sm">Advanced JLPT N3–N1 Content</span>
+              <span className="text-zinc-700 font-medium text-sm">{t("plans.advancedJlpt")}</span>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-[#b7152b] shrink-0" />
-              <span className="text-zinc-700 font-medium text-sm">Offline Mode & Downloads</span>
+              <span className="text-zinc-700 font-medium text-sm">{t("plans.offline")}</span>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-[#b7152b] shrink-0" />
-              <span className="text-zinc-700 font-medium text-sm">Premium Profile Cosmetics</span>
+              <span className="text-zinc-700 font-medium text-sm">{t("plans.cosmetics")}</span>
             </div>
           </div>
           
           <button onClick={() => purchasePlan("yearly")} disabled={purchasing !== null} className="w-full py-4 rounded-2xl bg-[#b7152b] hover:bg-rose-700 disabled:opacity-60 text-white font-bold transition-colors flex items-center justify-center gap-2 shadow-lg shadow-red-200">
-            {purchasing === "yearly" ? "Processing…" : "Upgrade Now"}
+            {purchasing === "yearly" ? t("plans.processing") : t("plans.upgrade")}
             <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -181,35 +187,35 @@ export default function PremiumPlansPage() {
         {/* Monthly Pro */}
         <div className="bg-white p-8 rounded-[2.5rem] border border-zinc-100 shadow-sm flex flex-col h-full hover:shadow-lg transition-all">
           <div className="mb-6">
-            <h3 className="text-xl font-bold text-zinc-900 mb-2">Monthly Pro</h3>
+            <h3 className="text-xl font-bold text-zinc-900 mb-2">{t("plans.monthlyPro")}</h3>
             <div className="flex items-baseline gap-1">
-              <span className="text-4xl font-black text-zinc-900">199 Gem</span>
-              <span className="text-zinc-400 font-medium">/tháng</span>
+              <span className="text-4xl font-black text-zinc-900">{formatNumber(199)} {t("plans.gemUnit")}</span>
+              <span className="text-zinc-400 font-medium">{t("plans.monthlyUnit")}</span>
             </div>
-            <p className="text-sm text-zinc-500 mt-2">Flexible monthly gem subscription.</p>
+            <p className="text-sm text-zinc-500 mt-2">{t("plans.monthlyDescription")}</p>
           </div>
           
           <div className="flex-1 space-y-4 mb-8">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-zinc-800 shrink-0" />
-              <span className="text-zinc-700 font-medium text-sm">Unlimited Practice</span>
+              <span className="text-zinc-700 font-medium text-sm">{t("plans.practice")}</span>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-zinc-800 shrink-0" />
-              <span className="text-zinc-700 font-medium text-sm">Ad-free Experience</span>
+              <span className="text-zinc-700 font-medium text-sm">{t("plans.noAds")}</span>
             </div>
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-zinc-800 shrink-0" />
-              <span className="text-zinc-700 font-medium text-sm">All JLPT Levels</span>
+              <span className="text-zinc-700 font-medium text-sm">{t("plans.allJlpt")}</span>
             </div>
             <div className="flex items-start gap-3 opacity-50">
               <XCircle className="w-5 h-5 text-zinc-400 shrink-0" />
-              <span className="text-zinc-400 font-medium text-sm">No Premium Cosmetics</span>
+              <span className="text-zinc-400 font-medium text-sm">{t("plans.noCosmetics")}</span>
             </div>
           </div>
           
           <button onClick={() => purchasePlan("monthly")} disabled={purchasing !== null} className="w-full py-4 rounded-2xl bg-zinc-50 hover:bg-zinc-100 disabled:opacity-60 text-zinc-700 font-bold transition-colors">
-            {purchasing === "monthly" ? "Processing…" : "Choose Monthly"}
+            {purchasing === "monthly" ? t("plans.processing") : t("plans.chooseMonthly")}
           </button>
         </div>
 
@@ -218,13 +224,13 @@ export default function PremiumPlansPage() {
       {purchaseError && (
         <div role="alert" className="mt-6 text-center text-sm font-semibold text-red-700">
           {purchaseError}{" "}
-          {purchaseError.includes("Recharge") && <Link className="underline" href="/wallet/recharge-gems">Recharge Gems</Link>}
+          {needsRecharge && <Link className="underline" href="/wallet/recharge-gems">{t("plans.recharge")}</Link>}
         </div>
       )}
       
       <div className="mt-12">
          <Link href="/premium" className="text-zinc-400 hover:text-zinc-700 font-medium text-sm underline underline-offset-4">
-           Return to features
+           {t("plans.return")}
          </Link>
       </div>
 

@@ -41,6 +41,7 @@ import Link from "next/link";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { convertHiraganaToRomaji } from "@/shared/utils/romaji";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface Folder {
   id: string;
@@ -88,6 +89,7 @@ interface DictSearchResult {
 }
 
 export default function MyWordsPage() {
+  const { t } = useLanguage();
   const { accessToken } = useAuthStore();
   const [folders, setFolders] = useState<Folder[]>([]);
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
@@ -141,7 +143,7 @@ export default function MyWordsPage() {
 
   // Custom Confirm Modal
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [confirmTitle, setConfirmTitle] = useState("Xác nhận");
+  const [confirmTitle, setConfirmTitle] = useState(t("words.confirm"));
   const [confirmMessage, setConfirmMessage] = useState("");
   const [onConfirmCallback, setOnConfirmCallback] = useState<(() => void) | null>(null);
 
@@ -187,11 +189,11 @@ export default function MyWordsPage() {
       }
     } catch (err) {
       console.error("Error fetching folders:", err);
-      showToast("Không thể tải danh sách thư mục.");
+      showToast(t("words.folderListLoadError"));
     } finally {
       setFoldersLoading(false);
     }
-  }, [selectedFolderId]);
+  }, [selectedFolderId, t]);
 
   // 2. Fetch contents of selected folder
   const fetchFolderContents = useCallback(async (folderId: string) => {
@@ -204,11 +206,11 @@ export default function MyWordsPage() {
       }
     } catch (err) {
       console.error("Error fetching folder contents:", err);
-      showToast("Không thể tải nội dung thư mục.");
+      showToast(t("words.folderContentsLoadError"));
     } finally {
       setContentsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (accessToken) {
@@ -249,7 +251,7 @@ export default function MyWordsPage() {
         icon: folderIconName,
       });
       if (response.data && response.data.success) {
-        showToast("Tạo thư mục thành công.");
+        showToast(t("words.folderCreateSuccess"));
         setIsCreateFolderOpen(false);
         setFolderName("");
         
@@ -260,7 +262,7 @@ export default function MyWordsPage() {
       }
     } catch (err) {
       console.error("Error creating folder:", err);
-      showToast("Không thể tạo thư mục.");
+      showToast(t("words.folderCreateError"));
     }
   };
 
@@ -276,7 +278,7 @@ export default function MyWordsPage() {
         icon: folderIconName,
       });
       if (response.data && response.data.success) {
-        showToast("Cập nhật thư mục thành công.");
+        showToast(t("words.folderUpdateSuccess"));
         setIsEditFolderOpen(false);
         setFolderToEdit(null);
         setFolderName("");
@@ -284,19 +286,19 @@ export default function MyWordsPage() {
       }
     } catch (err) {
       console.error("Error updating folder:", err);
-      showToast("Không thể cập nhật thư mục.");
+      showToast(t("words.folderUpdateError"));
     }
   };
 
   const handleDeleteFolder = (folderId: string) => {
     showConfirm(
-      "Xóa thư mục",
-      "Bạn có chắc chắn muốn xóa thư mục này? Toàn bộ liên kết từ vựng trong thư mục sẽ bị xóa.",
+      t("words.folderDeleteConfirmTitle"),
+      t("words.folderDeleteConfirm"),
       async () => {
         try {
           const response = await axiosClient.delete(`/folders/${folderId}`);
           if (response.data && response.data.success) {
-            showToast("Xóa thư mục thành công.");
+            showToast(t("words.folderDeleteSuccess"));
             setIsEditFolderOpen(false);
             setFolderToEdit(null);
             
@@ -309,7 +311,7 @@ export default function MyWordsPage() {
           }
         } catch (err) {
           console.error("Error deleting folder:", err);
-          showToast("Không thể xóa thư mục.");
+          showToast(t("words.folderDeleteError"));
         }
       }
     );
@@ -327,7 +329,7 @@ export default function MyWordsPage() {
       }
     } catch (err) {
       console.error("Error searching dictionary:", err);
-      showToast("Không thể tìm kiếm từ vựng hệ thống.");
+      showToast(t("words.systemSearchError"));
     } finally {
       setDictSearchLoading(false);
     }
@@ -342,7 +344,7 @@ export default function MyWordsPage() {
         vocabulary_id: vocabId,
       });
       if (response.data && response.data.success) {
-        showToast("Đã thêm từ vựng hệ thống vào thư mục.");
+        showToast(t("words.systemWordAdded"));
         fetchFolderContents(selectedFolderId);
         fetchFolders(); // Update counts
       }
@@ -355,7 +357,7 @@ export default function MyWordsPage() {
         }
       }
       console.error("Error adding system vocab:", err);
-      showToast("Không thể thêm từ vựng.");
+      showToast(t("words.addWordError"));
     } finally {
       setActionProcessing(prev => ({ ...prev, [vocabId]: false }));
     }
@@ -366,7 +368,7 @@ export default function MyWordsPage() {
     e.preventDefault();
     if (!selectedFolderId) return;
     if (!customWordKanji.trim() || !customWordMeaning.trim()) {
-      showToast("Vui lòng điền đầy đủ Từ vựng và Ý nghĩa.");
+      showToast(t("words.requiredFields"));
       return;
     }
 
@@ -389,7 +391,7 @@ export default function MyWordsPage() {
         });
 
         if (linkResponse.data && linkResponse.data.success) {
-          showToast("Đã lưu từ vựng tự biên soạn vào thư mục.");
+          showToast(t("words.customWordSaved"));
           // Clear inputs
           setCustomWordKanji("");
           setCustomWordHiragana("");
@@ -404,15 +406,15 @@ export default function MyWordsPage() {
       }
     } catch (err) {
       console.error("Error creating custom word:", err);
-      showToast("Không thể lưu từ vựng.");
+      showToast(t("words.customWordSaveError"));
     }
   };
 
   const handleRemoveWord = (wordId: string, isUserVocab: boolean) => {
     if (!selectedFolderId) return;
     showConfirm(
-      "Bỏ lưu từ vựng",
-      "Bạn có chắc chắn muốn bỏ lưu từ vựng này khỏi thư mục?",
+      t("words.removeWordConfirmTitle"),
+      t("words.removeWordConfirm"),
       async () => {
         try {
           const endpoint = isUserVocab 
@@ -421,13 +423,13 @@ export default function MyWordsPage() {
             
           const response = await axiosClient.delete(endpoint);
           if (response.data && response.data.success) {
-            showToast("Đã xóa từ vựng khỏi thư mục.");
+            showToast(t("words.removeWordSuccess"));
             fetchFolderContents(selectedFolderId);
             fetchFolders(); // Update counts
           }
         } catch (err) {
           console.error("Error removing word:", err);
-          showToast("Không thể xóa từ vựng khỏi thư mục.");
+          showToast(t("words.removeWordError"));
         }
       }
     );
@@ -456,7 +458,7 @@ export default function MyWordsPage() {
         await axiosClient.post(url, { vocabulary_id: vocabId });
       }
 
-      showToast(isCurrentFav ? "Đã bỏ yêu thích." : "Đã thêm vào yêu thích.");
+      showToast(isCurrentFav ? t("words.favoriteRemoved") : t("words.favoriteAdded"));
       
       // Update local state
       if (folderContents) {
@@ -475,7 +477,7 @@ export default function MyWordsPage() {
         const axiosErr = err as { response?: { status: number } };
         // If adding (POST) but already favorited in DB, treat as success
         if (!isCurrentFav && axiosErr.response?.status === 409) {
-          showToast("Đã thêm vào yêu thích.");
+          showToast(t("words.favoriteAdded"));
           if (folderContents) {
             setFolderContents({
               ...folderContents,
@@ -491,7 +493,7 @@ export default function MyWordsPage() {
         }
         // If removing (DELETE) but already removed in DB (404), treat as success
         if (isCurrentFav && axiosErr.response?.status === 404) {
-          showToast("Đã bỏ yêu thích.");
+          showToast(t("words.favoriteRemoved"));
           if (folderContents) {
             setFolderContents({
               ...folderContents,
@@ -522,7 +524,7 @@ export default function MyWordsPage() {
         note: editNoteText.trim(),
       });
       if (response.data && response.data.success) {
-        showToast("Cập nhật ghi chú thành công.");
+        showToast(t("words.noteUpdated"));
         setIsEditNoteOpen(false);
         setWordToEditNote(null);
         setEditNoteText("");
@@ -530,7 +532,7 @@ export default function MyWordsPage() {
       }
     } catch (err) {
       console.error("Error updating word note:", err);
-      showToast("Không thể cập nhật ghi chú.");
+      showToast(t("words.noteUpdateError"));
     }
   };
 
@@ -675,10 +677,10 @@ export default function MyWordsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-zinc-100 p-8 rounded-3xl shadow-sm">
         <div>
           <h1 className="text-3xl font-extrabold text-zinc-950 font-sans tracking-tight">
-            Vocabulary Management
+            {t("words.title")}
           </h1>
           <p className="text-zinc-500 text-sm mt-1.5 font-medium">
-            Organize and review your personal word lists.
+            {t("words.subtitle")}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -686,7 +688,7 @@ export default function MyWordsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
             <input
               type="text"
-              placeholder="Search folders..."
+              placeholder={t("words.searchFolders")}
               value={folderSearch}
               onChange={(e) => { setFolderSearch(e.target.value); setFolderPage(1); }}
               className="w-48 md:w-64 pl-10 pr-4 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] transition-all font-semibold"
@@ -694,7 +696,7 @@ export default function MyWordsPage() {
           </div>
           <Button onClick={openCreateFolderModal} className="w-auto h-10 px-4 flex items-center gap-2 text-sm">
             <Plus size={16} />
-            New Folder
+            {t("words.newFolder")}
           </Button>
         </div>
       </div>
@@ -702,7 +704,7 @@ export default function MyWordsPage() {
       {/* Folders Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-zinc-900 font-sans">My Folders</h2>
+          <h2 className="text-lg font-bold text-zinc-900 font-sans">{t("words.myFolders")}</h2>
           <div className="flex items-center gap-3">
             {/* View Switcher */}
             <div className="flex items-center gap-1 border border-zinc-200 p-1 rounded-xl bg-zinc-50">
@@ -725,17 +727,17 @@ export default function MyWordsPage() {
         {foldersLoading ? (
           <div className="flex flex-col items-center justify-center py-12 space-y-3 bg-white border border-zinc-100 rounded-3xl">
             <Loader2 className="w-8 h-8 animate-spin text-[#b7152b]" />
-            <span className="text-xs text-zinc-400 font-semibold">Đang tải thư mục...</span>
+            <span className="text-xs text-zinc-400 font-semibold">{t("words.loadingFolders")}</span>
           </div>
         ) : filteredFolders.length === 0 ? (
           <div className="bg-white border border-dashed border-zinc-200 rounded-3xl p-12 text-center flex flex-col items-center justify-center space-y-4">
             <FolderIcon className="text-zinc-300" size={48} />
             <div>
-              <h3 className="font-extrabold text-zinc-900">Không có thư mục nào</h3>
-              <p className="text-zinc-400 text-xs mt-1">Hãy tạo thư mục mới để bắt đầu lưu từ vựng.</p>
+              <h3 className="font-extrabold text-zinc-900">{t("words.noFolders")}</h3>
+              <p className="text-zinc-400 text-xs mt-1">{t("words.createFolderHint")}</p>
             </div>
             <Button onClick={openCreateFolderModal} className="w-auto h-9 text-xs px-4">
-              Tạo thư mục
+              {t("words.newFolder")}
             </Button>
           </div>
         ) : viewMode === "grid" ? (
@@ -754,7 +756,7 @@ export default function MyWordsPage() {
                         <Plus size={18} />
                       </div>
                       <span className="text-zinc-500 group-hover:text-zinc-800 text-xs font-bold mt-3 transition-colors">
-                        Tạo thư mục mới
+                        {t("words.createFolder")}
                       </span>
                     </div>
                   );
@@ -840,7 +842,7 @@ export default function MyWordsPage() {
                       className="flex-shrink-0 min-w-[180px] border-2 border-dashed border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50/50 rounded-2xl p-4 flex items-center justify-center gap-2 cursor-pointer transition-colors group"
                     >
                       <PlusCircle size={16} className="text-zinc-400 group-hover:text-zinc-600" />
-                      <span className="text-zinc-500 group-hover:text-zinc-800 text-xs font-bold">New Folder</span>
+                      <span className="text-zinc-500 group-hover:text-zinc-800 text-xs font-bold">{t("words.newFolder")}</span>
                     </div>
                   );
                 }
@@ -932,7 +934,7 @@ export default function MyWordsPage() {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
                 <input
                   type="text"
-                  placeholder="Filter word in folder..."
+                  placeholder={t("words.filter")}
                   value={wordSearch}
                   onChange={(e) => setWordSearch(e.target.value)}
                   className="w-48 pl-10 pr-4 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] transition-all font-semibold"
@@ -944,7 +946,7 @@ export default function MyWordsPage() {
                 className="w-auto h-10 px-4 rounded-xl border border-red-200 hover:bg-red-50/50 text-[#b7152b] text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap"
               >
                 <Plus size={14} />
-                Add Word
+                {t("words.addWord")}
               </button>
               {(() => {
                 const folderWordCount = folderContents ? folderContents.system_vocabularies.length + folderContents.user_vocabularies.length : 0;
@@ -958,11 +960,11 @@ export default function MyWordsPage() {
                         className="w-auto h-10 px-4 rounded-xl bg-zinc-200 text-zinc-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap cursor-not-allowed"
                       >
                         <Play size={14} fill="currentColor" />
-                        Learn
+                        {t("words.learn")}
                       </button>
                       {/* Custom Tooltip */}
                       <div className="absolute top-full right-0 mt-2.5 w-max max-w-[200px] bg-zinc-800 text-white text-[11px] px-3 py-2 rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 shadow-lg pointer-events-none text-center font-medium">
-                        Cần tối thiểu 10 từ vựng
+                        {t("words.learnMinimum")}
                         {/* Triangle pointer */}
                         <div className="absolute -top-1 right-6 w-2 h-2 bg-zinc-800 transform rotate-45 rounded-sm"></div>
                       </div>
@@ -976,7 +978,7 @@ export default function MyWordsPage() {
                     className="w-auto h-10 px-4 rounded-xl bg-[#b7152b] hover:bg-[#9a1022] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap"
                   >
                     <Play size={14} fill="currentColor" />
-                    Learn
+                    {t("words.learn")}
                   </Link>
                 );
               })()}
@@ -987,14 +989,14 @@ export default function MyWordsPage() {
           {contentsLoading ? (
             <div className="flex flex-col items-center justify-center py-20 space-y-3">
               <Loader2 className="w-8 h-8 animate-spin text-[#b7152b]" />
-              <span className="text-xs text-zinc-400 font-semibold">Đang tải từ vựng...</span>
+              <span className="text-xs text-zinc-400 font-semibold">{t("words.loadingVocabulary")}</span>
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="text-center py-16 bg-zinc-50/50 border border-zinc-100 rounded-2xl space-y-3">
               <FileText className="text-zinc-300 mx-auto" size={36} />
-              <p className="text-zinc-500 text-xs font-bold">Thư mục chưa có từ vựng nào.</p>
+              <p className="text-zinc-500 text-xs font-bold">{t("words.emptyFolder")}</p>
               <Button onClick={() => setIsAddWordOpen(true)} className="w-auto h-8 text-[11px] px-3 mx-auto flex items-center justify-center">
-                Thêm từ vựng ngay
+                {t("words.addVocabularyNow")}
               </Button>
             </div>
           ) : (
@@ -1003,10 +1005,10 @@ export default function MyWordsPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="border-b border-zinc-100 text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider">
-                      <th className="py-3 px-4">Word / Reading</th>
-                      <th className="py-3 px-4">Meaning</th>
-                      <th className="py-3 px-4">Note</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
+                      <th className="py-3 px-4">{t("words.wordReading")}</th>
+                      <th className="py-3 px-4">{t("words.meaning")}</th>
+                      <th className="py-3 px-4">{t("words.note")}</th>
+                      <th className="py-3 px-4 text-right">{t("words.actions")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1051,19 +1053,19 @@ export default function MyWordsPage() {
                           {word.isUserVocab ? (
                             <div className="flex items-center gap-1.5 group">
                               <span className="text-xs text-zinc-500 font-medium line-clamp-2">
-                                {word.note || <em className="text-zinc-300">Không có ghi chú</em>}
+                                {word.note || <em className="text-zinc-300">{t("words.noNote")}</em>}
                               </span>
                               <button
                                 onClick={() => openEditNoteModal(word as UserVocabulary)}
                                 className="opacity-0 group-hover:opacity-100 text-zinc-400 hover:text-zinc-700 p-0.5 rounded transition-opacity"
-                                title="Edit note"
+                                title={t("words.editNote")}
                               >
                                 <Edit3 size={11} />
                               </button>
                             </div>
                           ) : (
                             <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
-                              Platform Word
+                        {t("words.platformWord")}
                             </span>
                           )}
                         </td>
@@ -1089,7 +1091,7 @@ export default function MyWordsPage() {
                             <button
                               onClick={() => handleRemoveWord(word.id, word.isUserVocab)}
                               className="p-1.5 rounded-lg border border-zinc-200 text-zinc-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 transition-colors"
-                              title="Xóa khỏi thư mục"
+                              title={t("words.removeFromFolder")}
                             >
                               <Trash2 size={13} />
                             </button>
@@ -1152,7 +1154,7 @@ export default function MyWordsPage() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-6 border border-zinc-100 animate-scale-up">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-extrabold text-zinc-950 font-sans">Tạo Thư Mục Mới</h3>
+              <h3 className="text-lg font-extrabold text-zinc-950 font-sans">{t("words.createFolder")}</h3>
               <button 
                 onClick={() => setIsCreateFolderOpen(false)}
                 className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-50 hover:text-zinc-700"
@@ -1163,11 +1165,11 @@ export default function MyWordsPage() {
             
             <form onSubmit={handleCreateFolder} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Tên thư mục</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">{t("words.folderName")}</label>
                 <input
                   type="text"
                   required
-                  placeholder="Ví dụ: Từ vựng N3, Chuyến đi Nhật..."
+                  placeholder={`${t("words.example")}: ${t("words.folderExample")}`}
                   value={folderName}
                   onChange={(e) => setFolderName(e.target.value)}
                   className="w-full px-4 py-2.5 text-sm bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] font-semibold"
@@ -1176,7 +1178,7 @@ export default function MyWordsPage() {
 
               {/* Color options */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">Màu sắc hiển thị</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">{t("words.displayColor")}</label>
                 <div className="flex items-center gap-2.5 flex-wrap pt-1">
                   {["#b7152b", "#3b82f6", "#10b981", "#f59e0b", "#6366f1", "#ec4899", "#14b8a6"].map((color) => (
                     <button
@@ -1196,7 +1198,7 @@ export default function MyWordsPage() {
 
               {/* Icon options */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">Biểu tượng</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">{t("words.icon")}</label>
                 <div className="grid grid-cols-8 gap-2 pt-1 max-w-[320px]">
                   {[
                     "folder", "star", "heart", "book", 
@@ -1227,10 +1229,10 @@ export default function MyWordsPage() {
                   onClick={() => setIsCreateFolderOpen(false)}
                   className="px-4 py-2 border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-colors"
                 >
-                  Hủy
+                  {t("profileEdit.cancel")}
                 </button>
                 <Button type="submit" className="w-auto h-9 text-xs px-4">
-                  Tạo Thư Mục
+                  {t("words.createFolder")}
                 </Button>
               </div>
             </form>
@@ -1243,7 +1245,7 @@ export default function MyWordsPage() {
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-6 border border-zinc-100 animate-scale-up">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-extrabold text-zinc-950 font-sans">Chỉnh sửa thư mục</h3>
+              <h3 className="text-lg font-extrabold text-zinc-950 font-sans">{t("words.editFolder")}</h3>
               <button 
                 onClick={() => setIsEditFolderOpen(false)}
                 className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-50 hover:text-zinc-700"
@@ -1254,7 +1256,7 @@ export default function MyWordsPage() {
             
             <form onSubmit={handleUpdateFolder} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Tên thư mục</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider">{t("words.folderName")}</label>
                 <input
                   type="text"
                   required
@@ -1266,7 +1268,7 @@ export default function MyWordsPage() {
 
               {/* Color options */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">Màu sắc hiển thị</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">{t("words.displayColor")}</label>
                 <div className="flex items-center gap-2.5 flex-wrap pt-1">
                   {["#b7152b", "#3b82f6", "#10b981", "#f59e0b", "#6366f1", "#ec4899", "#14b8a6"].map((color) => (
                     <button
@@ -1286,7 +1288,7 @@ export default function MyWordsPage() {
 
               {/* Icon options */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">Biểu tượng</label>
+                <label className="text-xs font-bold text-zinc-400 uppercase tracking-wider block">{t("words.icon")}</label>
                 <div className="grid grid-cols-8 gap-2 pt-1 max-w-[320px]">
                   {[
                     "folder", "star", "heart", "book", 
@@ -1318,7 +1320,7 @@ export default function MyWordsPage() {
                   className="px-3 py-2 text-red-600 hover:bg-red-50 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors border border-transparent hover:border-red-100"
                 >
                   <Trash2 size={13} />
-                  Xóa thư mục
+                  {t("words.deleteFolder")}
                 </button>
                 
                 <div className="flex items-center gap-2">
@@ -1327,10 +1329,10 @@ export default function MyWordsPage() {
                     onClick={() => setIsEditFolderOpen(false)}
                     className="px-4 py-2 border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-colors"
                   >
-                    Hủy
+                    {t("profileEdit.cancel")}
                   </button>
                   <Button type="submit" className="w-auto h-9 text-xs px-4">
-                    Lưu thay đổi
+                    {t("words.saveChanges")}
                   </Button>
                 </div>
               </div>
@@ -1347,8 +1349,8 @@ export default function MyWordsPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
               <div>
-                <h3 className="text-lg font-extrabold text-zinc-950 font-sans">Thêm từ vựng vào thư mục</h3>
-                <p className="text-zinc-400 text-[11px] font-semibold mt-0.5">Thêm từ hệ thống hoặc tự soạn từ mới</p>
+                <h3 className="text-lg font-extrabold text-zinc-950 font-sans">{t("words.addVocabulary")}</h3>
+                <p className="text-zinc-400 text-[11px] font-semibold mt-0.5">{t("words.addVocabularyHint")}</p>
               </div>
               <button 
                 onClick={() => {
@@ -1372,7 +1374,7 @@ export default function MyWordsPage() {
                     : "border-transparent text-zinc-400 hover:text-zinc-600"
                 }`}
               >
-                Tra cứu hệ thống
+                {t("words.systemSearch")}
               </button>
               <button
                 onClick={() => setAddWordTab("custom")}
@@ -1382,7 +1384,7 @@ export default function MyWordsPage() {
                     : "border-transparent text-zinc-400 hover:text-zinc-600"
                 }`}
               >
-                Tự soạn từ mới
+                {t("words.customWord")}
               </button>
             </div>
 
@@ -1395,7 +1397,7 @@ export default function MyWordsPage() {
                     <input
                       type="text"
                       required
-                      placeholder="Tìm chữ Hán, Hiragana, hoặc Nghĩa..."
+                      placeholder={t("words.searchVocabulary")}
                       value={dictSearchQuery}
                       onChange={(e) => setDictSearchQuery(e.target.value)}
                       className="h-12 w-full rounded-full border border-zinc-200 bg-zinc-50 pl-11 pr-4 text-sm font-semibold text-zinc-800 placeholder:text-zinc-400 transition focus:border-[#b7152b] focus:outline-none focus:ring-4 focus:ring-[#b7152b]/10"
@@ -1406,7 +1408,7 @@ export default function MyWordsPage() {
                     disabled={dictSearchLoading}
                     className="h-12 w-auto shrink-0 rounded-full px-6 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    {dictSearchLoading ? <Loader2 size={16} className="animate-spin" /> : "Tìm kiếm"}
+                    {dictSearchLoading ? <Loader2 size={16} className="animate-spin" /> : t("dictionary.search")}
                   </Button>
                 </form>
 
@@ -1414,7 +1416,7 @@ export default function MyWordsPage() {
                 <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
                   {dictSearchResults.length === 0 ? (
                     <div className="text-center py-10 text-zinc-400 text-xs font-semibold">
-                      Chưa có kết quả tìm kiếm. Nhập từ khóa để tra cứu.
+                      {t("words.searchEmpty")}
                     </div>
                   ) : (
                     dictSearchResults.map((word) => (
@@ -1462,7 +1464,7 @@ export default function MyWordsPage() {
                                   ? "border-red-200 text-red-500 hover:bg-red-50" 
                                   : "border-zinc-200 text-[#b7152b] hover:bg-red-50"
                               } disabled:opacity-50 disabled:hover:bg-white`}
-                              title={isAlreadyAdded ? "Xóa khỏi thư mục" : "Lưu vào thư mục"}
+                              title={isAlreadyAdded ? t("words.deleteFolder") : t("words.addWord")}
                             >
                               {isProcessing ? (
                                 <Loader2 size={13} className="animate-spin" />
@@ -1486,11 +1488,11 @@ export default function MyWordsPage() {
               <form onSubmit={handleAddCustomWord} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Từ vựng (Kanji/Kana) *</label>
+                    <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">{t("words.vocabulary")}</label>
                     <input
                       type="text"
                       required
-                      placeholder="Ví dụ: 頑張る"
+                      placeholder={`${t("words.example")}: 頑張る`}
                       value={customWordKanji}
                       onChange={(e) => setCustomWordKanji(e.target.value)}
                       className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#b7152b] focus:border-[#b7152b] font-semibold"
@@ -1498,10 +1500,10 @@ export default function MyWordsPage() {
                   </div>
                   
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Cách đọc (Hiragana)</label>
+                    <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">{t("words.reading")}</label>
                     <input
                       type="text"
-                      placeholder="Ví dụ: がんばる"
+                      placeholder={`${t("words.example")}: がんばる`}
                       value={customWordHiragana}
                       onChange={(e) => setCustomWordHiragana(e.target.value)}
                       className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#b7152b] focus:border-[#b7152b] font-semibold"
@@ -1511,10 +1513,10 @@ export default function MyWordsPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Romaji</label>
+                    <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">{t("words.romaji")}</label>
                     <input
                       type="text"
-                      placeholder="Ví dụ: ganbaru"
+                      placeholder={`${t("words.example")}: ganbaru`}
                       value={customWordRomaji}
                       onChange={(e) => setCustomWordRomaji(e.target.value)}
                       className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#b7152b] focus:border-[#b7152b] font-semibold"
@@ -1522,11 +1524,11 @@ export default function MyWordsPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Ý nghĩa *</label>
+                    <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">{t("words.meaning")} *</label>
                     <input
                       type="text"
                       required
-                      placeholder="Ví dụ: cố gắng"
+                      placeholder={`${t("words.example")}: ${t("words.meaningExample")}`}
                       value={customWordMeaning}
                       onChange={(e) => setCustomWordMeaning(e.target.value)}
                       className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#b7152b] focus:border-[#b7152b] font-semibold"
@@ -1535,10 +1537,10 @@ export default function MyWordsPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Ghi chú cá nhân</label>
+                  <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">{t("words.personalNote")}</label>
                   <textarea
                     rows={3}
-                    placeholder="Lưu lại ngữ cảnh học, ví dụ câu, hoặc mẹo ghi nhớ..."
+                  placeholder={t("words.noteContextPlaceholder")}
                     value={customWordNote}
                     onChange={(e) => setCustomWordNote(e.target.value)}
                     className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-[#b7152b] focus:border-[#b7152b] font-semibold resize-none"
@@ -1551,10 +1553,10 @@ export default function MyWordsPage() {
                     onClick={() => setIsAddWordOpen(false)}
                     className="px-4 py-2 border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-colors"
                   >
-                    Hủy
+                    {t("profileEdit.cancel")}
                   </button>
                   <Button type="submit" className="w-auto h-9 text-xs px-4">
-                    Lưu từ vựng
+                    {t("words.saveWord")}
                   </Button>
                 </div>
               </form>
@@ -1569,7 +1571,7 @@ export default function MyWordsPage() {
           <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-6 border border-zinc-100 animate-scale-up">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-extrabold text-zinc-950 font-sans">Chỉnh sửa ghi chú</h3>
+                <h3 className="text-lg font-extrabold text-zinc-950 font-sans">{t("words.editNote")}</h3>
                 <p className="text-zinc-400 text-[11px] font-semibold mt-0.5">Từ vựng: {wordToEditNote.kanji}</p>
               </div>
               <button 
@@ -1582,10 +1584,10 @@ export default function MyWordsPage() {
             
             <form onSubmit={handleUpdateNote} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">Nội dung ghi chú</label>
+                <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">{t("words.noteContent")}</label>
                 <textarea
                   rows={4}
-                  placeholder="Điền ghi chú mới cho từ vựng..."
+                  placeholder={t("words.notePlaceholder")}
                   value={editNoteText}
                   onChange={(e) => setEditNoteText(e.target.value)}
                   className="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] font-semibold resize-none"
@@ -1598,10 +1600,10 @@ export default function MyWordsPage() {
                   onClick={() => setIsEditNoteOpen(false)}
                   className="px-4 py-2 border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-colors"
                 >
-                  Hủy
+                  {t("profileEdit.cancel")}
                 </button>
                 <Button type="submit" className="w-auto h-9 text-xs px-4">
-                  Cập nhật
+                  {t("words.update")}
                 </Button>
               </div>
             </form>
@@ -1627,14 +1629,14 @@ export default function MyWordsPage() {
                 onClick={() => setIsConfirmOpen(false)}
                 className="px-4 py-2 border border-zinc-200 text-zinc-700 text-[11px] font-bold rounded-xl hover:bg-zinc-50 transition-colors"
               >
-                Hủy
+                {t("profileEdit.cancel")}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmAction}
                 className="px-4 py-2 bg-[#b7152b] hover:bg-[#9a1022] text-white text-[11px] font-bold rounded-xl transition-all shadow-sm active:scale-95 cursor-pointer"
               >
-                Xác nhận
+                {t("words.confirm")}
               </button>
             </div>
           </div>

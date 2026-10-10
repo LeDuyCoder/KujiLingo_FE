@@ -15,6 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Button } from "@/shared/components/ui/Button";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface Vocabulary {
   id: string;
@@ -53,6 +54,8 @@ interface PageProps {
 }
 
 export default function TopicDetailPage({ params }: PageProps) {
+  const { t, language } = useLanguage();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
   const router = useRouter();
   const resolvedParams = use(params);
   const topicId = resolvedParams.id;
@@ -79,11 +82,11 @@ export default function TopicDetailPage({ params }: PageProps) {
         if (response.data && response.data.success) {
           setTopic(response.data.data);
         } else {
-          setError("Không thể tải thông tin chủ đề.");
+          setError(t("topic.loadError"));
         }
       } catch (err) {
         console.error("Error fetching topic detail:", err);
-        setError("Có lỗi xảy ra khi kết nối tới hệ thống.");
+        setError(t("topic.connectionError"));
       } finally {
         setLoading(false);
       }
@@ -92,7 +95,7 @@ export default function TopicDetailPage({ params }: PageProps) {
     if (topicId) {
       fetchTopicDetail();
     }
-  }, [topicId, refreshTrigger]);
+  }, [topicId, refreshTrigger, t]);
 
   const toggleFavorite = async (vocabId: string, currentFav: boolean) => {
     if (favoritingIds.has(vocabId)) return;
@@ -175,13 +178,13 @@ export default function TopicDetailPage({ params }: PageProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "MASTERED":
-        return { label: "Thành thạo", color: "bg-emerald-50 text-emerald-600 border-emerald-100" };
+        return { label: t("topic.statusMastered"), color: "bg-emerald-50 text-emerald-600 border-emerald-100" };
       case "REVIEWING":
-        return { label: "Đang ôn", color: "bg-amber-50 text-amber-600 border-amber-100" };
+        return { label: t("topic.statusReview"), color: "bg-amber-50 text-amber-600 border-amber-100" };
       case "LEARNING":
-        return { label: "Đang học", color: "bg-blue-50 text-blue-600 border-blue-100" };
+        return { label: t("topic.statusLearning"), color: "bg-blue-50 text-blue-600 border-blue-100" };
       default:
-        return { label: "Mới", color: "bg-zinc-50 text-zinc-500 border-zinc-100" };
+        return { label: t("topic.statusNew"), color: "bg-zinc-50 text-zinc-500 border-zinc-100" };
     }
   };
 
@@ -215,7 +218,7 @@ export default function TopicDetailPage({ params }: PageProps) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-400 font-semibold">Đang tải chủ đề...</span>
+        <span className="text-sm text-zinc-400 font-semibold">{t("topic.loading")}</span>
       </div>
     );
   }
@@ -226,10 +229,10 @@ export default function TopicDetailPage({ params }: PageProps) {
         <div className="w-16 h-16 bg-red-50 text-[#b7152b] rounded-full flex items-center justify-center mx-auto">
           <BookOpen size={32} />
         </div>
-        <h2 className="text-xl font-extrabold text-zinc-900">Không tìm thấy chủ đề</h2>
-        <p className="text-zinc-500 text-sm leading-relaxed">{error || "Chủ đề không khả dụng."}</p>
+        <h2 className="text-xl font-extrabold text-zinc-900">{t("topic.notFound")}</h2>
+        <p className="text-zinc-500 text-sm leading-relaxed">{error || t("topic.notAvailable")}</p>
         <Button onClick={() => router.back()} className="h-10 px-6 mx-auto">
-          Quay lại
+          {t("topic.back")}
         </Button>
       </div>
     );
@@ -251,7 +254,7 @@ export default function TopicDetailPage({ params }: PageProps) {
           className="flex items-center gap-2 text-zinc-500 hover:text-zinc-950 font-bold text-sm group transition-colors"
         >
           <ChevronLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
-          Quay lại danh sách chủ đề
+          {t("topic.backToTopics")}
         </button>
       </div>
 
@@ -260,13 +263,13 @@ export default function TopicDetailPage({ params }: PageProps) {
         <div className="space-y-3 z-10 max-w-3xl">
           <div className="flex items-center gap-2 text-[#b7152b]">
             <BookOpen size={16} />
-            <span className="text-[10px] font-extrabold uppercase tracking-wider">Chủ đề học tập</span>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">{t("topic.title")}</span>
           </div>
           <h1 className="text-3xl font-extrabold text-zinc-900 tracking-tight leading-tight">
-            {topic.title || "Chủ đề"}
+            {topic.title || t("topic.fallbackTitle")}
           </h1>
           <p className="text-zinc-500 text-sm leading-relaxed font-medium">
-            {topic.description || "Chủ đề bao gồm các từ vựng và ngữ pháp chọn lọc."}
+            {topic.description || t("topic.fallbackDescription")}
           </p>
         </div>
 
@@ -275,14 +278,14 @@ export default function TopicDetailPage({ params }: PageProps) {
             <div className="bg-white border border-zinc-100 p-4 rounded-2xl shadow-sm text-center min-w-[110px] flex-shrink-0">
               <div className="flex items-center justify-center gap-1 text-zinc-400 mb-1 whitespace-nowrap">
                 <FileText size={12} />
-                <span className="text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap">Từ vựng</span>
+                <span className="text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap">{t("topic.vocabulary")}</span>
               </div>
               <span className="text-2xl font-extrabold text-zinc-900">{topic.vocabularies.length}</span>
             </div>
             <div className="bg-white border border-zinc-100 p-4 rounded-2xl shadow-sm text-center min-w-[110px] flex-shrink-0">
               <div className="flex items-center justify-center gap-1 text-zinc-400 mb-1 whitespace-nowrap">
                 <Star size={12} />
-                <span className="text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap">Ngữ pháp</span>
+                <span className="text-[9px] font-extrabold uppercase tracking-wider whitespace-nowrap">{t("topic.grammar")}</span>
               </div>
               <span className="text-2xl font-extrabold text-zinc-900">{topic.grammar_points.length}</span>
             </div>
@@ -294,7 +297,7 @@ export default function TopicDetailPage({ params }: PageProps) {
               className="w-full sm:w-auto h-12 px-6 rounded-2xl bg-[#b7152b] hover:bg-[#961223] text-white font-bold text-sm shadow-lg shadow-rose-500/10 flex items-center justify-center gap-2 whitespace-nowrap flex-shrink-0"
             >
               <Play size={14} fill="currentColor" />
-              Bắt đầu học
+              {t("topic.startLearning")}
             </Button>
           )}
         </div>
@@ -312,7 +315,7 @@ export default function TopicDetailPage({ params }: PageProps) {
               : "text-zinc-400 hover:text-zinc-600"
           }`}
         >
-          Từ vựng ({topic.vocabularies.length})
+          {t("topic.vocabularyTab").replace("{count}", topic.vocabularies.length.toLocaleString(locale))}
         </button>
         <button
           onClick={() => setActiveTab("grammar")}
@@ -322,7 +325,7 @@ export default function TopicDetailPage({ params }: PageProps) {
               : "text-zinc-400 hover:text-zinc-600"
           }`}
         >
-          Ngữ pháp ({topic.grammar_points.length})
+          {t("topic.grammarTab").replace("{count}", topic.grammar_points.length.toLocaleString(locale))}
         </button>
       </div>
 
@@ -331,7 +334,7 @@ export default function TopicDetailPage({ params }: PageProps) {
         <div className="space-y-3">
           {topic.vocabularies.length === 0 ? (
             <div className="bg-white border border-dashed border-zinc-200 rounded-3xl p-12 text-center text-zinc-400">
-              Chủ đề này chưa có từ vựng nào.
+              {t("topic.emptyVocabulary")}
             </div>
           ) : (
             topic.vocabularies.map((vocab) => {
@@ -372,7 +375,7 @@ export default function TopicDetailPage({ params }: PageProps) {
                     </span>
                     <button
                       type="button"
-                      aria-label={`Play pronunciation for ${vocab.kanji || vocab.hiragana || "word"}`}
+                      aria-label={t("topic.playPronunciation").replace("{word}", vocab.kanji || vocab.hiragana || t("topic.fallbackTitle"))}
                       onClick={() => speakWord(vocab.kanji || vocab.hiragana || "")}
                       className="flex h-7 w-7 items-center justify-center rounded-lg border border-zinc-100 bg-zinc-50 text-zinc-500 transition-colors hover:bg-zinc-100"
                     >
@@ -380,7 +383,7 @@ export default function TopicDetailPage({ params }: PageProps) {
                     </button>
                     <button
                       type="button"
-                      aria-label={vocab.is_favorited ? "Remove from favorites" : "Add to favorites"}
+                      aria-label={vocab.is_favorited ? t("topic.removeFavorite") : t("topic.addFavorite")}
                       onClick={() => toggleFavorite(vocab.id, vocab.is_favorited)}
                       disabled={favoritingIds.has(vocab.id)}
                       className="flex h-7 w-7 items-center justify-center rounded-lg border border-zinc-100 bg-zinc-50 transition-colors hover:bg-red-50"
@@ -403,7 +406,7 @@ export default function TopicDetailPage({ params }: PageProps) {
         <div className="space-y-4">
           {topic.grammar_points.length === 0 ? (
             <div className="bg-white border border-dashed border-zinc-200 rounded-3xl p-12 text-center text-zinc-400">
-              Chủ đề này chưa có ngữ pháp nào.
+              {t("topic.emptyGrammar")}
             </div>
           ) : (
             topic.grammar_points.map((gp) => (
@@ -419,23 +422,23 @@ export default function TopicDetailPage({ params }: PageProps) {
                 </div>
                 {gp.structure && (
                   <div className="bg-zinc-50 border border-zinc-100 rounded-xl px-4 py-2.5">
-                    <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block mb-0.5">Cấu trúc</span>
+                    <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block mb-0.5">{t("topic.structure")}</span>
                     <span className="text-sm font-bold text-zinc-800">{gp.structure}</span>
                   </div>
                 )}
                 <div className="text-sm text-zinc-700 font-medium leading-relaxed">
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block mb-0.5">Ý nghĩa</span>
+                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block mb-0.5">{t("topic.meaning")}</span>
                   {gp.meaning_vi}
                 </div>
                 {gp.explanation && (
                   <div className="text-xs text-zinc-500 leading-relaxed">
-                    <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block mb-0.5">Giải thích</span>
+                    <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block mb-0.5">{t("topic.explanation")}</span>
                     {gp.explanation}
                   </div>
                 )}
                 {gp.usage && (
                   <div className="text-xs text-zinc-500 leading-relaxed">
-                    <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block mb-0.5">Cách sử dụng</span>
+                    <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block mb-0.5">{t("topic.usage")}</span>
                     {gp.usage}
                   </div>
                 )}
@@ -454,7 +457,7 @@ export default function TopicDetailPage({ params }: PageProps) {
             {/* Modal Header */}
             <div className="border-b border-zinc-100 px-6 py-4 flex items-center justify-between bg-zinc-50/50">
               <div className="space-y-1">
-                <span className="text-[10px] font-extrabold text-[#b7152b] uppercase tracking-wider">Học từ vựng</span>
+                <span className="text-[10px] font-extrabold text-[#b7152b] uppercase tracking-wider">{t("topic.learnVocabulary")}</span>
                 <h3 className="font-extrabold text-sm text-zinc-950 truncate max-w-[280px]">
                   {topic.title}
                 </h3>
@@ -474,7 +477,7 @@ export default function TopicDetailPage({ params }: PageProps) {
                   {/* Progress Indicators */}
                   <div className="w-full space-y-2">
                     <div className="flex justify-between items-center text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                      <span>Tiến độ</span>
+                          <span>{t("topic.progress")}</span>
                       <span>{currentCardIndex + 1} / {topic.vocabularies.length} từ</span>
                     </div>
                     <div className="w-full h-1.5 bg-zinc-100 rounded-full overflow-hidden">
@@ -501,8 +504,8 @@ export default function TopicDetailPage({ params }: PageProps) {
                         style={{ ...cardSideStyle, zIndex: isFlipped ? 0 : 2 }}
                       >
                         <div className="w-full flex justify-between items-center text-[9px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                          <span>Thẻ từ vựng</span>
-                          <span>Bấm để xem nghĩa</span>
+                          <span>{t("topic.flashcard")}</span>
+                          <span>{t("topic.tapMeaning")}</span>
                         </div>
                         <div className="text-center space-y-2">
                           <span 
@@ -531,8 +534,8 @@ export default function TopicDetailPage({ params }: PageProps) {
                         style={{ ...cardSideStyle, transform: "rotateY(180deg)", zIndex: isFlipped ? 2 : 0 }}
                       >
                         <div className="w-full flex justify-between items-center text-[9px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                          <span>Ý nghĩa & Cách đọc</span>
-                          <span>Bấm để lật lại</span>
+                          <span>{t("topic.meaningReading")}</span>
+                          <span>{t("topic.tapFlip")}</span>
                         </div>
                         <div className="text-center space-y-3">
                           <span 
@@ -577,13 +580,13 @@ export default function TopicDetailPage({ params }: PageProps) {
                       onClick={() => handleReviewSubmit(false)}
                       className="flex-1 h-11 rounded-xl bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 font-extrabold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
                     >
-                      ✕ Chưa thuộc
+                      ✕ {t("topic.reviewNotYet")}
                     </button>
                     <button
                       onClick={() => handleReviewSubmit(true)}
                       className="flex-1 h-11 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 font-extrabold text-xs transition-colors flex items-center justify-center gap-1.5 shadow-sm"
                     >
-                      ✓ Đã thuộc
+                      ✓ {t("topic.reviewMastered")}
                     </button>
                   </div>
                 </div>
@@ -594,21 +597,21 @@ export default function TopicDetailPage({ params }: PageProps) {
                     <Check size={40} strokeWidth={3} />
                   </div>
                   <div className="space-y-2">
-                    <h4 className="text-xl font-extrabold text-zinc-950">Học bài hoàn tất!</h4>
+                    <h4 className="text-xl font-extrabold text-zinc-950">{t("topic.lessonComplete")}</h4>
                     <p className="text-xs text-zinc-500 max-w-xs mx-auto leading-relaxed">
-                      Bạn đã hoàn thành việc ôn tập {topic.vocabularies.length} từ vựng thuộc chủ đề này.
+                      {t("topic.studiedSummary").replace("{count}", topic.vocabularies.length.toLocaleString(locale))}
                     </p>
                   </div>
                   <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4 w-full max-w-sm flex justify-around">
                     <div>
-                      <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Đã thuộc</span>
+                      <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("topic.mastered")}</span>
                       <span className="text-xl font-extrabold text-emerald-600">
                         {studyResults.filter(r => r.correct).length}
                       </span>
                     </div>
                     <div className="border-r border-zinc-200" />
                     <div>
-                      <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Chưa thuộc</span>
+                      <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("topic.notMastered")}</span>
                       <span className="text-xl font-extrabold text-rose-600">
                         {studyResults.filter(r => !r.correct).length}
                       </span>
@@ -618,7 +621,7 @@ export default function TopicDetailPage({ params }: PageProps) {
                     onClick={closePractice}
                     className="w-full max-w-sm h-11 rounded-xl bg-[#b7152b] hover:bg-[#961223] text-white font-bold text-xs shadow-md"
                   >
-                    Hoàn thành & Quay lại
+                    {t("topic.finishReturn")}
                   </Button>
                 </div>
               )}

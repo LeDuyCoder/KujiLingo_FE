@@ -4,8 +4,10 @@ import React from "react";
 import Link from "next/link";
 import { ShieldCheck, XCircle, Infinity, Ban, Gem, ArrowRight } from "lucide-react";
 import Image from "next/image";
+import { useLanguage } from "@/shared/i18n/language";
 
 export default function PremiumLandingPage() {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col gap-16 pb-12 w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
       
@@ -14,18 +16,18 @@ export default function PremiumLandingPage() {
         <div className="flex-1 space-y-8">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-red-100/50 text-[#b7152b] text-sm font-semibold border border-red-100">
             <span className="w-2 h-2 rounded-full bg-[#b7152b] animate-pulse" />
-            Pro Membership
+            {t("premium.membership")}
           </div>
           
           <h1 className="text-5xl lg:text-6xl font-black text-zinc-900 tracking-tight leading-[1.1]">
-            Unlock Your Full <br />
+            {t("premium.unlock")} <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#b7152b] to-rose-500">
-              Japanese Potential.
+              {t("premium.potential")}
             </span>
           </h1>
           
           <p className="text-lg text-zinc-600 max-w-xl leading-relaxed">
-            Accelerate your JLPT journey with unlimited access, premium gamification features, and priority tools designed for serious learners.
+            {t("premium.description")}
           </p>
           
           <div className="flex flex-wrap items-center gap-4 pt-2">
@@ -33,24 +35,24 @@ export default function PremiumLandingPage() {
               href="/premium/plans"
               className="inline-flex items-center justify-center px-8 py-4 rounded-2xl bg-[#b7152b] text-white font-bold text-lg hover:bg-rose-700 transition-all shadow-lg shadow-red-200 hover:-translate-y-1"
             >
-              Upgrade Now
+              {t("premium.upgrade")}
             </Link>
             <Link 
               href="/premium/plans"
               className="inline-flex items-center justify-center px-8 py-4 rounded-2xl bg-red-50 text-[#b7152b] font-bold text-lg hover:bg-red-100 transition-all"
             >
-              View Plans
+              {t("premium.plans")}
             </Link>
           </div>
           
           <div className="flex items-center gap-6 pt-4 text-sm font-medium text-zinc-500">
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-5 h-5 text-green-500" />
-              Secure Payment
+              {t("premium.secure")}
             </div>
             <div className="flex items-center gap-2">
               <XCircle className="w-5 h-5 text-red-400" />
-              Cancel Anytime
+              {t("premium.cancel")}
             </div>
           </div>
         </div>
@@ -88,9 +90,9 @@ export default function PremiumLandingPage() {
       {/* Features Section */}
       <section className="flex flex-col items-center justify-center space-y-12 mt-16">
         <div className="text-center space-y-4">
-          <h2 className="text-3xl font-black text-zinc-900 tracking-tight">Why Go Pro?</h2>
+          <h2 className="text-3xl font-black text-zinc-900 tracking-tight">{t("premium.why")}</h2>
           <p className="text-zinc-500 font-medium max-w-md mx-auto">
-            Experience KujiLingo without limits. Everything you need to master Japanese faster.
+            {t("premium.whyDescription")}
           </p>
         </div>
 
@@ -100,9 +102,9 @@ export default function PremiumLandingPage() {
             <div className="w-14 h-14 rounded-2xl bg-red-50 text-[#b7152b] flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-[#b7152b] group-hover:text-white transition-all duration-300">
               <Infinity className="w-7 h-7" />
             </div>
-            <h3 className="text-xl font-bold text-zinc-900 mb-3">Unlimited Learning</h3>
+            <h3 className="text-xl font-bold text-zinc-900 mb-3">{t("premium.unlimited")}</h3>
             <p className="text-zinc-500 leading-relaxed text-sm">
-              No hearts or energy limits. Study as much as you want, whenever you want.
+              {t("premium.unlimitedDescription")}
             </p>
           </div>
 
@@ -111,9 +113,9 @@ export default function PremiumLandingPage() {
             <div className="w-14 h-14 rounded-2xl bg-red-50 text-[#b7152b] flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-[#b7152b] group-hover:text-white transition-all duration-300">
               <Ban className="w-7 h-7" />
             </div>
-            <h3 className="text-xl font-bold text-zinc-900 mb-3">Ad-Free Experience</h3>
+            <h3 className="text-xl font-bold text-zinc-900 mb-3">{t("premium.adFree")}</h3>
             <p className="text-zinc-500 leading-relaxed text-sm">
-              Stay focused on your goals without any distracting advertisements.
+              {t("premium.adFreeDescription")}
             </p>
           </div>
 
@@ -122,9 +124,9 @@ export default function PremiumLandingPage() {
             <div className="w-14 h-14 rounded-2xl bg-red-50 text-[#b7152b] flex items-center justify-center mb-6 group-hover:scale-110 group-hover:bg-[#b7152b] group-hover:text-white transition-all duration-300">
               <Gem className="w-7 h-7" />
             </div>
-            <h3 className="text-xl font-bold text-zinc-900 mb-3">Premium Cosmetics</h3>
+            <h3 className="text-xl font-bold text-zinc-900 mb-3">{t("premium.cosmetics")}</h3>
             <p className="text-zinc-500 leading-relaxed text-sm">
-              Unlock exclusive avatars, profile themes, and badges to stand out.
+              {t("premium.cosmeticsDescription")}
             </p>
           </div>
         </div>
@@ -136,16 +138,16 @@ export default function PremiumLandingPage() {
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03]" />
           <div className="relative z-10 flex flex-col items-center justify-center">
             <h2 className="text-3xl lg:text-4xl font-black text-white mb-4">
-              Ready to become a Pro learner?
+              {t("premium.ready")}
             </h2>
             <p className="text-zinc-400 font-medium text-base mb-8 max-w-md mx-auto">
-              Join thousands of students mastering Japanese faster with KujiLingo Pro.
+              {t("premium.join")}
             </p>
             <Link 
               href="/premium/plans"
               className="inline-flex items-center gap-2 bg-[#b7152b] text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-rose-700 hover:scale-105 transition-all duration-300 shadow-xl shadow-red-900/50"
             >
-              Upgrade to Pro Today
+              {t("premium.upgradeToday")}
               <ArrowRight className="w-5 h-5" />
             </Link>
           </div>

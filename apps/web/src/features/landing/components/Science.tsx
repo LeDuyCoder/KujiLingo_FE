@@ -2,22 +2,23 @@
 
 import React from "react";
 import { Target, Timer, BarChart3 } from "lucide-react";
+import { useLanguage } from "@/shared/i18n/language";
 
 export const Science = () => {
+  const { t } = useLanguage();
   return (
     <section className="bg-zinc-50/50 py-20 lg:py-24 border-y border-zinc-100" id="methodology">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         {/* Header */}
         <div className="text-left mb-16">
           <div className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50/50 px-3.5 py-1 text-xs font-semibold tracking-wider text-[#b7152b] uppercase mb-4">
-            The Science
+            {t("landing.science")}
           </div>
           <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl mb-4">
-            Engineered for Retention.
+            {t("landing.scienceTitle")}
           </h2>
           <p className="text-lg text-zinc-500 max-w-2xl leading-relaxed">
-            We don&apos;t rely on passive reading. KujiLingo forces active recall through high-pressure 
-            scenarios, accelerating your brain&apos;s natural memorization pathways.
+            {t("landing.scienceDescription")}
           </p>
         </div>
 
@@ -29,10 +30,9 @@ export const Science = () => {
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-zinc-50 text-zinc-700 mb-6">
                 <Target size={22} className="text-zinc-600" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-900 mb-3">Adaptive SRS</h3>
+              <h3 className="text-lg font-bold text-zinc-900 mb-3">{t("landing.adaptiveSrs")}</h3>
               <p className="text-sm text-zinc-500 leading-relaxed mb-6">
-                Our Spaced Repetition System continuously maps your neural retention. Items you struggle 
-                with appear more frequently, while mastered vocabulary is tested precisely before you forget it.
+                {t("landing.adaptiveSrsDescription")}
               </p>
             </div>
             {/* Segmented Progress Bar */}
@@ -51,20 +51,19 @@ export const Science = () => {
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-zinc-50 text-zinc-700 mb-6">
                 <Timer size={22} className="text-zinc-600" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-900 mb-3">Time-Boxed Stress</h3>
+              <h3 className="text-lg font-bold text-zinc-900 mb-3">{t("landing.timePressure")}</h3>
               <p className="text-sm text-zinc-500 leading-relaxed mb-6">
-                Fluency isn&apos;t just knowing the answer; it&apos;s knowing it instantly. Introduce time constraints 
-                to move from translation to direct comprehension.
+                {t("landing.timePressureDescription")}
               </p>
             </div>
             {/* Large Stats Display */}
             <div className="mt-auto pt-4">
               <span className="text-xs font-bold tracking-widest text-zinc-400 uppercase block mb-1">
-                avg response
+                {t("landing.averageResponse")}
               </span>
               <div className="flex items-baseline gap-1">
                 <span className="text-3xl font-black tracking-tight text-zinc-900">1.2</span>
-                <span className="text-lg font-bold text-zinc-500">seconds</span>
+                <span className="text-lg font-bold text-zinc-500">{t("landing.seconds")}</span>
               </div>
             </div>
           </div>
@@ -75,10 +74,9 @@ export const Science = () => {
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-zinc-50 text-zinc-700 mb-6">
                 <BarChart3 size={22} className="text-zinc-600" />
               </div>
-              <h3 className="text-lg font-bold text-zinc-900 mb-3">Granular Analytics</h3>
+              <h3 className="text-lg font-bold text-zinc-900 mb-3">{t("landing.analytics")}</h3>
               <p className="text-sm text-zinc-500 leading-relaxed mb-6">
-                Track your progression with ruthless objectivity. Monitor your accuracy rates, retention 
-                decay curves, and reaction times per kanji characters.
+                {t("landing.analyticsDescription")}
               </p>
             </div>
             {/* Chart Simulation */}
@@ -95,10 +93,9 @@ export const Science = () => {
         {/* ELO Rating Dark Card (Matches Climb the Global Ranks) */}
         <div className="mt-8 rounded-3xl bg-zinc-950 text-white p-8 lg:p-10 shadow-lg border border-zinc-900 flex flex-col md:flex-row items-center justify-between gap-8 transition-transform duration-300 hover:scale-[1.005]">
           <div className="text-left max-w-xl">
-            <h3 className="text-2xl font-bold tracking-tight mb-3">Climb the Global Ranks</h3>
+            <h3 className="text-2xl font-bold tracking-tight mb-3">{t("landing.globalRanks")}</h3>
             <p className="text-zinc-400 text-sm leading-relaxed">
-              Your Elo rating reflects your true, battle-tested fluency. Watch your trajectory as you 
-              dominate the arena, gain ELO points, and climb the ranks from Bronze novice to Grandmaster.
+              {t("landing.globalRanksDescription")}
             </p>
           </div>
           {/* ELO Circle Progress SVG */}

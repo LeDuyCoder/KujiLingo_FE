@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans, M_PLUS_1p, Be_Vietnam_Pro } from "next/font/google";
 import "../shared/styles/globals.css";
+import { LanguageDocumentSync } from "../shared/i18n/LanguageDocumentSync";
 
 const notoSans = Noto_Sans({
   variable: "--font-noto-sans",
@@ -31,10 +32,13 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      lang="en"
+      lang="vi"
       className={`${notoSans.variable} ${mPlus1p.variable} ${beVietnamPro.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <LanguageDocumentSync />
+        {children}
+      </body>
     </html>
   );
 }

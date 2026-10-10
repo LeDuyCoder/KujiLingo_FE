@@ -9,6 +9,8 @@ interface User {
   is_premium: boolean;
   jlpt_target_level?: string;
   learning_goal_minutes?: number;
+  avatar_url?: string | null;
+  preferred_language?: "vi" | "en";
 }
 
 interface AuthState {
@@ -32,6 +34,11 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   setTokens: (accessToken: string | null, refreshToken: string | null) => void;
+  completeGoogleLogin: (session: {
+    access_token: string;
+    refresh_token: string;
+    user: User;
+  }) => void;
   updateUser: (data: Partial<User>) => void;
 }
 
@@ -157,6 +164,13 @@ export const useAuthStore = create<AuthState>()(
 
       clearError: () => set({ error: null }),
       setTokens: (accessToken, refreshToken) => set({ accessToken, refreshToken }),
+      completeGoogleLogin: (session) => set({
+        user: session.user,
+        accessToken: session.access_token,
+        refreshToken: session.refresh_token,
+        isLoading: false,
+        error: null,
+      }),
       updateUser: (data) => set((state) => ({
         user: state.user ? { ...state.user, ...data } : null
       })),

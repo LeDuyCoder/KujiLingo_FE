@@ -6,8 +6,10 @@ import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { useAuthStore } from "../stores/auth.store";
+import { useLanguage } from "@/shared/i18n/language";
 
 export const VerifyEmail = () => {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
@@ -29,7 +31,7 @@ export const VerifyEmail = () => {
       if (!token) {
         if (isMounted) {
           setStatus("error");
-          setErrorMessage("Không tìm thấy mã xác nhận (Token is missing). Vui lòng kiểm tra lại đường dẫn trong email của bạn.");
+          setErrorMessage(t("verify.missingToken"));
         }
         return;
       }
@@ -45,13 +47,13 @@ export const VerifyEmail = () => {
           setStatus("error");
           // Friendly error mapping based on backend code or message
           if (result.code === "TOKEN_ALREADY_USED") {
-            setErrorMessage("Mã xác nhận này đã được sử dụng. Tài khoản của bạn có thể đã được kích hoạt thành công từ trước.");
+            setErrorMessage(t("verify.alreadyUsed"));
           } else if (result.code === "TOKEN_EXPIRED") {
-            setErrorMessage("Mã xác nhận này đã hết hạn. Vui lòng yêu cầu gửi lại email xác nhận.");
+            setErrorMessage(t("verify.expired"));
           } else if (result.code === "TOKEN_NOT_FOUND") {
-            setErrorMessage("Mã xác nhận không hợp lệ hoặc không tồn tại.");
+            setErrorMessage(t("verify.invalid"));
           } else {
-            setErrorMessage(result.message || "Đã xảy ra lỗi trong quá trình xác nhận email. Vui lòng thử lại sau.");
+            setErrorMessage(t("verify.genericError"));
           }
         }
       }
@@ -62,14 +64,14 @@ export const VerifyEmail = () => {
     return () => {
       isMounted = false;
     };
-  }, [token, verifyEmail, router]);
+  }, [token, verifyEmail, router, t]);
 
   if (status === "loading") {
     return (
       <div className="flex flex-col items-center justify-center w-full max-w-[420px] px-4 animate-fade-in-up text-center">
         <div className="w-12 h-12 border-4 border-[#b7152b] border-t-transparent rounded-full animate-spin mb-6" />
-        <h2 className="text-2xl font-bold text-zinc-900 mb-2">Đang xác minh...</h2>
-        <p className="text-zinc-500 text-sm">Vui lòng chờ trong giây lát, chúng tôi đang kiểm tra mã xác nhận của bạn.</p>
+        <h2 className="text-2xl font-bold text-zinc-900 mb-2">{t("verify.loading")}</h2>
+        <p className="text-zinc-500 text-sm">{t("verify.loadingHint")}</p>
       </div>
     );
   }
@@ -82,7 +84,7 @@ export const VerifyEmail = () => {
       </div>
 
       <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 mb-3">
-        Xác minh thất bại
+        {t("verify.failed")}
       </h1>
 
       <p className="text-zinc-600 text-sm leading-relaxed mb-8 max-w-sm">
@@ -91,7 +93,7 @@ export const VerifyEmail = () => {
 
       <div className="w-full">
         <Link href="/login" className="w-full">
-          <Button className="w-full h-12">Trở về Đăng nhập</Button>
+          <Button className="w-full h-12">{t("verify.backLogin")}</Button>
         </Link>
       </div>
     </div>
