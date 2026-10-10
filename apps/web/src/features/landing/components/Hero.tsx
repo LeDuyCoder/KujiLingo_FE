@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useLanguage } from "@/shared/i18n/language";
 
 export const Hero = () => {
+  const { t } = useLanguage();
   const [progress, setProgress] = useState(70);
 
   // Countdown animation for live match card
@@ -30,39 +32,31 @@ export const Hero = () => {
             {/* Beta Tag */}
             <div className="inline-flex items-center gap-2 self-start rounded-full border border-red-100 bg-red-50/50 px-3.5 py-1 text-xs font-semibold tracking-wider text-[#b7152b] uppercase mb-6 animate-fade-in-up">
               <span className="h-1.5 w-1.5 rounded-full bg-[#b7152b] animate-pulse" />
-              Now in Open Beta
+              {t("landing.openBeta")}
             </div>
 
             {/* Headline */}
             <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 sm:text-5xl lg:text-6xl leading-[1.1] mb-6 animate-fade-in-up delay-100">
-              Fluency demands <br className="hidden sm:inline" />
-              <span className="inline-flex items-center gap-2 sm:gap-3 text-zinc-950 font-black">
-                <span className="inline-flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-red-50 text-[#b7152b]">
-                  🔥
-                </span>
-                Competitive
-              </span>{" "}
-              <br />
-              Discipline.
+              <span className="mr-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-red-50 text-[#b7152b] align-middle sm:h-10 sm:w-10">🔥</span>
+              {t("landing.headline")}
             </h1>
 
             {/* Subtitle */}
             <p className="text-lg text-zinc-600 leading-relaxed max-w-2xl mb-8 animate-fade-in-up delay-200">
-              The informational hub for the elite learning platform designed for JLPT mastery, 
-              powered by real-time PvP battles and spaced-repetition science.
+              {t("landing.heroDescription")}
             </p>
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 sm:items-center animate-fade-in-up delay-300">
               <Link href="/login">
                 <button className="flex h-14 w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-[#b7152b] text-white px-8 font-semibold text-base hover:bg-[#a01226] active:scale-[0.98] transition-all cursor-pointer shadow-lg shadow-red-100">
-                  Join the Elite
+                  {t("landing.join")}
                   <span className="text-lg">🛡️</span>
                 </button>
               </Link>
               <Link href="#methodology">
                 <button className="flex h-14 w-full sm:w-auto items-center justify-center rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 px-8 font-semibold text-base active:scale-[0.98] transition-all cursor-pointer">
-                  See how it works
+                  {t("landing.howItWorks")}
                 </button>
               </Link>
             </div>
@@ -76,7 +70,7 @@ export const Hero = () => {
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-red-500 animate-ping" />
                   <span className="text-xs font-bold tracking-widest text-zinc-400 uppercase">
-                    Live Match
+                    {t("landing.liveMatch")}
                   </span>
                 </div>
                 <div className="h-2 w-2 rounded-full bg-red-500" />
@@ -88,7 +82,7 @@ export const Hero = () => {
                   漢字
                 </span>
                 <span className="text-xs font-bold tracking-widest text-zinc-400 uppercase animate-pulse">
-                  Opponent Answering...
+                  {t("landing.opponentAnswering")}
                 </span>
               </div>
 

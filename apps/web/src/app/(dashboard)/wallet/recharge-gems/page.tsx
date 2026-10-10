@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useAppDialog } from "@/shared/components/ui/AppDialogProvider";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface GemPackage {
   id: string;
@@ -43,6 +45,9 @@ interface WalletHistory {
 
 
 export default function RechargeGemsPage() {
+  const { t, language } = useLanguage();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
+  const { alert } = useAppDialog();
   const { user } = useAuthStore();
   const [wallet, setWallet] = useState<{ coins: number; gems: number } | null>(null);
   const [packages, setPackages] = useState<GemPackage[]>([]);
@@ -100,7 +105,7 @@ export default function RechargeGemsPage() {
       }
     } catch (err) {
       console.error("Purchase failed:", err);
-      alert("Failed to initiate payment. Please try again.");
+      void alert({ title: t("wallet.paymentStartError"), description: "" });
     } finally {
       setIsPurchasing(false);
     }
@@ -111,18 +116,18 @@ export default function RechargeGemsPage() {
       
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs font-semibold text-zinc-500 mb-6">
-        <Link href="/home" className="hover:text-zinc-900 transition-colors">Home</Link>
+        <Link href="/home" className="hover:text-zinc-900 transition-colors">{t("wallet.home")}</Link>
         <ChevronRight size={14} className="text-zinc-300" />
-        <span>Wallet</span>
+        <span>{t("wallet.wallet")}</span>
         <ChevronRight size={14} className="text-zinc-300" />
-        <span className="text-[#b7152b]">Recharge Gems</span>
+        <span className="text-[#b7152b]">{t("wallet.recharge")}</span>
       </div>
 
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-black text-zinc-900 tracking-tight mb-2">Recharge Gems</h1>
+        <h1 className="text-2xl font-black text-zinc-900 tracking-tight mb-2">{t("wallet.recharge")}</h1>
         <p className="text-zinc-500 font-medium text-sm max-w-xl">
-          Purchase Gems to unlock premium cosmetics, avatars, backgrounds and frames.
+          {t("wallet.description")}
         </p>
       </div>
 
@@ -134,8 +139,8 @@ export default function RechargeGemsPage() {
             <Gem size={20} className="text-[#b7152b] fill-[#b7152b]/10" />
           </div>
           <div>
-            <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-0.5">Current Gems</div>
-            <div className="text-xl font-black text-zinc-900">{wallet?.gems.toLocaleString() || "0"}</div>
+            <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-0.5">{t("wallet.currentGems")}</div>
+            <div className="text-xl font-black text-zinc-900">{wallet?.gems.toLocaleString(locale) || "0"}</div>
           </div>
         </div>
         
@@ -145,18 +150,18 @@ export default function RechargeGemsPage() {
             <Coins size={20} className="text-amber-500 fill-amber-500/10" />
           </div>
           <div>
-            <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-0.5">Current Coins</div>
-            <div className="text-xl font-black text-zinc-900">{wallet?.coins.toLocaleString() || "0"}</div>
+            <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-0.5">{t("wallet.currentCoins")}</div>
+            <div className="text-xl font-black text-zinc-900">{wallet?.coins.toLocaleString(locale) || "0"}</div>
           </div>
         </div>
 
         {/* Status */}
         <div className="bg-white border border-zinc-100 rounded-2xl p-5 shadow-sm flex items-center justify-between">
           <div>
-             <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-1">Member Status</div>
+             <div className="text-[10px] font-black text-zinc-400 uppercase tracking-wider mb-1">{t("wallet.memberStatus")}</div>
              <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-rose-50 text-[#b7152b] text-sm font-bold rounded-full border border-rose-100 mt-1">
                <Award size={14} />
-               {user?.is_premium ? "Premium" : "Free Plan"}
+               {user?.is_premium ? t("wallet.premiumPlan") : t("wallet.freePlan")}
              </div>
           </div>
         </div>
@@ -169,13 +174,13 @@ export default function RechargeGemsPage() {
            
            <div className="relative z-10 text-white max-w-md">
              <div className="inline-block px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-[10px] font-bold uppercase tracking-wider mb-3 border border-white/30">
-               Limited Time Offer
+               {t("wallet.offer")}
              </div>
              <h2 className="text-2xl md:text-3xl font-black mb-2 leading-tight">
                {promotion.title}
              </h2>
              <p className="text-red-100 font-medium text-sm">
-               Stock up now for upcoming exclusive frames.
+               {t("wallet.offerHint")}
              </p>
            </div>
         </div>
@@ -186,7 +191,7 @@ export default function RechargeGemsPage() {
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Left Side: Packages */}
         <div className="flex-1">
-          <h2 className="text-base font-bold text-zinc-900 mb-3">Select Package</h2>
+          <h2 className="text-base font-bold text-zinc-900 mb-3">{t("wallet.selectPackage")}</h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {packages.map((pkg) => (
@@ -215,12 +220,12 @@ export default function RechargeGemsPage() {
                       ? "bg-[#b7152b] text-white border-red-700" 
                       : "bg-zinc-100 text-zinc-500 border-zinc-200"
                   }`}>
-                    {pkg.is_popular ? "MOST POPULAR" : "BEST VALUE"}
+                    {pkg.is_popular ? t("wallet.mostPopular") : t("wallet.bestValue")}
                   </div>
                 )}
                 {pkg.effective_bonus_gem > 0 && (
                   <div className="absolute top-4 right-4 bg-rose-200 text-[#b7152b] text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                    +{pkg.effective_bonus_gem} Bonus
+                    +{pkg.effective_bonus_gem.toLocaleString(locale)} {t("wallet.bonus")}
                   </div>
                 )}
 
@@ -230,7 +235,7 @@ export default function RechargeGemsPage() {
                 </div>
 
                 <div className="flex items-center gap-1.5 text-xl font-black text-zinc-900 mb-2">
-                  {pkg.gem_amount.toLocaleString()} 
+                  {pkg.gem_amount.toLocaleString(locale)}
                   <Gem size={18} className="text-[#b7152b] fill-[#b7152b]/10" />
                 </div>
                 
@@ -239,7 +244,7 @@ export default function RechargeGemsPage() {
                     ? "bg-[#b7152b] text-white"
                     : "text-zinc-500 bg-zinc-50 group-hover:bg-zinc-100"
                 }`}>
-                  {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(pkg.price)}
+                  {new Intl.NumberFormat(locale, { style: 'currency', currency: 'VND' }).format(pkg.price)}
                 </div>
               </div>
             ))}
@@ -247,30 +252,30 @@ export default function RechargeGemsPage() {
 
           {/* Transactions Table */}
           <div className="mt-8">
-            <h2 className="text-base font-bold text-zinc-900 mb-3">Recent Transactions</h2>
+            <h2 className="text-base font-bold text-zinc-900 mb-3">{t("wallet.transactions")}</h2>
             <div className="bg-white rounded-2xl border border-zinc-100 overflow-hidden">
               <table className="w-full text-xs text-left">
                 <thead className="bg-zinc-50/50 text-zinc-500 font-bold text-xs uppercase tracking-wider border-b border-zinc-100">
                   <tr>
-                    <th className="px-6 py-4">Date</th>
-                    <th className="px-6 py-4">Package</th>
-                    <th className="px-6 py-4">Amount</th>
-                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">{t("wallet.date")}</th>
+                    <th className="px-6 py-4">{t("wallet.package")}</th>
+                    <th className="px-6 py-4">{t("wallet.amount")}</th>
+                    <th className="px-6 py-4">{t("wallet.status")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-50">
                   {transactions.map((tx) => (
                     <tr key={tx.id} className="hover:bg-zinc-50/50 transition-colors">
                       <td className="px-6 py-4 text-zinc-500 font-medium">
-                        {new Date(tx.created_at).toLocaleDateString()}
+                        {new Date(tx.created_at).toLocaleDateString(locale)}
                       </td>
                       <td className="px-6 py-4 font-bold text-zinc-900 flex items-center gap-1.5">
-                        {tx.gem_change} <Gem size={14} className="text-[#b7152b]" />
+                        {tx.gem_change.toLocaleString(locale)} <Gem size={14} className="text-[#b7152b]" />
                       </td>
                       <td className="px-6 py-4 text-zinc-600 font-medium">-</td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 tracking-wider">
-                          SUCCESS
+                          {t("wallet.success")}
                         </span>
                       </td>
                     </tr>
@@ -278,7 +283,7 @@ export default function RechargeGemsPage() {
                   {transactions.length === 0 && (
                     <tr>
                       <td colSpan={4} className="px-6 py-8 text-center text-zinc-500">
-                        No transactions found
+                        {t("wallet.noTransactions")}
                       </td>
                     </tr>
                   )}
@@ -291,7 +296,7 @@ export default function RechargeGemsPage() {
         {/* Right Side: Order Summary */}
         <div className="w-full lg:w-72 shrink-0">
           <div className="bg-white rounded-[1.5rem] p-5 lg:p-6 border border-zinc-100 shadow-xl shadow-zinc-200/40 sticky top-28">
-            <h2 className="text-lg font-black text-zinc-900 mb-5">Order Summary</h2>
+            <h2 className="text-lg font-black text-zinc-900 mb-5">{t("wallet.orderSummary")}</h2>
             
             {selectedPackage ? (
               <>
@@ -299,31 +304,31 @@ export default function RechargeGemsPage() {
                   <div className="flex justify-between items-center text-xs font-bold text-zinc-700">
                     <span className="flex items-center gap-1.5">
                       <Gem size={14} className="text-[#b7152b]" />
-                      {selectedPackage.gem_amount.toLocaleString()} Gems
+                      {selectedPackage.gem_amount.toLocaleString(locale)} {t("wallet.gems")}
                     </span>
-                    <span>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedPackage.price)}</span>
+                    <span>{new Intl.NumberFormat(locale, { style: 'currency', currency: 'VND' }).format(selectedPackage.price)}</span>
                   </div>
                   
                   {selectedPackage.effective_bonus_gem > 0 && (
                     <div className="flex justify-between items-center text-xs font-bold text-[#b7152b]">
-                      <span>+ {selectedPackage.effective_bonus_gem} Bonus Gems</span>
-                      <span>Free</span>
+                      <span>+ {selectedPackage.effective_bonus_gem.toLocaleString(locale)} {t("wallet.bonusGems")}</span>
+                      <span>{t("wallet.freePlan")}</span>
                     </div>
                   )}
                   
                   {promotion && (
                     <div className="flex justify-between items-center text-xs font-bold text-zinc-400">
                       <span>{promotion.title}</span>
-                      <span>Applied</span>
+                      <span>{t("wallet.applied")}</span>
                     </div>
                   )}
                 </div>
 
                 <div className="border-t border-zinc-100 pt-4 mb-6">
                   <div className="flex justify-between items-end">
-                    <span className="text-zinc-500 text-sm font-bold">Total</span>
+                    <span className="text-zinc-500 text-sm font-bold">{t("wallet.total")}</span>
                     <span className="text-2xl font-black text-zinc-900">
-                      {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(selectedPackage.price)}
+                      {new Intl.NumberFormat(locale, { style: 'currency', currency: 'VND' }).format(selectedPackage.price)}
                     </span>
                   </div>
                 </div>
@@ -334,19 +339,19 @@ export default function RechargeGemsPage() {
                   className="w-full bg-[#b7152b] hover:bg-rose-700 disabled:bg-zinc-300 disabled:cursor-not-allowed text-white font-bold text-sm py-3.5 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-red-200 transition-all duration-300 hover:scale-[1.02] mb-3"
                 >
                   <Lock size={16} />
-                  {isPurchasing ? "Processing..." : "Purchase Now"}
+                  {isPurchasing ? t("wallet.processing") : t("wallet.purchase")}
                 </button>
                 <p className="text-[9px] text-zinc-400 text-center font-medium">
-                  By purchasing, you agree to our Terms of Service.
+                  {t("wallet.paymentTerms")}
                 </p>
               </>
             ) : (
-              <div className="text-zinc-400 text-sm text-center py-8">Select a package to view summary</div>
+              <div className="text-zinc-400 text-sm text-center py-8">{t("wallet.selectToSummary")}</div>
             )}
 
             {/* Payment Methods */}
             <div className="mt-8 pt-6 border-t border-zinc-100">
-               <h3 className="text-xs font-bold text-zinc-900 mb-4 uppercase tracking-wider">Select Payment Method</h3>
+               <h3 className="text-xs font-bold text-zinc-900 mb-4 uppercase tracking-wider">{t("wallet.paymentMethod")}</h3>
                <div className="flex gap-2">
                  <div 
                    onClick={() => setPaymentMethod("PAYOS")}
@@ -366,11 +371,11 @@ export default function RechargeGemsPage() {
                <div className="flex items-center justify-center gap-8 mt-6 text-[9px] font-black text-zinc-400 uppercase tracking-widest text-center">
                  <div className="flex flex-col items-center gap-1">
                    <Zap size={16} className="text-amber-500" />
-                   Instant<br/>Delivery
+                   {t("wallet.instantDelivery")}
                  </div>
                  <div className="flex flex-col items-center gap-1">
                    <Lock size={16} className="text-[#b7152b]" />
-                   Secure<br/>Payment
+                   {t("wallet.securePayment")}
                  </div>
                </div>
             </div>

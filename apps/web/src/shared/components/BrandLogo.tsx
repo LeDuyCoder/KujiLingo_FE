@@ -1,11 +1,16 @@
+"use client";
+
 import Image from "next/image";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface BrandLogoProps {
   size?: "small" | "medium";
   showTagline?: boolean;
+  compactOnLarge?: boolean;
 }
 
-export function BrandLogo({ size = "medium", showTagline = false }: BrandLogoProps) {
+export function BrandLogo({ size = "medium", showTagline = false, compactOnLarge = false }: BrandLogoProps) {
+  const { t } = useLanguage();
   const isSmall = size === "small";
 
   return (
@@ -24,7 +29,7 @@ export function BrandLogo({ size = "medium", showTagline = false }: BrandLogoPro
           className="h-full w-full object-cover"
         />
       </span>
-      <span className="flex flex-col">
+      <span className={`flex flex-col ${compactOnLarge ? "lg:hidden" : ""}`}>
         <span
           className={`font-extrabold leading-none tracking-tight text-[#b7152b] ${
             isSmall ? "text-lg" : "text-xl"
@@ -34,7 +39,7 @@ export function BrandLogo({ size = "medium", showTagline = false }: BrandLogoPro
         </span>
         {showTagline && (
           <span className="mt-1 text-[10px] font-medium uppercase tracking-wider text-zinc-400">
-            Learn Japanese
+            {t("brand.tagline")}
           </span>
         )}
       </span>

@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { 
   Search, 
   Loader2, 
@@ -13,11 +14,13 @@ import {
   Eye,
   X,
   Flame,
-  AlertCircle
+  AlertCircle,
+  ArrowUpRight,
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { Button } from "@/shared/components/ui/Button";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface ShopItem {
   id: string;
@@ -61,6 +64,8 @@ interface ShopBanner {
 }
 
 export default function ShopPage() {
+  const { t, language } = useLanguage();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
   const { user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -220,7 +225,7 @@ export default function ShopPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-400 font-semibold">Đang tải cửa hàng KujiLingo...</span>
+        <span className="text-sm text-zinc-400 font-semibold">{t("shop.loading")}</span>
       </div>
     );
   }
@@ -270,39 +275,45 @@ export default function ShopPage() {
         <div>
           <h1 className="text-3xl font-extrabold text-zinc-950 tracking-tight flex items-center gap-2">
             <ShoppingBag className="text-[#b7152b]" />
-            Cửa hàng KujiLingo
+            {t("shop.title")}
           </h1>
           <p className="text-zinc-500 text-sm mt-1">
-            Đổi tiền xu và KujiGems tích lũy từ việc học để lấy khung viền, ảnh đại diện và vật phẩm trang trí.
+            {t("shop.description")}
           </p>
         </div>
 
         {/* Real Dynamic Wallet status cards */}
         {/* Real Dynamic Wallet status cards */}
         <div className="flex gap-3">
-          <div className="bg-white border border-zinc-100 rounded-2xl px-4 py-2.5 flex items-center gap-3 shadow-sm hover:shadow transition-shadow">
-            <div className="w-9 h-9 rounded-full bg-amber-50 border border-amber-200/40 flex items-center justify-center shrink-0 shadow-inner">
+          <div className="bg-white border border-zinc-100 rounded-2xl px-2.5 py-2 sm:px-4 sm:py-2.5 flex items-center gap-2 sm:gap-3 shadow-sm hover:shadow transition-shadow">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-amber-50 border border-amber-200/40 flex items-center justify-center shrink-0 shadow-inner">
               <Coins className="text-amber-500 w-4.5 h-4.5 fill-amber-500" />
             </div>
             <div className="text-left">
-              <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-wider block">Coins</span>
+              <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("wallet.currentCoins")}</span>
               <span className="text-sm font-black text-zinc-900 leading-none">
-                {wallet.coins.toLocaleString()}
+                {wallet.coins.toLocaleString(locale)}
               </span>
             </div>
           </div>
           
-          <div className="bg-white border border-zinc-100 rounded-2xl px-4 py-2.5 flex items-center gap-3 shadow-sm hover:shadow transition-shadow">
-            <div className="w-9 h-9 rounded-full bg-red-50 border border-red-200/40 flex items-center justify-center shrink-0 shadow-inner">
+          <Link
+            href="/wallet/recharge-gems"
+            aria-label={t("shop.rechargeGemsAria").replace("{balance}", wallet.gems.toLocaleString(locale))}
+            title={t("wallet.recharge")}
+            className="bg-white border border-zinc-100 rounded-2xl px-2.5 py-2 sm:px-4 sm:py-2.5 flex items-center gap-2 sm:gap-3 shadow-sm hover:border-red-200 hover:shadow transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b7152b] focus-visible:ring-offset-2"
+          >
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-red-50 border border-red-200/40 flex items-center justify-center shrink-0 shadow-inner">
               <Gem className="text-[#b7152b] w-4.5 h-4.5 fill-[#b7152b]/25" />
             </div>
             <div className="text-left">
               <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-wider block">KujiGems</span>
               <span className="text-sm font-black text-zinc-900 leading-none">
-                {wallet.gems.toLocaleString()}
+                {wallet.gems.toLocaleString(locale)}
               </span>
             </div>
-          </div>
+            <ArrowUpRight size={15} className="shrink-0 text-zinc-400" aria-hidden="true" />
+          </Link>
         </div>
       </div>
       {/* Featured Banners (Carousel) */}
@@ -334,7 +345,7 @@ export default function ShopPage() {
 
                     <div className="space-y-4 max-w-lg z-10 text-left">
                       <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black bg-red-500/10 text-red-500 border border-red-500/20 uppercase tracking-widest">
-                        Sự kiện nổi bật
+                        {t("shop.featuredEvent")}
                       </span>
                       <div className="space-y-2">
                         <h2 className="text-2xl md:text-3xl font-black tracking-tight leading-tight bg-gradient-to-r from-white via-zinc-100 to-zinc-300 bg-clip-text text-transparent">
@@ -348,7 +359,7 @@ export default function ShopPage() {
                       {linkedItem && (
                         <div className="flex items-center gap-2 pt-2">
                           <Button className="bg-[#b7152b] hover:bg-red-700 text-white rounded-xl font-bold px-6 py-2.5 shadow-lg shadow-red-900/20 flex items-center gap-2 group-hover:scale-105 transition-transform duration-300">
-                            Xem thử Live
+                            {t("shop.livePreview")}
                             <Eye size={16} />
                           </Button>
                         </div>
@@ -439,7 +450,7 @@ export default function ShopPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm vật phẩm..."
+            placeholder={t("shop.search")}
             className="w-full pl-9 pr-4 py-2 bg-zinc-50 border border-zinc-200/60 rounded-full text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-red-500/20 focus:border-[#b7152b] placeholder-zinc-400 text-zinc-800"
           />
         </div>
@@ -468,7 +479,7 @@ export default function ShopPage() {
                 {item.is_owned && (
                   <span className="text-[10px] font-extrabold text-emerald-600 flex items-center gap-0.5 bg-emerald-50 px-2 py-0.5 rounded-lg">
                     <Check size={11} strokeWidth={3} />
-                    Đã sở hữu
+                    {t("shop.owned")}
                   </span>
                 )}
               </div>
@@ -481,14 +492,14 @@ export default function ShopPage() {
                 {/* Live Preview Overlay */}
                 <div className="absolute inset-0 bg-black/45 opacity-0 group-hover/preview:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 z-20 text-white">
                   <Eye size={18} className="drop-shadow-md" />
-                  <span className="text-[9px] font-black tracking-wider uppercase drop-shadow-md">Xem thử Live</span>
+                  <span className="text-[9px] font-black tracking-wider uppercase drop-shadow-md">{t("shop.livePreview")}</span>
                 </div>
 
                 {item.item_type === "FRAME" ? (
                   // Frame preview overlaying dummy avatar
                   <div className="relative w-20 h-20 flex items-center justify-center">
                     <div className="w-14 h-14 rounded-full bg-zinc-200 border border-zinc-300 flex items-center justify-center font-bold text-zinc-400 text-xs shadow-inner">
-                      User
+                      {t("shop.userPlaceholder")}
                     </div>
                     {/* The Frame Overlay */}
                     <img 
@@ -539,7 +550,7 @@ export default function ShopPage() {
                   ) : (
                     <div className="flex items-center gap-1.5">
                       <span className="text-base font-black text-zinc-900">
-                        {item.price.toLocaleString()}
+                        {item.price.toLocaleString(locale)}
                       </span>
                       {item.currency === "COIN" ? (
                         <Coins className="text-amber-500 w-4 h-4 fill-amber-500 shrink-0" />
@@ -558,7 +569,7 @@ export default function ShopPage() {
                       disabled
                     >
                       <CheckCircle size={12} fill="currentColor" className="text-amber-500 fill-white" />
-                      Đang dùng
+                      {t("shop.equipped")}
                     </Button>
                   ) : (
                     <Button 
@@ -594,7 +605,7 @@ export default function ShopPage() {
         {filteredItems.length === 0 && (
           <div className="col-span-full py-16 text-center text-zinc-400 font-bold space-y-2">
             <ShoppingBag className="w-12 h-12 mx-auto text-zinc-300" />
-            <p>Không tìm thấy vật phẩm nào thuộc danh mục này.</p>
+            <p>{t("shop.empty")}</p>
           </div>
         )}
       </div>
@@ -670,7 +681,7 @@ export default function ShopPage() {
 
               {/* Previewed Item Information */}
               <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100">
-                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-wider mb-2">Đang xem trước</p>
+                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-wider mb-2">{t("shop.livePreview")}</p>
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
                     <span className="font-extrabold text-sm text-zinc-900">{previewItem.name}</span>
@@ -685,11 +696,11 @@ export default function ShopPage() {
                   <div className="text-right">
                     {previewItem.is_owned ? (
                       <span className="text-emerald-600 font-extrabold text-xs flex items-center gap-1">
-                        <Check size={12} strokeWidth={3} /> Đã mua
+                        <Check size={12} strokeWidth={3} /> {t("shop.owned")}
                       </span>
                     ) : (
                       <span className="font-black text-sm flex items-center gap-1 justify-end text-zinc-950">
-                        {previewItem.price.toLocaleString()}
+                        {previewItem.price.toLocaleString(locale)}
                         {previewItem.currency === "COIN" ? (
                           <Coins className="text-amber-500 w-3.5 h-3.5 fill-amber-500" />
                         ) : (
@@ -706,7 +717,7 @@ export default function ShopPage() {
                 {previewItem.is_owned ? (
                   equippedItems[previewItem.item_type] === previewItem.id ? (
                     <Button className="w-full h-10 bg-zinc-100 hover:bg-zinc-100 text-zinc-400 font-bold text-xs rounded-xl cursor-default" disabled>
-                      Đang sử dụng
+                      {t("collection.currentlyEquipped")}
                     </Button>
                   ) : (
                     <Button 
@@ -716,7 +727,7 @@ export default function ShopPage() {
                       }}
                       className="w-full h-10 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-sm shadow-emerald-600/10"
                     >
-                      Trang bị ngay
+                      {t("shop.equipNow")}
                     </Button>
                   )
                 ) : (
@@ -726,7 +737,7 @@ export default function ShopPage() {
                     }}
                     className="w-full h-10 bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs rounded-xl shadow-sm"
                   >
-                    Mua vật phẩm
+                    {t("shop.purchaseItem")}
                   </Button>
                 )}
               </div>
@@ -777,13 +788,13 @@ export default function ShopPage() {
 
             {/* Title & Body */}
             <div className="space-y-2 text-center">
-              <h3 className="text-lg font-black text-zinc-900">Xác nhận mua hàng</h3>
+              <h3 className="text-lg font-black text-zinc-900">{t("shop.confirmPurchase")}</h3>
               <p className="text-zinc-500 text-xs font-semibold leading-relaxed">
                 Bạn có chắc chắn muốn mua vật phẩm <span className="text-zinc-900 font-extrabold">{confirmPurchaseItem.name}</span> với giá:
               </p>
               <div className="flex items-center justify-center gap-1.5 py-1">
                 <span className="text-2xl font-black text-zinc-950">
-                  {confirmPurchaseItem.price.toLocaleString()}
+                  {confirmPurchaseItem.price.toLocaleString(locale)}
                 </span>
                 {confirmPurchaseItem.currency === "COIN" ? (
                   <Coins className="text-amber-500 w-6 h-6 fill-amber-500" />

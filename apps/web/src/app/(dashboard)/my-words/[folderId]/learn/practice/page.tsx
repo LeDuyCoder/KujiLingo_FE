@@ -7,6 +7,8 @@ import {
   X, Volume2, Zap, Flame, Mic, Trophy, RefreshCcw, Clock
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useAppDialog } from "@/shared/components/ui/AppDialogProvider";
+import { useLanguage } from "@/shared/i18n/language";
 
 type Vocabulary = {
   id: string;
@@ -61,6 +63,8 @@ interface Question {
 }
 
 export default function PracticePage() {
+  const { t, language } = useLanguage();
+  const { alert } = useAppDialog();
   const router = useRouter();
   const params = useParams();
   const folderId = params.folderId as string;
@@ -249,7 +253,7 @@ export default function PracticePage() {
     };
     const SpeechRecognition = speechWindow.SpeechRecognition || speechWindow.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert("Trình duyệt của bạn không hỗ trợ tính năng nhận diện giọng nói (Khuyên dùng Chrome/Edge).");
+      void alert({ title: "Không hỗ trợ nhận diện giọng nói", description: "Trình duyệt của bạn chưa hỗ trợ tính năng này. Hãy thử dùng Chrome hoặc Edge." });
       return;
     }
 
@@ -356,7 +360,7 @@ export default function PracticePage() {
 
     recognition.onerror = (event) => {
       setIsListening(false);
-      alert("Lỗi nhận diện giọng nói: " + event.error);
+      void alert({ title: "Lỗi nhận diện giọng nói", description: `Không thể nhận diện giọng nói (${event.error}). Vui lòng thử lại.` });
     };
 
     recognition.onend = () => {
@@ -464,8 +468,8 @@ export default function PracticePage() {
   const getMeaning = (w: Vocabulary) => w.vocabulary_meanings?.[0]?.meaning || w.meaning || "Unknown";
   const getJp = (w: Vocabulary) => w.kanji || w.hiragana || w.romaji || "";
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center">Loading practice data...</div>;
-  if (questions.length === 0) return <div className="min-h-screen flex items-center justify-center">No vocabularies found in this folder.</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center">{t("practice.loading")}</div>;
+  if (questions.length === 0) return <div className="min-h-screen flex items-center justify-center">{t("practice.noWords")}</div>;
 
   const currentQ = questions[currentIdx];
 
@@ -515,38 +519,38 @@ export default function PracticePage() {
           </div>
           
           {/* Huge Title */}
-          <h1 className="text-5xl font-black text-zinc-900 mb-4 text-center tracking-tight">Practice Complete!</h1>
+          <h1 className="text-5xl font-black text-zinc-900 mb-4 text-center tracking-tight">{t("practice.complete")}</h1>
           <p className="text-xl font-bold text-zinc-500 mb-12 text-center flex items-center justify-center gap-2">
-            You earned <span className="text-amber-500 bg-amber-50 px-3 py-1 rounded-xl flex items-center gap-1 shadow-sm border border-amber-100"><Zap size={20} fill="currentColor"/> {score} XP</span> today.
+            {t("practice.youEarned")} <span className="text-amber-500 bg-amber-50 px-3 py-1 rounded-xl flex items-center gap-1 shadow-sm border border-amber-100"><Zap size={20} fill="currentColor"/> {score.toLocaleString(language === "vi" ? "vi-VN" : "en-US")} XP</span> {t("practice.today")}
           </p>
           
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full mb-14">
              <div className="bg-white p-6 rounded-[2rem] border-2 border-zinc-100 shadow-sm flex flex-col items-center justify-center transition-transform hover:-translate-y-1">
                <span className="text-emerald-500 font-black text-4xl mb-2">{accuracy}%</span>
-               <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest">Accuracy</span>
+               <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest">{t("practice.accuracy")}</span>
              </div>
              <div className="bg-white p-6 rounded-[2rem] border-2 border-zinc-100 shadow-sm flex flex-col items-center justify-center transition-transform hover:-translate-y-1">
                <span className="text-blue-500 font-black text-4xl mb-2">{correctCount}</span>
-               <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest">Correct</span>
+               <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest">{t("practice.correct")}</span>
              </div>
              <div className="bg-white p-6 rounded-[2rem] border-2 border-zinc-100 shadow-sm flex flex-col items-center justify-center transition-transform hover:-translate-y-1">
                <span className="text-rose-500 font-black text-4xl mb-2">{wrongCount}</span>
-               <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest">Incorrect</span>
+               <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest">{t("practice.incorrect")}</span>
              </div>
              <div className="bg-white p-6 rounded-[2rem] border-2 border-zinc-100 shadow-sm flex flex-col items-center justify-center transition-transform hover:-translate-y-1">
                <span className="text-amber-500 font-black text-4xl mb-2">{Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</span>
-               <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest">Time</span>
+               <span className="text-zinc-400 font-bold text-xs uppercase tracking-widest">{t("practice.time")}</span>
              </div>
           </div>
           
           {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-lg">
             <button onClick={() => window.location.reload()} className="w-full px-8 py-5 bg-white border-2 border-zinc-200 text-zinc-600 font-bold rounded-2xl hover:bg-zinc-50 hover:border-zinc-300 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm">
-              <RefreshCcw size={20} /> Try Again
+              <RefreshCcw size={20} /> {t("practice.tryAgain")}
             </button>
             <Link href={`/my-words/${folderId}/learn`} className="w-full px-8 py-5 bg-[#b7152b] text-white font-bold rounded-2xl hover:bg-[#9a1022] transition-all shadow-xl shadow-red-500/20 flex items-center justify-center gap-2 active:scale-95">
-              Continue <span className="text-red-200">→</span>
+              {t("practice.continue")} <span className="text-red-200">→</span>
             </Link>
           </div>
         </div>
@@ -557,7 +561,7 @@ export default function PracticePage() {
       case 'TYPING':
         return (
           <div className="bg-white rounded-3xl p-12 shadow-xl w-full text-center">
-            <div className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-6">Translate to Japanese</div>
+            <div className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-6">{t("practice.translate")}</div>
             <h2 className="text-4xl font-black text-zinc-900 mb-10">&quot;{getMeaning(currentQ.word)}&quot;</h2>
             <div className="relative max-w-md mx-auto mb-6">
               <input 
@@ -566,22 +570,22 @@ export default function PracticePage() {
                 onChange={e => setTypingInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !isChecking && checkTyping()}
                 disabled={isChecking}
-                placeholder="Type Romaji, Hiragana, or Kanji..."
+                placeholder={t("practice.answerPlaceholder")}
                 className="w-full border-2 border-zinc-200 rounded-2xl py-4 px-6 text-center text-2xl font-bold text-zinc-900 focus:outline-none focus:border-rose-400" 
               />
             </div>
             {checkResult && (
                <div className={`mb-6 font-bold text-lg ${checkResult === 'correct' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                 {checkResult === 'correct' ? '✅ Correct!' : '❌ Incorrect! Target:'} {getJp(currentQ.word)}
+                 {checkResult === 'correct' ? t("practice.correctResult") : t("practice.incorrectTarget")} {getJp(currentQ.word)}
                </div>
             )}
             <div className="flex justify-center gap-4 mb-12">
               <button onClick={() => playAudio(getJp(currentQ.word))} className="px-6 py-2 bg-zinc-100 rounded-full font-bold text-sm text-zinc-500 flex items-center gap-2 hover:bg-zinc-200">
-                <Volume2 size={16} /> Play Audio
+                <Volume2 size={16} /> {t("practice.playAudio")}
               </button>
             </div>
             <button disabled={isChecking} onClick={checkTyping} className="px-12 py-4 bg-[#ef4444] text-white font-bold text-lg rounded-2xl hover:bg-red-600 transition-colors shadow-md flex items-center justify-center gap-2 mx-auto disabled:opacity-50">
-              Submit Answer ↵
+              {t("practice.submitAnswer")} ↵
             </button>
           </div>
         );
@@ -589,12 +593,12 @@ export default function PracticePage() {
       case 'AUDIO':
         return (
           <div className="bg-white rounded-3xl p-10 shadow-xl w-full text-center">
-            <h2 className="text-3xl font-black text-zinc-900 mb-2">Listen carefully</h2>
-            <p className="text-zinc-500 font-semibold mb-10">Select the correct matching vocabulary.</p>
+            <h2 className="text-3xl font-black text-zinc-900 mb-2">{t("practice.listen")}</h2>
+            <p className="text-zinc-500 font-semibold mb-10">{t("practice.selectMatch")}</p>
             <button onClick={() => playAudio(getJp(currentQ.word))} className="w-24 h-24 bg-[#ef4444] rounded-full flex items-center justify-center text-white mx-auto mb-4 hover:scale-105 transition-transform shadow-lg shadow-red-200">
               <Volume2 size={40} />
             </button>
-            <div className="text-xs font-black text-[#ef4444] uppercase tracking-widest mb-12">Play Audio</div>
+            <div className="text-xs font-black text-[#ef4444] uppercase tracking-widest mb-12">{t("practice.playAudio")}</div>
             <div className="grid grid-cols-2 gap-4 mb-12">
               {currentQ.audioOptions?.map((opt, i) => (
                 <button disabled={isChecking} onClick={() => checkAudio(opt.id)} key={i} className="p-6 bg-white border-2 border-zinc-100 rounded-2xl hover:border-zinc-300 transition-colors flex flex-col items-center justify-center gap-2 disabled:opacity-50">
@@ -614,7 +618,7 @@ export default function PracticePage() {
       case 'SPEAKING':
         return (
           <div className="bg-white rounded-3xl p-10 shadow-xl w-full text-center">
-            <p className="text-zinc-500 font-bold mb-8">Read the Japanese word aloud.</p>
+            <p className="text-zinc-500 font-bold mb-8">{t("practice.readAloud")}</p>
             <div className="text-7xl font-black text-zinc-900 mb-4">{getJp(currentQ.word)}</div>
             <div className="text-3xl font-semibold text-zinc-500 mb-16">{currentQ.word.romaji || ""}</div>
             
@@ -630,7 +634,7 @@ export default function PracticePage() {
             
             <div className="min-h-[3rem] flex flex-col items-center justify-center">
               {isListening ? (
-                <div className="text-xs font-bold text-[#b7152b] animate-bounce">Đang nghe...</div>
+                <div className="text-xs font-bold text-[#b7152b] animate-bounce">{t("practice.listening")}</div>
               ) : speechFeedback ? (
                 <div className="flex flex-col items-center gap-4 mt-2">
                   <div className={`text-lg font-bold ${speechFeedback.isCorrect ? "text-emerald-500" : "text-rose-500"}`}>
@@ -641,12 +645,12 @@ export default function PracticePage() {
                       onClick={handleNext}
                       className="px-6 py-2 bg-zinc-100 text-zinc-600 font-bold rounded-xl hover:bg-zinc-200 transition-colors text-sm flex items-center gap-2"
                     >
-                      Bỏ qua <span className="text-zinc-400">→</span>
+                      {t("practice.skip")} <span className="text-zinc-400">→</span>
                     </button>
                   )}
                 </div>
               ) : (
-                <div className="text-xs font-bold text-zinc-400">Nhấn vào mic và đọc to từ vựng</div>
+                <div className="text-xs font-bold text-zinc-400">{t("practice.micHint")}</div>
               )}
             </div>
           </div>
@@ -655,7 +659,7 @@ export default function PracticePage() {
       case 'BUILDER':
          return (
           <div className="bg-white rounded-3xl p-10 shadow-xl w-full text-center">
-            <h2 className="text-3xl font-black text-zinc-900 mb-8 leading-tight">Spell the word correctly</h2>
+            <h2 className="text-3xl font-black text-zinc-900 mb-8 leading-tight">{t("practice.spell")}</h2>
              <div className="bg-zinc-100 px-6 py-4 rounded-2xl relative mb-10 max-w-xs mx-auto">
                 <span className="text-lg font-bold text-zinc-700">&quot;{getMeaning(currentQ.word)}&quot;</span>
               </div>
@@ -666,7 +670,7 @@ export default function PracticePage() {
               onDragOver={handleDragOver}
             >
               {builderSlots.length === 0 && (
-                <span className="text-zinc-300 font-semibold select-none">Nhấn hoặc Kéo thả chữ vào đây</span>
+                <span className="text-zinc-300 font-semibold select-none">{t("practice.dragHint")}</span>
               )}
               {builderSlots.map((slot, i) => (
                 <button 
@@ -716,13 +720,13 @@ export default function PracticePage() {
               disabled={isChecking || builderSlots.length !== builderOptions.length}
               className="px-12 py-4 bg-[#b7152b] text-white font-bold text-lg rounded-2xl hover:bg-[#9a1022] transition-colors w-full max-w-xs shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Check Answer
+              {t("practice.checkAnswer")}
             </button>
           </div>
          );
 
       default:
-        return <div>Mode not fully implemented in demo</div>;
+        return <div>{t("practice.demoMode")}</div>;
     }
   };
 
@@ -739,15 +743,15 @@ export default function PracticePage() {
           {!isFinished && (
             <div className="flex flex-row lg:flex-col gap-4 w-full lg:w-48 shrink-0 justify-center flex-wrap">
               <div className="bg-white rounded-2xl p-4 border border-zinc-100 shadow-sm flex flex-col items-center justify-center min-w-[8rem] flex-1 lg:flex-none transition-transform hover:-translate-y-1">
-                 <div className="text-zinc-400 font-bold text-xs uppercase tracking-widest mb-1">Correct</div>
+                 <div className="text-zinc-400 font-bold text-xs uppercase tracking-widest mb-1">{t("practice.correct")}</div>
                  <div className="font-black text-3xl text-blue-500">{correctCount}</div>
               </div>
               <div className="bg-white rounded-2xl p-4 border border-zinc-100 shadow-sm flex flex-col items-center justify-center min-w-[8rem] flex-1 lg:flex-none transition-transform hover:-translate-y-1">
-                 <div className="text-zinc-400 font-bold text-xs uppercase tracking-widest mb-1">Incorrect</div>
+                 <div className="text-zinc-400 font-bold text-xs uppercase tracking-widest mb-1">{t("practice.incorrect")}</div>
                  <div className="font-black text-3xl text-rose-500">{wrongCount}</div>
               </div>
               <div className="bg-white rounded-2xl p-4 border border-zinc-100 shadow-sm flex flex-col items-center justify-center min-w-[8rem] flex-1 lg:flex-none transition-transform hover:-translate-y-1">
-                 <div className="text-zinc-400 font-bold text-xs uppercase tracking-widest mb-1">Accuracy</div>
+                 <div className="text-zinc-400 font-bold text-xs uppercase tracking-widest mb-1">{t("practice.accuracy")}</div>
                  <div className="font-black text-3xl text-emerald-500">
                    {correctCount + wrongCount > 0 ? Math.round((correctCount / (correctCount + wrongCount)) * 100) : 0}%
                  </div>

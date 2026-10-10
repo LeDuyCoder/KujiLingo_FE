@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Check, ChevronRight, Eraser, RotateCcw, Eye, EyeOff, PenLine, X } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useLanguage } from "@/shared/i18n/language";
 import { loadTargetStrokes, validateStroke, type Point, type PositionedTargetStroke, type TargetStroke } from "./stroke-validator";
 
 interface FolderWord {
@@ -67,6 +68,7 @@ function makePrompts(words: FolderWord[]): KanjiPrompt[] {
 }
 
 export default function KanjiWritingPage() {
+  const { t } = useLanguage();
   const params = useParams();
   const folderId = params.folderId as string;
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -351,7 +353,7 @@ export default function KanjiWritingPage() {
     <div className="mx-auto max-w-4xl space-y-6 pb-12">
       <div className="flex items-center gap-2 text-sm font-semibold text-zinc-500">
         <Link href={`/my-words/${folderId}/learn`} className="inline-flex items-center gap-1.5 transition hover:text-zinc-900">
-          <ArrowLeft size={16} /> Learning modes
+          <ArrowLeft size={16} /> {t("kanjiWriting.mode")}
         </Link>
         <ChevronRight size={15} />
         <span className="truncate text-zinc-800">{folderName}</span>
@@ -363,14 +365,14 @@ export default function KanjiWritingPage() {
             <div>
               <div className="mb-2 flex items-center gap-2 text-violet-600">
                 <PenLine size={18} />
-                <span className="text-xs font-extrabold uppercase tracking-wider">Kanji writing</span>
+                <span className="text-xs font-extrabold uppercase tracking-wider">{t("learn.kanjiWriting")}</span>
               </div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-zinc-950">Write from memory</h1>
-              <p className="mt-1 text-sm text-zinc-500">Practice Kanji found in “{folderName}”.</p>
+              <h1 className="text-2xl font-extrabold tracking-tight text-zinc-950">{t("kanjiWriting.title")}</h1>
+              <p className="mt-1 text-sm text-zinc-500">{t("kanjiWriting.practiceFolder").replace("{folder}", folderName)}</p>
             </div>
             <Link
               href={`/my-words/${folderId}/learn`}
-              aria-label="Exit Kanji writing practice"
+              aria-label={t("kanjiWriting.exit")}
               className="rounded-full p-2 text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-800"
             >
               <X size={19} />
@@ -380,7 +382,7 @@ export default function KanjiWritingPage() {
           {prompts.length > 0 && !isFinished && (
             <div className="mt-6">
               <div className="mb-2 flex justify-between text-xs font-bold text-zinc-500">
-                <span>Word {currentIndex + 1} of {prompts.length}</span>
+                <span>{t("kanjiWriting.word")} {currentIndex + 1} {t("kanjiWriting.of")} {prompts.length}</span>
                 <span>{progressPercent}%</span>
               </div>
               <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
@@ -392,9 +394,9 @@ export default function KanjiWritingPage() {
 
         {loadError ? (
           <div className="p-10 text-center">
-            <p className="font-bold text-zinc-800">Could not load this folder.</p>
+            <p className="font-bold text-zinc-800">{t("kanjiWriting.loadError")}</p>
             <Link href={`/my-words/${folderId}/learn`} className="mt-4 inline-flex items-center gap-2 font-bold text-violet-700 hover:underline">
-              <ArrowLeft size={16} /> Back to learning modes
+              <ArrowLeft size={16} /> {t("kanjiWriting.backModes")}
             </Link>
           </div>
         ) : prompts.length === 0 ? (
@@ -402,10 +404,10 @@ export default function KanjiWritingPage() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
               <PenLine size={26} />
             </div>
-            <h2 className="text-lg font-extrabold text-zinc-900">No Kanji in this folder yet</h2>
-            <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">Add vocabulary with Kanji characters to practice writing them here.</p>
+            <h2 className="text-lg font-extrabold text-zinc-900">{t("kanjiWriting.emptyTitle")}</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-zinc-500">{t("kanjiWriting.emptyHint")}</p>
             <Link href={`/my-words/${folderId}/learn`} className="mt-5 inline-flex items-center gap-2 font-bold text-violet-700 hover:underline">
-              <ArrowLeft size={16} /> Back to learning modes
+              <ArrowLeft size={16} /> {t("kanjiWriting.backModes")}
             </Link>
           </div>
         ) : isFinished ? (
@@ -413,47 +415,47 @@ export default function KanjiWritingPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
               <Check size={30} />
             </div>
-            <p className="text-xs font-extrabold uppercase tracking-widest text-violet-600">Session complete</p>
-            <h2 className="mt-2 text-2xl font-extrabold text-zinc-950">Good writing practice!</h2>
+            <p className="text-xs font-extrabold uppercase tracking-widest text-violet-600">{t("kanjiWriting.sessionComplete")}</p>
+            <h2 className="mt-2 text-2xl font-extrabold text-zinc-950">{t("kanjiWriting.encouragement")}</h2>
             <p className="mt-3 text-sm font-semibold text-zinc-500">
-              {correctCount} marked correct · {needsPracticeCount} to practice again
+              {correctCount} {t("kanjiWriting.correctCount")} · {needsPracticeCount} {t("kanjiWriting.practiceAgainCount")}
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <button onClick={restart} className="inline-flex items-center gap-2 rounded-full bg-violet-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-violet-700">
-                <RotateCcw size={16} /> Practice again
+                <RotateCcw size={16} /> {t("kanjiWriting.practiceAgain")}
               </button>
               <Link href={`/my-words/${folderId}/learn`} className="rounded-full border border-zinc-200 px-5 py-3 text-sm font-bold text-zinc-700 transition hover:bg-zinc-50">
-                Learning modes
+                {t("kanjiWriting.mode")}
               </Link>
             </div>
           </div>
         ) : (
           <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,0.85fr)_minmax(320px,1.15fr)]">
             <div className="flex flex-col justify-center">
-              <p className="text-xs font-extrabold uppercase tracking-wider text-zinc-400">Write the Kanji for</p>
+              <p className="text-xs font-extrabold uppercase tracking-wider text-zinc-400">{t("kanjiWriting.writeFor")}</p>
               <p className="mt-2 text-3xl font-extrabold text-zinc-900">{currentClue?.reading}</p>
               <p className="mt-2 text-base font-semibold text-zinc-600">{currentClue?.meaning}</p>
               {currentPrompt.clues.length > 1 && (
-                <p className="mt-3 text-xs font-semibold text-zinc-400">This Kanji appears in {currentPrompt.clues.length} words in this folder.</p>
+                <p className="mt-3 text-xs font-semibold text-zinc-400">{t("kanjiWriting.occurrences").replace("{count}", String(currentPrompt.clues.length))}</p>
               )}
 
               {isRevealed ? (
                 <div className="mt-7 rounded-2xl border border-violet-100 bg-violet-50 p-5">
-                  <p className="text-xs font-extrabold uppercase tracking-wider text-violet-600">Answer</p>
+                  <p className="text-xs font-extrabold uppercase tracking-wider text-violet-600">{t("kanjiWriting.answer")}</p>
                   <p className="mt-1 break-all text-5xl font-black text-zinc-900 sm:text-6xl">{currentPrompt.answer}</p>
-                  <p className="mt-5 text-sm font-bold text-zinc-700">How did you do?</p>
+                  <p className="mt-5 text-sm font-bold text-zinc-700">{t("kanjiWriting.howDidYouDo")}</p>
                   <div className="mt-3 grid grid-cols-2 gap-2">
                     <button onClick={() => handleGrade(true)} className="rounded-xl bg-emerald-600 px-3 py-3 text-sm font-bold text-white transition hover:bg-emerald-700">
-                      I got it
+                      {t("kanjiWriting.gotIt")}
                     </button>
                     <button onClick={() => handleGrade(false)} className="rounded-xl border border-violet-200 bg-white px-3 py-3 text-sm font-bold text-violet-700 transition hover:bg-violet-100">
-                      I need more practice
+                      {t("kanjiWriting.needMorePractice")}
                     </button>
                   </div>
                 </div>
               ) : (
                 <button onClick={() => setIsRevealed(true)} className="mt-7 inline-flex w-fit items-center gap-2 rounded-full border border-violet-200 px-4 py-2.5 text-sm font-bold text-violet-700 transition hover:bg-violet-50">
-                  <Eye size={16} /> Show answer
+                  <Eye size={16} /> {t("kanjiWriting.showAnswer")}
                 </button>
               )}
             </div>
@@ -461,13 +463,13 @@ export default function KanjiWritingPage() {
             <div>
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm font-extrabold text-zinc-800">Write it here</p>
+                  <p className="text-sm font-extrabold text-zinc-800">{t("kanjiWriting.writeHere")}</p>
                   <p className="mt-0.5 text-xs font-semibold text-zinc-400">
                     {strokeDataStatus === "loading"
-                      ? "Loading stroke order…"
+                      ? t("kanjiWriting.loadingStrokes")
                       : strokeDataStatus === "error"
-                        ? "Stroke guide unavailable. Check your connection and reload."
-                        : `${completedStrokeIndexes.length} / ${positionedTargetStrokes.length} strokes`}
+                        ? t("kanjiWriting.strokeGuideUnavailable")
+                        : `${completedStrokeIndexes.length} / ${positionedTargetStrokes.length} ${t("kanjiWriting.strokes")}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
@@ -477,10 +479,10 @@ export default function KanjiWritingPage() {
                     className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${showHint ? "bg-violet-50 text-violet-700" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"}`}
                   >
                     {showHint ? <EyeOff size={14} /> : <Eye size={14} />}
-                    {showHint ? "Hide hint" : "Show hint"}
+                    {showHint ? t("kanjiWriting.hideHint") : t("kanjiWriting.showHint")}
                   </button>
                   <button type="button" onClick={clearCanvas} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800">
-                    <Eraser size={14} /> Clear
+                    <Eraser size={14} /> {t("kanjiWriting.clear")}
                   </button>
                 </div>
               </div>
@@ -521,7 +523,7 @@ export default function KanjiWritingPage() {
                 )}
                 <canvas
                   ref={canvasRef}
-                  aria-label="Kanji writing canvas"
+                  aria-label={t("kanjiWriting.canvasLabel")}
                   className={`absolute inset-0 h-full w-full touch-none ${isRevealed || strokeDataStatus !== "ready" || completedStrokeIndexes.length >= positionedTargetStrokes.length ? "pointer-events-none" : "cursor-crosshair"}`}
                   onPointerDown={handlePointerDown}
                   onPointerMove={handlePointerMove}
@@ -531,19 +533,19 @@ export default function KanjiWritingPage() {
                 />
                 {strokeFeedback && !isRevealed && (
                   <span className={`pointer-events-none absolute bottom-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-bold shadow-sm transition-colors ${strokeFeedback === "accepted" ? "text-emerald-600" : "text-rose-600"}`}>
-                    {strokeFeedback === "accepted" ? "Stroke accepted" : "Try again — follow the guide from start to end"}
+                    {strokeFeedback === "accepted" ? t("kanjiWriting.accepted") : t("kanjiWriting.tryAgain")}
                   </span>
                 )}
                 {!isRevealed && (
                   <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-zinc-400 shadow-sm">
                     {strokeDataStatus === "ready" && completedStrokeIndexes.length === positionedTargetStrokes.length
-                      ? "All strokes complete"
-                      : showHint ? "Trace in order" : "Draw with mouse or touch"}
+                      ? t("kanjiWriting.allStrokesComplete")
+                      : showHint ? t("kanjiWriting.traceInOrder") : t("kanjiWriting.drawHint")}
                   </span>
                 )}
               </div>
               <p className="mt-2 text-right text-[10px] text-zinc-400">
-                Stroke order data: <a href="https://kanjivg.tagaini.net/" target="_blank" rel="noreferrer" className="underline hover:text-zinc-600">KanjiVG</a> · CC BY-SA 3.0
+                {t("kanjiWriting.strokeData")}: <a href="https://kanjivg.tagaini.net/" target="_blank" rel="noreferrer" className="underline hover:text-zinc-600">KanjiVG</a> · CC BY-SA 3.0
               </p>
             </div>
           </div>

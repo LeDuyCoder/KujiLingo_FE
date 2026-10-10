@@ -2,8 +2,10 @@ import React from "react";
 import Image from "next/image";
 import { Layers, Gamepad2, Trophy } from "lucide-react";
 import { BrandLogo } from "@/shared/components/BrandLogo";
+import { useLanguage } from "@/shared/i18n/language";
 
 export const FeatureBanner = () => {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col justify-between h-full bg-[#fbf8f8] p-12 lg:p-16 border-r border-zinc-100">
       {/* Logo */}
@@ -25,10 +27,10 @@ export const FeatureBanner = () => {
         </div>
 
         <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900 mb-3 animate-fade-in-up opacity-0">
-          Learn Japanese Smarter
+          {t("landing.learnSmarter")}
         </h1>
         <p className="text-sm text-zinc-500 max-w-sm leading-relaxed animate-fade-in-up delay-100 opacity-0">
-          Master Hiragana, Katakana, and Kanji through an adaptive, distraction-free environment.
+          {t("landing.learnSmarterDescription")}
         </p>
       </div>
 
@@ -39,9 +41,9 @@ export const FeatureBanner = () => {
             <Layers size={22} />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-zinc-950 mb-0.5">Smart Flashcards</h3>
+            <h3 className="text-sm font-semibold text-zinc-950 mb-0.5">{t("landing.smartFlashcards")}</h3>
             <p className="text-xs text-zinc-500 leading-relaxed">
-              Spaced repetition system tailored to your memory retention.
+              {t("landing.smartFlashcardsDescription")}
             </p>
           </div>
         </div>
@@ -51,9 +53,9 @@ export const FeatureBanner = () => {
             <Gamepad2 size={22} />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-zinc-950 mb-0.5">Interactive Mini Games</h3>
+            <h3 className="text-sm font-semibold text-zinc-950 mb-0.5">{t("landing.miniGames")}</h3>
             <p className="text-xs text-zinc-500 leading-relaxed">
-              Reinforce vocabulary with engaging, quick-burst challenges.
+              {t("landing.miniGamesDescription")}
             </p>
           </div>
         </div>
@@ -63,9 +65,9 @@ export const FeatureBanner = () => {
             <Trophy size={22} />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-zinc-950 mb-0.5">Achievement System</h3>
+            <h3 className="text-sm font-semibold text-zinc-950 mb-0.5">{t("landing.achievements")}</h3>
             <p className="text-xs text-zinc-500 leading-relaxed">
-              Track your mastery level as you conquer new lessons.
+              {t("landing.achievementsDescription")}
             </p>
           </div>
         </div>

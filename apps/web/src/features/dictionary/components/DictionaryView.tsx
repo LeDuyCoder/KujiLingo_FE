@@ -15,6 +15,7 @@ import {
 import { Button } from "@/shared/components/ui/Button";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { convertHiraganaToRomaji } from "@/shared/utils/romaji";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface VocabularyDetail {
   id: string;
@@ -65,8 +66,10 @@ import { axiosClient } from "@/shared/api/axiosClient";
 
 export const DictionaryView = () => {
   const { user, accessToken } = useAuthStore();
+  const { language, t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [lastQuery, setLastQuery] = useState("");
+  const initialQueryHandled = React.useRef(false);
   const [selectedLevel, setSelectedLevel] = useState<string>("All");
   const [results, setResults] = useState<DictionaryEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -163,6 +166,28 @@ export const DictionaryView = () => {
     }
   }, [showToast]);
 
+  useEffect(() => {
+    const runQuery = (query: string | null | undefined) => {
+      const normalizedQuery = query?.trim();
+      if (!normalizedQuery || normalizedQuery.length > 100) return;
+      initialQueryHandled.current = true;
+      setSearchQuery(normalizedQuery);
+      void executeSearch(normalizedQuery, selectedLevel);
+    };
+
+    if (!initialQueryHandled.current) {
+      initialQueryHandled.current = true;
+      runQuery(new URLSearchParams(window.location.search).get("q"));
+    }
+
+    const handleGlobalSearch = (event: Event) => {
+      const query = (event as CustomEvent<{ query?: string }>).detail?.query;
+      runQuery(query);
+    };
+    window.addEventListener("kujilingo:global-search", handleGlobalSearch);
+    return () => window.removeEventListener("kujilingo:global-search", handleGlobalSearch);
+  }, [executeSearch, selectedLevel]);
+
   const handleSearch = React.useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const query = searchQuery.trim();
@@ -241,7 +266,9 @@ export const DictionaryView = () => {
             const kanjiData = records.find((item) => item.character === char || item.kanji === char) ?? records[0];
             if (response.data?.success && kanjiData) {
               const reading = kanjiData.onyomi || kanjiData.kunyomi || "";
-              const meaning = kanjiData.meaning_en || kanjiData.meaning_vi || "";
+              const meaning = language === "en"
+                ? kanjiData.meaning_en || kanjiData.meaning_vi || ""
+                : kanjiData.meaning_vi || kanjiData.meaning_en || "";
               detailsMap[char] = { reading, meaning };
             } else {
               detailsMap[char] = { reading: "", meaning: "" };
@@ -457,10 +484,10 @@ export const DictionaryView = () => {
       {/* Title */}
       <div>
         <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 mb-2 font-serif">
-          Dictionary
+          {t("dictionary.title")}
         </h1>
         <p className="text-zinc-500 text-sm max-w-2xl leading-relaxed">
-          Tra cứu từ vựng tiếng Nhật, Hán tự và các mẫu ngữ pháp JLPT từ N5 đến N1.
+          {t("dictionary.description")}
         </p>
       </div>
 
@@ -477,7 +504,7 @@ export const DictionaryView = () => {
                   maxLength={100}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Nhập từ vựng cần tra cứu..."
+                  placeholder={t("dictionary.searchPlaceholder")}
                   className="w-full h-13 pl-12 pr-4 bg-zinc-50 border border-zinc-200 rounded-2xl text-base placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#b7152b]/10 focus:border-[#b7152b] transition-all font-medium"
                 />
               </div>
@@ -487,7 +514,7 @@ export const DictionaryView = () => {
                 variant="unstyled"
                 className="h-13 w-auto bg-[#b7152b] hover:bg-[#991120] text-white font-bold px-8 rounded-2xl flex items-center justify-center gap-2 shadow-sm shadow-red-100 transition-colors"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Search"}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t("dictionary.search")}
               </Button>
             </form>
 
@@ -516,7 +543,7 @@ export const DictionaryView = () => {
                         : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
                     }`}
                   >
-                    {level}
+                    {level === "All" ? t("dictionary.allLevels") : level}
                   </button>
                 );
               })}
@@ -547,8 +574,8 @@ export const DictionaryView = () => {
 
               {results.length === 0 ? (
                 <div className="bg-white border border-zinc-100 rounded-3xl p-12 text-center shadow-sm">
-                  <p className="text-zinc-500 font-medium">Không tìm thấy từ vựng nào khớp với từ khóa của bạn.</p>
-                  <p className="text-zinc-400 text-xs mt-2">Vui lòng kiểm tra lại chính tả hoặc thay đổi bộ lọc cấp độ.</p>
+                  <p className="text-zinc-500 font-medium">{t("dictionary.noResults")}</p>
+                  <p className="text-zinc-400 text-xs mt-2">{t("dictionary.noResultsHint")}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -586,7 +613,7 @@ export const DictionaryView = () => {
 
                         {/* Meaning preview */}
                         <p className="text-sm text-zinc-600 mt-4 leading-relaxed font-medium line-clamp-2 pr-20">
-                          {entry.meaning_vi}
+                          {language === "en" ? entry.meaning_en || entry.meaning_vi : entry.meaning_vi || entry.meaning_en}
                         </p>
 
                         {/* Action buttons on card (Favorites/Save) */}
@@ -600,7 +627,7 @@ export const DictionaryView = () => {
                                   ? "bg-amber-50 border-amber-200 text-amber-600 shadow-sm"
                                   : "bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-400 hover:text-zinc-700"
                               }`}
-                              title={entry.is_saved ? "Saved" : "Save Word"}
+                              title={entry.is_saved ? t("dictionary.saved") : t("dictionary.saveWord")}
                             >
                               <Bookmark size={15} fill={entry.is_saved ? "currentColor" : "none"} />
                             </button>
@@ -613,7 +640,7 @@ export const DictionaryView = () => {
                                   ? "bg-red-50 border-red-200 text-[#b7152b] shadow-sm"
                                   : "bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-400 hover:text-zinc-700"
                               }`}
-                              title={entry.is_favorited ? "Favorited" : "Favorite"}
+                              title={entry.is_favorited ? t("dictionary.favorited") : t("dictionary.favorite")}
                             >
                               <Heart size={15} fill={entry.is_favorited ? "currentColor" : "none"} />
                             </button>
@@ -632,9 +659,9 @@ export const DictionaryView = () => {
               <div className="w-16 h-16 rounded-full bg-red-50 text-[#b7152b] flex items-center justify-center mx-auto">
                 <Search size={28} />
               </div>
-              <h3 className="text-lg font-extrabold text-zinc-900">Tra cứu nhanh từ vựng</h3>
+              <h3 className="text-lg font-extrabold text-zinc-900">{t("dictionary.quickLookup")}</h3>
               <p className="text-zinc-500 text-sm max-w-md mx-auto leading-relaxed">
-                Nhập từ vựng, Hiragana, Hán tự hoặc nghĩa tiếng Việt/tiếng Anh ở khung tìm kiếm phía trên để bắt đầu tra cứu.
+                {t("dictionary.quickLookupHint")}
               </p>
             </div>
           )}
@@ -664,7 +691,7 @@ export const DictionaryView = () => {
               {detailLoading && (
                 <div className="flex flex-col items-center justify-center py-20 space-y-3">
                   <Loader2 className="w-8 h-8 animate-spin text-[#b7152b]" />
-                  <span className="text-xs text-zinc-400 font-semibold">Đang tải chi tiết...</span>
+                  <span className="text-xs text-zinc-400 font-semibold">{t("dictionary.loadingDetail")}</span>
                 </div>
               )}
 
@@ -703,7 +730,7 @@ export const DictionaryView = () => {
                         className="flex-1 h-12 bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-800 font-bold px-4 rounded-xl transition-all flex items-center justify-center gap-2 text-sm shadow-sm"
                       >
                         <Volume2 size={16} className="text-zinc-600" />
-                        Listen
+                        {t("dictionary.listen")}
                       </button>
 
                       {/* Save Word Button */}
@@ -718,12 +745,12 @@ export const DictionaryView = () => {
                         {selectedEntry.is_saved ? (
                           <>
                             <Check size={16} />
-                            Saved
+                            {t("dictionary.saved")}
                           </>
                         ) : (
                           <>
                             <Plus size={16} />
-                            Save Word
+                            {t("dictionary.saveWord")}
                           </>
                         )}
                       </button>
@@ -734,7 +761,7 @@ export const DictionaryView = () => {
                   {(selectedEntry.meaning_vi || selectedEntry.meaning_en) && (
                   <div>
                     <span className="text-[10px] font-extrabold tracking-widest text-[#b7152b]/80 uppercase block mb-2.5">
-                      MEANING
+                      {t("dictionary.meaning")}
                     </span>
                     <div className="space-y-3">
                       {/* Vietnamese meaning */}
@@ -768,7 +795,7 @@ export const DictionaryView = () => {
                   {selectedEntry.vocabulary && (selectedEntry.vocabulary.example_sentence_jp || selectedEntry.vocabulary.example_sentence_vi) && (
                     <div>
                       <span className="text-[10px] font-extrabold tracking-widest text-[#b7152b]/80 uppercase block mb-2.5">
-                        EXAMPLES
+                      {t("dictionary.examples")}
                       </span>
                       <div className="bg-zinc-50/30 border border-zinc-100 rounded-2xl p-4 space-y-2">
                         {selectedEntry.vocabulary.example_sentence_jp && (
@@ -789,7 +816,7 @@ export const DictionaryView = () => {
                   {getKanjiBreakdown(selectedEntry.term_jp).length > 0 && (
                     <div>
                       <span className="text-[10px] font-extrabold tracking-widest text-[#b7152b]/80 uppercase block mb-2.5">
-                        KANJI BREAKDOWN
+                        {t("dictionary.kanjiBreakdown")}
                       </span>
                       <div className="grid grid-cols-2 gap-2.5">
                         {getKanjiBreakdown(selectedEntry.term_jp).map((kanjiChar) => {

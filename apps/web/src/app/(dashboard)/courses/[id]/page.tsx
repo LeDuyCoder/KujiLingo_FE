@@ -15,6 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Button } from "@/shared/components/ui/Button";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface Lesson {
   id: string;
@@ -43,6 +44,7 @@ interface PageProps {
 }
 
 export default function CourseDetailPage({ params }: PageProps) {
+  const { t } = useLanguage();
   const router = useRouter();
   const resolvedParams = use(params);
   const courseId = resolvedParams.id;
@@ -170,7 +172,7 @@ export default function CourseDetailPage({ params }: PageProps) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-400 font-semibold">Đang tải thông tin khóa học...</span>
+        <span className="text-sm text-zinc-400 font-semibold">{t("courses.loadingDetail")}</span>
       </div>
     );
   }
@@ -181,10 +183,10 @@ export default function CourseDetailPage({ params }: PageProps) {
         <div className="w-16 h-16 bg-red-50 text-[#b7152b] rounded-full flex items-center justify-center mx-auto">
           <Award size={32} />
         </div>
-        <h2 className="text-xl font-extrabold text-zinc-900">Không tìm thấy khóa học</h2>
-        <p className="text-zinc-500 text-sm leading-relaxed">{error || "Khóa học không khả dụng hoặc đã bị gỡ bỏ."}</p>
+        <h2 className="text-xl font-extrabold text-zinc-900">{t("courses.notFound")}</h2>
+        <p className="text-zinc-500 text-sm leading-relaxed">{error || t("courses.notAvailable")}</p>
         <Button onClick={() => router.push("/courses")} className="h-10 px-6 mx-auto">
-          Quay lại danh sách
+          {t("courses.backList")}
         </Button>
       </div>
     );
@@ -255,7 +257,7 @@ export default function CourseDetailPage({ params }: PageProps) {
           className="flex min-h-9 items-center gap-1.5 pr-2 text-xs font-bold text-zinc-500 transition-colors group hover:text-zinc-950 sm:gap-2 sm:text-sm"
         >
           <ChevronLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
-          Quay lại khóa học
+          {t("courses.backCourse")}
         </button>
       </div>
 
@@ -269,14 +271,14 @@ export default function CourseDetailPage({ params }: PageProps) {
             {course.title}
           </h1>
           <p className="max-w-2xl text-[13px] font-medium leading-relaxed text-zinc-500 sm:text-sm">
-            {course.description || "Khóa học được biên soạn có lộ trình chi tiết giúp học viên làm chủ kiến thức từ vựng hiệu quả."}
+            {course.description || t("courses.fallbackDescription")}
           </p>
         </div>
 
         <div className="z-10 flex w-fit min-w-[124px] flex-col items-center rounded-2xl border border-zinc-100 bg-white px-4 py-3 text-center shadow-sm md:min-w-[140px] md:p-5">
           <div className="mb-0.5 flex items-center justify-center gap-1.5 text-zinc-400 md:mb-1">
             <FileText size={14} />
-            <span className="text-[10px] font-extrabold uppercase tracking-wider">Bài học</span>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider">{t("courses.lessons")}</span>
           </div>
           <span className="text-3xl font-extrabold text-zinc-900">
             {sortedLessons.length}
@@ -291,16 +293,16 @@ export default function CourseDetailPage({ params }: PageProps) {
       <div className="space-y-6 rounded-3xl border border-zinc-100 bg-white p-4 shadow-sm sm:space-y-8 sm:p-6 md:rounded-[32px] md:p-12">
         <div>
           <h2 className="font-sans text-lg font-bold tracking-tight text-zinc-900 sm:text-xl">
-            Lộ trình học tập (Roadmap)
+            {t("courses.roadmap")}
           </h2>
           <p className="mt-1 max-w-xl text-[11px] font-semibold leading-relaxed text-zinc-400 sm:text-xs">
-            Bấm vào từng bài học để xem thông tin chi tiết và bắt đầu học.
+            {t("courses.roadmapHint")}
           </p>
         </div>
 
         {sortedLessons.length === 0 ? (
           <div className="text-center py-12 text-zinc-400">
-            Khóa học này hiện chưa có bài học nào được tạo.
+            {t("courses.emptyLessons")}
           </div>
         ) : (
           /* Duolingo style zigzag roadmap track with a curved SVG path */
@@ -385,19 +387,19 @@ export default function CourseDetailPage({ params }: PageProps) {
                         <div className={`absolute bottom-full -z-10 -translate-x-1/2 w-0 h-0 border-l-[9px] border-l-transparent border-r-[9px] border-r-transparent border-b-[9px] border-b-zinc-100 ${pointerPosition}`} />
 
                         <span className={`text-[10px] font-extrabold uppercase tracking-wider block mb-1 ${status === "locked" ? "text-zinc-400" : colors.text}`}>
-                          Bài học {idx + 1}
+                          {t("courses.lesson")} {idx + 1}
                         </span>
                         <h4 className="font-extrabold text-sm text-zinc-950 mb-1 leading-snug">
                           {lesson.title}
                         </h4>
                         <p className="text-[11px] text-zinc-500 leading-normal mb-3 font-medium line-clamp-3">
-                          {lesson.description || "Nội dung bài học bao gồm các từ vựng chọn lọc."}
+                          {lesson.description || t("courses.lessonDescription")}
                         </p>
 
                         {status === "locked" ? (
                           <div className="w-full py-2 bg-zinc-50 border border-zinc-200 rounded-xl text-[11px] text-zinc-400 font-extrabold flex items-center justify-center gap-1.5 cursor-not-allowed">
                             <Lock size={12} />
-                            Chưa mở khóa
+                            {t("courses.locked")}
                           </div>
                         ) : (
                           <div className="flex gap-2">
@@ -406,7 +408,7 @@ export default function CourseDetailPage({ params }: PageProps) {
                             className={`h-9 flex-1 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 ${colors.btnBg}`}
                           >
                             <Play size={10} fill="currentColor" />
-                            Học ngay
+                            {t("courses.startLesson")}
                           </Button>
                           {lesson.quiz_count > 0 && (
                             <Button
@@ -415,7 +417,7 @@ export default function CourseDetailPage({ params }: PageProps) {
                               className="h-9 flex-1 rounded-xl border border-zinc-200 bg-white text-xs font-bold text-zinc-700 hover:border-[#b7152b] hover:text-[#b7152b] flex items-center justify-center gap-1.5 transition-colors"
                             >
                               <ClipboardList size={13} />
-                              Quiz
+                              {t("quiz.title")}
                             </Button>
                           )}
                           </div>

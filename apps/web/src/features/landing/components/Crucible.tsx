@@ -2,8 +2,10 @@
 
 import React from "react";
 import { Swords, Trophy } from "lucide-react";
+import { useLanguage } from "@/shared/i18n/language";
 
 export const Crucible = () => {
+  const { t } = useLanguage();
   return (
     <section className="bg-white py-20 lg:py-24 border-b border-zinc-100" id="arena">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -17,10 +19,10 @@ export const Crucible = () => {
             <div className="w-full max-w-[420px] rounded-3xl border border-zinc-100 bg-white p-8 shadow-xl shadow-zinc-100 flex flex-col items-center animate-fade-in-up">
               <div className="text-center mb-8">
                 <h3 className="text-sm font-black tracking-widest text-[#b7152b] uppercase mb-1 animate-pulse">
-                  Match Found
+                  {t("landing.matchFound")}
                 </h3>
                 <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
-                  Starting in 3...
+                  {t("landing.startingIn")}
                 </p>
               </div>
 
@@ -34,7 +36,7 @@ export const Crucible = () => {
                       P1
                     </span>
                   </div>
-                  <span className="text-sm font-bold text-zinc-900">You</span>
+                  <span className="text-sm font-bold text-zinc-900">{t("landing.you")}</span>
                   <span className="text-xs font-medium text-zinc-500">1240 ELO</span>
                 </div>
 
@@ -51,14 +53,14 @@ export const Crucible = () => {
                       P2
                     </span>
                   </div>
-                  <span className="text-sm font-bold text-zinc-900">Opponent</span>
+                  <span className="text-sm font-bold text-zinc-900">{t("landing.opponent")}</span>
                   <span className="text-xs font-medium text-zinc-500">1255 ELO</span>
                 </div>
               </div>
 
               {/* CTA Simulation */}
               <div className="w-full flex items-center justify-center rounded-xl bg-zinc-950 py-3.5 text-xs font-bold tracking-widest text-white uppercase shadow-lg border border-zinc-800 animate-pulse">
-                Prepare for Battle
+                {t("landing.prepareBattle")}
               </div>
             </div>
           </div>
@@ -66,14 +68,13 @@ export const Crucible = () => {
           {/* Right Column: Text Content */}
           <div className="flex flex-col justify-center text-left lg:pl-10">
             <div className="inline-flex items-center gap-2 rounded-full border border-red-100 bg-red-50/50 px-3.5 py-1 text-xs font-semibold tracking-wider text-[#b7152b] uppercase mb-6 self-start">
-              The Crucible
+              {t("landing.crucible")}
             </div>
             <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl mb-6 leading-[1.15]">
-              Test your mettle against the world.
+              {t("landing.crucibleTitle")}
             </h2>
             <p className="text-lg text-zinc-500 max-w-xl leading-relaxed mb-10">
-              Knowledge is tested in the forge of competition. Enter the Arena to match against 
-              students of similar skill globally and prove your fluency under pressure.
+              {t("landing.crucibleDescription")}
             </p>
 
             {/* Feature Bullets */}
@@ -83,10 +84,9 @@ export const Crucible = () => {
                   <Swords size={20} />
                 </div>
                 <div>
-                  <h4 className="text-base font-bold text-zinc-900 mb-1">Real-Time Duels</h4>
+                  <h4 className="text-base font-bold text-zinc-900 mb-1">{t("landing.realTimeDuels")}</h4>
                   <p className="text-sm text-zinc-500 leading-relaxed">
-                    Answer vocabulary and grammar questions simultaneously. Speed and accuracy determine 
-                    who deals damage to their opponent&apos;s health bar.
+                    {t("landing.realTimeDuelsDescription")}
                   </p>
                 </div>
               </div>
@@ -96,10 +96,9 @@ export const Crucible = () => {
                   <Trophy size={20} />
                 </div>
                 <div>
-                  <h4 className="text-base font-bold text-zinc-900 mb-1">Elo Rating System</h4>
+                  <h4 className="text-base font-bold text-zinc-900 mb-1">{t("landing.eloSystem")}</h4>
                   <p className="text-sm text-zinc-500 leading-relaxed">
-                    Climb the ranks from Bronze novice to Grandmaster scholar. Your rating reflects 
-                    your true, battle-tested fluency and pairs you with worthy adversaries.
+                    {t("landing.eloDescription")}
                   </p>
                 </div>
               </div>

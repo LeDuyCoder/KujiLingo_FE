@@ -11,6 +11,7 @@ import {
   Target
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface Vocabulary {
   id: string;
@@ -36,6 +37,7 @@ interface UserStats {
 }
 
 export default function FlashcardsPage() {
+  const { t } = useLanguage();
   const params = useParams();
   const router = useRouter();
   const folderId = params.folderId as string;
@@ -224,17 +226,17 @@ export default function FlashcardsPage() {
         <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
           <Target size={48} />
         </div>
-        <h1 className="text-3xl font-extrabold text-zinc-900">Session Complete!</h1>
+        <h1 className="text-3xl font-extrabold text-zinc-900">{t("quiz.complete")}</h1>
         <p className="text-zinc-500 font-medium max-w-sm">
           You&apos;ve reviewed all {cards.length} cards in this folder. Great job!
         </p>
         <div className="flex gap-4">
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-100 min-w-[120px]">
-            <p className="text-xs font-bold text-zinc-400 mb-1">XP Gained</p>
+            <p className="text-xs font-bold text-zinc-400 mb-1">{t("quiz.xpGained")}</p>
             <p className="text-2xl font-extrabold text-[#b7152b]">{xpGained}</p>
           </div>
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-zinc-100 min-w-[120px]">
-            <p className="text-xs font-bold text-zinc-400 mb-1">Accuracy</p>
+            <p className="text-xs font-bold text-zinc-400 mb-1">{t("practice.accuracy")}</p>
             <p className="text-2xl font-extrabold text-blue-600">
               {correctCount + wrongCount > 0 ? Math.round((correctCount / (correctCount + wrongCount)) * 100) : 0}%
             </p>
@@ -244,7 +246,7 @@ export default function FlashcardsPage() {
           href={`/my-words/${folderId}/learn`}
           className="mt-6 px-8 py-3 bg-[#b7152b] text-white rounded-xl font-bold hover:bg-[#9a1022] transition-colors"
         >
-          Return to Folder
+          {t("flashcards.returnFolder")}
         </Link>
       </div>
     );
@@ -274,11 +276,11 @@ export default function FlashcardsPage() {
         </div>
         
         <div className="flex items-center text-xs font-semibold text-zinc-500 gap-1.5">
-          <span>Folders</span>
+          <span>{t("flashcards.folders")}</span>
           <ChevronRight size={14} />
           <span>{folderName}</span>
           <ChevronRight size={14} />
-          <span className="text-zinc-900 font-bold">Review Session</span>
+          <span className="text-zinc-900 font-bold">{t("flashcards.session")}</span>
         </div>
 
         <div className="flex items-center gap-4 text-zinc-500">
@@ -299,40 +301,40 @@ export default function FlashcardsPage() {
           
           {/* Current Folder */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100">
-            <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mb-4">Current Folder</p>
+            <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mb-4">{t("flashcards.currentFolder")}</p>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-red-50 text-[#b7152b] rounded-xl flex items-center justify-center font-bold">
                 N5
               </div>
               <div>
                 <h3 className="font-extrabold text-zinc-900">{folderName}</h3>
-                <p className="text-xs text-zinc-500 font-medium">Japanese Core</p>
+                <p className="text-xs text-zinc-500 font-medium">{t("flashcards.subtitle")}</p>
               </div>
             </div>
           </div>
 
           {/* Statistics */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100">
-            <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mb-4">Statistics (Global)</p>
+            <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mb-4">{t("flashcards.statistics")}</p>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <span className="text-sm text-zinc-600 font-medium">Learned</span>
+                  <span className="text-sm text-zinc-600 font-medium">{t("flashcards.learned")}</span>
                 </div>
                 <span className="font-bold text-zinc-900">{globalLearned}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                  <span className="text-sm text-zinc-600 font-medium">Need Review</span>
+                  <span className="text-sm text-zinc-600 font-medium">{t("flashcards.needReview")}</span>
                 </div>
                 <span className="font-bold text-zinc-900">{globalReview}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="text-sm text-zinc-600 font-medium">Mastered</span>
+                  <span className="text-sm text-zinc-600 font-medium">{t("flashcards.mastered")}</span>
                 </div>
                 <span className="font-bold text-zinc-900">{globalMastered}</span>
               </div>
@@ -341,7 +343,7 @@ export default function FlashcardsPage() {
 
           {/* Today's Progress */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100 flex flex-col items-center justify-center text-center">
-            <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mb-6 self-start">Session Progress</p>
+            <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mb-6 self-start">{t("flashcards.progress")}</p>
             
             {/* Simple CSS Circle */}
             <div className="relative w-32 h-32 flex items-center justify-center mb-4">
@@ -357,7 +359,7 @@ export default function FlashcardsPage() {
                 <span className="text-2xl font-extrabold text-zinc-900">{sessionProgressPercent}%</span>
               </div>
             </div>
-            <p className="text-xs text-zinc-500 font-medium">Folder Completion</p>
+            <p className="text-xs text-zinc-500 font-medium">{t("flashcards.folderCompletion")}</p>
           </div>
 
         </div>
@@ -372,7 +374,7 @@ export default function FlashcardsPage() {
               <div className="flex items-center gap-4 text-xs font-bold text-zinc-500">
                 <span className="flex items-center gap-1.5 text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
                   <Target size={14} />
-                  {accuracy}% Accuracy
+                  {accuracy}% {t("practice.accuracy")}
                 </span>
                 <span className="flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2.5 py-1 rounded-lg">
                   🔥 {sessionStreak} Streak
@@ -440,7 +442,7 @@ export default function FlashcardsPage() {
                   </div>
                   {currentCard?.note && (
                     <div className="mt-8 px-6 py-4 bg-yellow-50 text-yellow-800 rounded-2xl text-sm max-w-sm text-center">
-                      <span className="font-bold block mb-1">Note:</span>
+                      <span className="font-bold block mb-1">{t("flashcards.note")}</span>
                       {currentCard.note}
                     </div>
                   )}
@@ -464,7 +466,7 @@ export default function FlashcardsPage() {
               className="flex-1 h-14 bg-white border border-red-200 hover:bg-red-50 text-red-600 rounded-2xl font-extrabold text-sm sm:text-base flex items-center justify-center shadow-sm transition-colors"
             >
               <span className="flex items-center gap-2">
-                Again <span className="opacity-50 text-xs hidden sm:inline">(1)</span>
+                {t("flashcards.again")} <span className="opacity-50 text-xs hidden sm:inline">(1)</span>
               </span>
             </button>
             <button 
@@ -472,7 +474,7 @@ export default function FlashcardsPage() {
               className="flex-1 h-14 bg-white border border-orange-200 hover:bg-orange-50 text-orange-600 rounded-2xl font-extrabold text-sm sm:text-base flex items-center justify-center shadow-sm transition-colors"
             >
               <span className="flex items-center gap-2">
-                Hard <span className="opacity-50 text-xs hidden sm:inline">(2)</span>
+                {t("flashcards.hard")} <span className="opacity-50 text-xs hidden sm:inline">(2)</span>
               </span>
             </button>
             <button 
@@ -480,7 +482,7 @@ export default function FlashcardsPage() {
               className="flex-1 h-14 bg-white border border-green-200 hover:bg-green-50 text-green-600 rounded-2xl font-extrabold text-sm sm:text-base flex items-center justify-center shadow-sm transition-colors"
             >
               <span className="flex items-center gap-2">
-                Good <span className="opacity-50 text-xs hidden sm:inline">(3)</span>
+                {t("flashcards.good")} <span className="opacity-50 text-xs hidden sm:inline">(3)</span>
               </span>
             </button>
             <button 
@@ -488,14 +490,14 @@ export default function FlashcardsPage() {
               className="flex-1 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-extrabold text-sm sm:text-base flex items-center justify-center shadow-sm transition-colors border-b-4 border-blue-800 active:border-b-0 active:translate-y-1"
             >
               <span className="flex items-center gap-2">
-                Easy <span className="opacity-80 text-xs hidden sm:inline">(4)</span>
+                {t("flashcards.easy")} <span className="opacity-80 text-xs hidden sm:inline">(4)</span>
               </span>
             </button>
           </div>
 
           {!isFlipped && (
             <p className="text-zinc-400 text-sm font-semibold mt-6 animate-pulse">
-              Press <kbd className="px-2 py-1 bg-zinc-200 text-zinc-600 rounded-md mx-1">Space</kbd> or click card to flip
+              {t("flashcards.flipHint")}
             </p>
           )}
 
@@ -506,15 +508,15 @@ export default function FlashcardsPage() {
           
           {/* Session Stats */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100">
-            <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mb-4">Session Stats</p>
+            <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mb-4">{t("flashcards.sessionStats")}</p>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-purple-50 rounded-2xl p-4 flex flex-col items-center text-center">
                 <span className="text-2xl font-extrabold text-purple-700 mb-1">{xpGained}</span>
-                <span className="text-[10px] font-bold text-purple-400 uppercase">XP Gained</span>
+                <span className="text-[10px] font-bold text-purple-400 uppercase">{t("quiz.xpGained")}</span>
               </div>
               <div className="bg-orange-50 rounded-2xl p-4 flex flex-col items-center text-center">
                 <span className="text-2xl font-extrabold text-orange-600 mb-1">{maxCombo}x</span>
-                <span className="text-[10px] font-bold text-orange-400 uppercase">Max Combo</span>
+                <span className="text-[10px] font-bold text-orange-400 uppercase">{t("flashcards.maxCombo")}</span>
               </div>
             </div>
             <div className="bg-red-50 rounded-2xl p-4 flex items-center justify-between">
@@ -530,31 +532,31 @@ export default function FlashcardsPage() {
 
           {/* Shortcuts */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-zinc-100">
-            <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mb-4">Shortcuts</p>
+            <p className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-widest mb-4">{t("flashcards.shortcuts")}</p>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-500 font-medium">Flip Card</span>
-                <kbd className="px-2.5 py-1 bg-zinc-100 text-zinc-600 font-bold text-xs rounded-lg border border-zinc-200 shadow-sm">Space</kbd>
+                <span className="text-sm text-zinc-500 font-medium">{t("flashcards.flipCard")}</span>
+                <kbd className="px-2.5 py-1 bg-zinc-100 text-zinc-600 font-bold text-xs rounded-lg border border-zinc-200 shadow-sm">{t("flashcards.spaceKey")}</kbd>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-500 font-medium">Again</span>
+                <span className="text-sm text-zinc-500 font-medium">{t("flashcards.again")}</span>
                 <kbd className="px-2.5 py-1 bg-zinc-100 text-zinc-600 font-bold text-xs rounded-lg border border-zinc-200 shadow-sm">1</kbd>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-500 font-medium">Hard</span>
+                <span className="text-sm text-zinc-500 font-medium">{t("flashcards.hard")}</span>
                 <kbd className="px-2.5 py-1 bg-zinc-100 text-zinc-600 font-bold text-xs rounded-lg border border-zinc-200 shadow-sm">2</kbd>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-500 font-medium">Good</span>
+                <span className="text-sm text-zinc-500 font-medium">{t("flashcards.good")}</span>
                 <kbd className="px-2.5 py-1 bg-zinc-100 text-zinc-600 font-bold text-xs rounded-lg border border-zinc-200 shadow-sm">3</kbd>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-500 font-medium">Swipe Left</span>
-                <kbd className="px-2.5 py-1 bg-zinc-100 text-zinc-600 font-bold text-xs rounded-lg border border-zinc-200 shadow-sm">Again</kbd>
+                <span className="text-sm text-zinc-500 font-medium">{t("flashcards.swipeLeft")}</span>
+                <kbd className="px-2.5 py-1 bg-zinc-100 text-zinc-600 font-bold text-xs rounded-lg border border-zinc-200 shadow-sm">{t("flashcards.again")}</kbd>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-500 font-medium">Swipe Right</span>
-                <kbd className="px-2.5 py-1 bg-zinc-100 text-zinc-600 font-bold text-xs rounded-lg border border-zinc-200 shadow-sm">Good</kbd>
+                <span className="text-sm text-zinc-500 font-medium">{t("flashcards.swipeRight")}</span>
+                <kbd className="px-2.5 py-1 bg-zinc-100 text-zinc-600 font-bold text-xs rounded-lg border border-zinc-200 shadow-sm">{t("flashcards.good")}</kbd>
               </div>
             </div>
           </div>

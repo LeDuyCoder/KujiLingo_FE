@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface LeaderboardEntry {
   rank: number;
@@ -43,6 +44,8 @@ interface UserStats {
 }
 
 export default function LeaderboardPage() {
+  const { t, language } = useLanguage();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
   const { user } = useAuthStore();
   const [period, setPeriod] = useState<"weekly" | "all_time">("weekly");
   const [searchQuery, setSearchQuery] = useState("");
@@ -96,7 +99,7 @@ export default function LeaderboardPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-400 font-semibold">Đang tải bảng xếp hạng...</span>
+        <span className="text-sm text-zinc-400 font-semibold">{t("leaderboard.loading")}</span>
       </div>
     );
   }
@@ -128,9 +131,9 @@ export default function LeaderboardPage() {
     <div className="space-y-8 animate-fade-in-up">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-extrabold text-zinc-950 tracking-tight">Global Leaderboard</h1>
+        <h1 className="text-3xl font-extrabold text-zinc-950 tracking-tight">{t("leaderboard.title")}</h1>
         <p className="text-zinc-500 text-sm mt-1">
-          Thi đua cùng các học viên trên toàn thế giới và thăng tiến trên bảng xếp hạng.
+          {t("leaderboard.description")}
         </p>
       </div>
 
@@ -155,7 +158,7 @@ export default function LeaderboardPage() {
               </div>
               <div className="bg-slate-100/80 border border-slate-200/50 rounded-2xl px-3 py-1.5 w-full max-w-[130px] mx-auto shadow-inner">
                 <span className="block text-xs font-black text-slate-700">
-                  {secondPlace.xp_total.toLocaleString()}
+                  {secondPlace.xp_total.toLocaleString(locale)}
                 </span>
                 <span className="block text-[8px] font-extrabold text-slate-400 uppercase tracking-wide">
                   {scoreUnit}
@@ -163,7 +166,7 @@ export default function LeaderboardPage() {
               </div>
             </div>
           ) : (
-            <div className="w-full text-center text-zinc-300 text-xs py-10">Trống</div>
+            <div className="w-full text-center text-zinc-300 text-xs py-10">{t("leaderboard.empty")}</div>
           )}
         </div>
 
@@ -191,7 +194,7 @@ export default function LeaderboardPage() {
               </div>
               <div className="bg-amber-50 border border-amber-200/50 rounded-2xl px-4 py-2 w-full max-w-[150px] mx-auto shadow-inner">
                 <span className="block text-sm font-black text-amber-600">
-                  {firstPlace.xp_total.toLocaleString()}
+                  {firstPlace.xp_total.toLocaleString(locale)}
                 </span>
                 <span className="block text-[8px] font-extrabold text-amber-500 uppercase tracking-wide">
                   {scoreUnit}
@@ -199,7 +202,7 @@ export default function LeaderboardPage() {
               </div>
             </div>
           ) : (
-            <div className="w-full text-center text-zinc-300 text-xs py-10">Trống</div>
+            <div className="w-full text-center text-zinc-300 text-xs py-10">{t("leaderboard.empty")}</div>
           )}
         </div>
 
@@ -222,7 +225,7 @@ export default function LeaderboardPage() {
               </div>
               <div className="bg-orange-50/50 border border-orange-200/50 rounded-2xl px-3 py-1.5 w-full max-w-[130px] mx-auto shadow-inner">
                 <span className="block text-xs font-black text-orange-700">
-                  {thirdPlace.xp_total.toLocaleString()}
+                  {thirdPlace.xp_total.toLocaleString(locale)}
                 </span>
                 <span className="block text-[8px] font-extrabold text-orange-400 uppercase tracking-wide">
                   {scoreUnit}
@@ -230,7 +233,7 @@ export default function LeaderboardPage() {
               </div>
             </div>
           ) : (
-            <div className="w-full text-center text-zinc-300 text-xs py-10">Trống</div>
+            <div className="w-full text-center text-zinc-300 text-xs py-10">{t("leaderboard.empty")}</div>
           )}
         </div>
       </div>
@@ -252,7 +255,7 @@ export default function LeaderboardPage() {
                   period === "weekly" ? "bg-white text-[#b7152b] shadow-sm" : "text-zinc-400 hover:text-zinc-600"
                 }`}
               >
-                Weekly (Tuần này)
+                {t("leaderboard.weekly")}
               </button>
               <button 
                 onClick={() => setPeriod("all_time")}
@@ -260,7 +263,7 @@ export default function LeaderboardPage() {
                   period === "all_time" ? "bg-white text-[#b7152b] shadow-sm" : "text-zinc-400 hover:text-zinc-600"
                 }`}
               >
-                All Time (Mọi lúc)
+                {t("leaderboard.allTime")}
               </button>
             </div>
 
@@ -273,7 +276,7 @@ export default function LeaderboardPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Tìm học viên..."
+                placeholder={t("leaderboard.search")}
                 className="w-full pl-9 pr-4 py-2.5 bg-zinc-50 border border-zinc-200/60 rounded-full text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-red-500/20 focus:border-[#b7152b] placeholder-zinc-400 text-zinc-800"
               />
             </div>
@@ -285,10 +288,10 @@ export default function LeaderboardPage() {
               <table className="w-full min-w-[500px] border-collapse text-left">
                 <thead>
                   <tr className="border-b border-zinc-100 text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider bg-zinc-50/50">
-                    <th className="px-6 py-4 text-center w-20">Hạng</th>
-                    <th className="px-6 py-4">Học viên</th>
-                    <th className="px-6 py-4 text-center w-24">Cấp độ</th>
-                    <th className="px-6 py-4 text-right pr-8">Tổng {scoreUnit}</th>
+                    <th className="px-6 py-4 text-center w-20">{t("leaderboard.rank")}</th>
+                    <th className="px-6 py-4">{t("leaderboard.student")}</th>
+                    <th className="px-6 py-4 text-center w-24">{t("leaderboard.level")}</th>
+                    <th className="px-6 py-4 text-right pr-8">{t("leaderboard.totalScore").replace("{unit}", scoreUnit)}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 text-sm font-semibold text-zinc-700">
@@ -318,7 +321,7 @@ export default function LeaderboardPage() {
                             </div>
                             <div>
                               <span className="font-extrabold text-zinc-900 block leading-tight">
-                                {isMe ? `Bạn (${entry.display_name})` : entry.display_name}
+                                {isMe ? t("leaderboard.you").replace("{name}", entry.display_name) : entry.display_name}
                               </span>
                             </div>
                           </div>
@@ -333,7 +336,7 @@ export default function LeaderboardPage() {
 
                         {/* Total Score */}
                         <td className="px-6 py-4.5 text-right pr-8 font-black text-zinc-950">
-                          {entry.xp_total.toLocaleString()}
+                          {entry.xp_total.toLocaleString(locale)}
                         </td>
                       </tr>
                     );
@@ -342,7 +345,7 @@ export default function LeaderboardPage() {
                   {filteredEntries.length === 0 && (
                     <tr>
                       <td colSpan={4} className="px-6 py-12 text-center text-zinc-400 font-bold">
-                        Không tìm thấy học viên trùng khớp.
+                        {t("leaderboard.noMatch")}
                       </td>
                     </tr>
                   )}
@@ -352,7 +355,7 @@ export default function LeaderboardPage() {
 
             {/* Pagination Footer */}
             <div className="bg-zinc-50/50 px-6 py-4 flex justify-between items-center text-xs font-bold text-zinc-400 border-t border-zinc-100">
-              <span>Hiển thị 1 đến {filteredEntries.length} của {filteredEntries.length} học viên</span>
+              <span>{t("leaderboard.pagination").replace("{shown}", filteredEntries.length.toLocaleString(locale)).replace("{total}", filteredEntries.length.toLocaleString(locale))}</span>
               
               <div className="flex gap-1.5">
                 <button className="w-7 h-7 rounded-lg border border-zinc-100 bg-white flex items-center justify-center text-zinc-300 cursor-not-allowed" disabled>&lt;</button>
@@ -374,10 +377,10 @@ export default function LeaderboardPage() {
               </div>
               <div>
                 <h3 className="font-extrabold text-zinc-950 text-base leading-tight">
-                  {user?.display_name || "Học viên"}
+                  {user?.display_name || t("leaderboard.student")}
                 </h3>
                 <span className="text-xs font-bold text-zinc-400 block mt-0.5">
-                  Xếp hạng hiện tại: <span className="text-[#b7152b] font-black">#{myRank || "N/A"}</span>
+                  {t("leaderboard.currentRank")} <span className="text-[#b7152b] font-black">#{myRank ? myRank.toLocaleString(locale) : "N/A"}</span>
                 </span>
               </div>
             </div>
@@ -386,8 +389,8 @@ export default function LeaderboardPage() {
             {nextRankUser ? (
               <div className="space-y-2.5">
                 <div className="flex justify-between items-center text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">
-                  <span>{myScore.toLocaleString()} {scoreUnit}</span>
-                  <span className="text-[#b7152b]">Hạng tiếp theo: #{myRank - 1}</span>
+                  <span>{myScore.toLocaleString(locale)} {scoreUnit}</span>
+                  <span className="text-[#b7152b]">{t("leaderboard.nextRank").replace("{rank}", (myRank - 1).toLocaleString(locale))}</span>
                 </div>
                 <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
                   <div 
@@ -396,12 +399,12 @@ export default function LeaderboardPage() {
                   />
                 </div>
                 <p className="text-[10px] text-zinc-500 font-bold leading-normal italic text-center">
-                  &ldquo;Chỉ cần {xpToOvertake.toLocaleString()} {scoreUnit} nữa để vượt qua {nextRankUser.display_name}!&rdquo;
+                  &ldquo;{t("leaderboard.overtakeHint").replace("{count}", xpToOvertake.toLocaleString(locale)).replace("{unit}", scoreUnit).replace("{name}", nextRankUser.display_name)}&rdquo;
                 </p>
               </div>
             ) : (
               <div className="text-xs text-zinc-400 font-bold italic text-center py-2 bg-amber-50 rounded-2xl border border-amber-100 text-amber-700">
-                🎉 Bạn đang dẫn đầu bảng xếp hạng!
+                {t("leaderboard.leading")}
               </div>
             )}
 
@@ -409,14 +412,14 @@ export default function LeaderboardPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center bg-zinc-50 border border-zinc-100 rounded-2xl p-3">
-                <span className="text-zinc-400 text-[10px] font-extrabold uppercase block tracking-wider">Chuỗi ngày</span>
+                <span className="text-zinc-400 text-[10px] font-extrabold uppercase block tracking-wider">{t("leaderboard.streak")}</span>
                 <span className="text-zinc-900 text-lg font-black mt-1 block flex items-center justify-center gap-1">
                   <Flame size={16} className="text-amber-500 fill-amber-500" />
                   {userStats?.streak || 0}
                 </span>
               </div>
               <div className="text-center bg-zinc-50 border border-zinc-100 rounded-2xl p-3">
-                <span className="text-zinc-400 text-[10px] font-extrabold uppercase block tracking-wider">Cấp độ</span>
+                <span className="text-zinc-400 text-[10px] font-extrabold uppercase block tracking-wider">{t("leaderboard.level")}</span>
                 <span className="text-zinc-900 text-lg font-black mt-1 block flex items-center justify-center gap-1">
                   <Trophy size={16} className="text-yellow-500" />
                   {userStats?.level || 1}
@@ -427,7 +430,7 @@ export default function LeaderboardPage() {
 
           {/* Personal Stats Card (Replacing mock panels with 100% database stats) */}
           <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm space-y-4">
-            <h3 className="font-bold text-zinc-900 text-base">Thống kê học tập</h3>
+            <h3 className="font-bold text-zinc-900 text-base">{t("leaderboard.stats")}</h3>
             
             <div className="space-y-3.5 pt-1">
               <div className="flex items-center gap-3.5 bg-zinc-50 border border-zinc-100 rounded-2xl p-3">
@@ -435,9 +438,9 @@ export default function LeaderboardPage() {
                   <Activity size={16} />
                 </div>
                 <div>
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Tổng lượt ôn tập</span>
+                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("leaderboard.reviews")}</span>
                   <span className="text-sm font-black text-zinc-950 mt-0.5 block">
-                    {userStats?.total_reviews?.toLocaleString() ?? 0} lần
+                    {userStats?.total_reviews?.toLocaleString(locale) ?? 0} {t("leaderboard.reviewUnit")}
                   </span>
                 </div>
               </div>
@@ -447,7 +450,7 @@ export default function LeaderboardPage() {
                   <Sparkles size={16} fill="currentColor" />
                 </div>
                 <div>
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Tỷ lệ chính xác</span>
+                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("leaderboard.accuracy")}</span>
                   <span className="text-sm font-black text-zinc-950 mt-0.5 block">
                     {userStats?.accuracy_percent ? `${userStats.accuracy_percent}%` : "Chưa có dữ liệu"}
                   </span>
@@ -459,9 +462,9 @@ export default function LeaderboardPage() {
                   <Trophy size={16} />
                 </div>
                 <div>
-                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">Từ vựng thành thạo</span>
+                  <span className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider block">{t("leaderboard.mastered")}</span>
                   <span className="text-sm font-black text-zinc-950 mt-0.5 block">
-                    {userStats?.total_mastered?.toLocaleString() ?? 0} từ
+                    {userStats?.total_mastered?.toLocaleString(locale) ?? 0} {t("leaderboard.masteredUnit")}
                   </span>
                 </div>
               </div>

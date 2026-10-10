@@ -8,26 +8,18 @@ import { Button } from "@/shared/components/ui/Button";
 import { Input } from "@/shared/components/ui/Input";
 import { Checkbox } from "@/shared/components/ui/Checkbox";
 import { useAuthStore } from "../stores/auth.store";
+import { GoogleSignInButton } from "./GoogleSignInButton";
+import { useLanguage } from "@/shared/i18n/language";
 
 export const LoginForm = () => {
   const router = useRouter();
   const { login, isLoading, error, user, clearError } = useAuthStore();
-  const quickLoginAccounts = [
-    {
-      role: "user",
-      label: "Học viên",
-      email: process.env.NEXT_PUBLIC_DEMO_USER_EMAIL || "user_demo_1@example.com",
-      password: process.env.NEXT_PUBLIC_DEMO_USER_PASSWORD || "Password123",
-    },
-    ...(process.env.NEXT_PUBLIC_DEMO_ADMIN_EMAIL && process.env.NEXT_PUBLIC_DEMO_ADMIN_PASSWORD
-      ? [{
-          role: "admin",
-          label: "Quản trị viên",
-          email: process.env.NEXT_PUBLIC_DEMO_ADMIN_EMAIL,
-          password: process.env.NEXT_PUBLIC_DEMO_ADMIN_PASSWORD,
-        }]
-      : []),
-  ];
+  const { t } = useLanguage();
+  const demoUserEmail = process.env.NEXT_PUBLIC_DEMO_USER_EMAIL || "user_demo_1@example.com";
+  const demoUserPassword = process.env.NEXT_PUBLIC_DEMO_USER_PASSWORD || "Password123";
+  const demoAdminEmail = process.env.NEXT_PUBLIC_DEMO_ADMIN_EMAIL;
+  const demoAdminPassword = process.env.NEXT_PUBLIC_DEMO_ADMIN_PASSWORD;
+  const hasDemoAdminCredentials = Boolean(demoAdminEmail && demoAdminPassword);
   
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -64,7 +56,7 @@ export const LoginForm = () => {
     return (
       <div className="w-full max-w-[420px] px-4 md:px-0 flex flex-col items-center justify-center min-h-[300px] text-center">
         <div className="w-12 h-12 border-4 border-[#b7152b] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="text-zinc-600">You are already signed in. Redirecting...</p>
+        <p className="text-zinc-600">{t("auth.redirecting")}</p>
       </div>
     );
   }
@@ -73,10 +65,10 @@ export const LoginForm = () => {
     <div className="w-full max-w-[420px] px-4 md:px-0 animate-fade-in-up">
       <div className="mb-6">
         <h2 className="text-3xl font-bold tracking-tight text-zinc-900 mb-2">
-          Welcome Back
+          {t("auth.welcomeBack")}
         </h2>
         <p className="text-base text-zinc-500">
-          Sign in to continue your learning journey.
+          {t("auth.loginDescription")}
         </p>
       </div>
 
@@ -86,7 +78,7 @@ export const LoginForm = () => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <div className="flex-1">
-            <p className="font-semibold text-red-900">Đăng nhập thất bại</p>
+            <p className="font-semibold text-red-900">{t("auth.loginFailed")}</p>
             <p className="mt-1 text-red-700">{error}</p>
           </div>
         </div>
@@ -95,11 +87,11 @@ export const LoginForm = () => {
       <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-zinc-700">
-            Email Address
+            {t("auth.email")}
           </label>
           <Input
             type="email"
-            placeholder="you@example.com"
+            placeholder={t("auth.emailPlaceholder")}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -110,7 +102,7 @@ export const LoginForm = () => {
 
         <div className="flex flex-col gap-2">
           <label className="text-sm font-semibold text-zinc-700">
-            Password
+            {t("auth.password")}
           </label>
           <Input
             type={showPassword ? "text" : "password"}
@@ -135,7 +127,7 @@ export const LoginForm = () => {
 
         <div className="flex items-center justify-between text-sm">
           <Checkbox
-            label="Remember me"
+            label={t("auth.remember")}
             checked={rememberMe}
             onChange={(e) => setRememberMe(e.target.checked)}
             disabled={isLoading}
@@ -144,7 +136,7 @@ export const LoginForm = () => {
             href="#"
             className="font-medium text-[#b7152b] hover:text-[#a01226] hover:underline"
           >
-            Forgot password?
+            {t("auth.forgotPassword")}
           </a>
         </div>
 
@@ -152,10 +144,10 @@ export const LoginForm = () => {
           {isLoading ? (
             <div className="flex items-center justify-center gap-2">
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>Signing In...</span>
+              <span>{t("auth.signingIn")}</span>
             </div>
           ) : (
-            "Sign In"
+            t("auth.signIn")
           )}
         </Button>
 
@@ -164,65 +156,56 @@ export const LoginForm = () => {
             <div className="w-full border-t border-zinc-200 border-zinc-200" />
           </div>
           <span className="relative bg-white px-3 text-sm text-zinc-400 bg-white">
-            OR
+            {t("auth.or")}
           </span>
         </div>
 
-        <Button
-          type="button"
-          variant="outline"
-          className="flex items-center justify-center gap-3 border border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50"
-        >
-          <svg className="h-5 w-5" viewBox="0 0 24 24">
-            <path
-              fill="#4285F4"
-              d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-            />
-            <path
-              fill="#EA4335"
-              d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-            />
-          </svg>
-          Continue with Google
-        </Button>
+        <GoogleSignInButton disabled={isLoading} />
 
         {process.env.NODE_ENV === "development" && (
           <div className="mt-2">
             <p className="mb-2 text-center text-xs font-semibold uppercase tracking-wide text-zinc-400">
-              Quick sign in
+              {t("auth.devLogin")}
             </p>
-            <div className={`grid gap-3 ${quickLoginAccounts.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
-              {quickLoginAccounts.map((account) => (
-                <Button
-                  key={account.role}
-                  type="button"
-                  variant="outline"
-                  className="h-10 rounded-xl border-zinc-200 px-3 text-sm"
-                  disabled={isLoading}
-                  onClick={() => signIn(account.email, account.password)}
-                >
-                  {isLoading ? "Signing in..." : account.label}
-                </Button>
-              ))}
+            <div className="grid grid-cols-2 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 rounded-xl border-zinc-200 px-3 text-sm"
+                disabled={isLoading}
+                onClick={() => signIn(demoUserEmail, demoUserPassword)}
+              >
+                {isLoading ? t("auth.signingIn") : t("auth.learner")}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 rounded-xl border-zinc-200 px-3 text-sm"
+                disabled={isLoading || !hasDemoAdminCredentials}
+                onClick={() => {
+                  if (demoAdminEmail && demoAdminPassword) {
+                    void signIn(demoAdminEmail, demoAdminPassword);
+                  }
+                }}
+              >
+                {isLoading ? t("auth.signingIn") : t("auth.admin")}
+              </Button>
             </div>
+            {!hasDemoAdminCredentials && (
+              <p className="mt-2 text-center text-xs text-zinc-400">
+                Cấu hình NEXT_PUBLIC_DEMO_ADMIN_EMAIL và NEXT_PUBLIC_DEMO_ADMIN_PASSWORD trong apps/web/.env.local để bật đăng nhập admin.
+              </p>
+            )}
           </div>
         )}
 
         <div className="mt-4 text-center text-sm text-zinc-500">
-          Don&apos;t have an account?{" "}
+          {t("auth.noAccount")}{" "}
           <Link
             href="/register"
             className="font-medium text-[#b7152b] hover:text-[#a01226] hover:underline"
           >
-            Create Account
+            {t("auth.createAccount")}
           </Link>
         </div>
       </form>

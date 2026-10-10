@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Check, ClipboardList, Headphones, Loader2, RotateCcw, X } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { Button } from "@/shared/components/ui/Button";
+import { useLanguage } from "@/shared/i18n/language";
 
 type QuizQuestion = {
   id: string;
@@ -31,9 +32,11 @@ type QuizResult = {
 };
 
 export default function LessonQuizPage({ params }: { params: Promise<{ id: string }> }) {
+  const { t, language } = useLanguage();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
   const { id } = use(params);
   const router = useRouter();
-  const [title, setTitle] = useState("Bài quiz");
+  const [title, setTitle] = useState(t("quiz.title"));
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [choices, setChoices] = useState<Record<string, string>>({});
   const [result, setResult] = useState<QuizResult | null>(null);
@@ -46,17 +49,17 @@ export default function LessonQuizPage({ params }: { params: Promise<{ id: strin
     axiosClient.get(`/api/v1/lessons/${id}/quiz`)
       .then((response) => {
         if (!active) return;
-        setTitle(response.data.data.lesson_title || "Bài quiz");
+        setTitle(response.data.data.lesson_title || t("quiz.title"));
         setQuestions(response.data.data.questions || []);
       })
       .catch((requestError: { response?: { status?: number; data?: { error?: { code?: string } } } }) => {
         if (!active) return;
         const code = requestError.response?.data?.error?.code;
-        setError(code === "QUIZ_NOT_FOUND" ? "Bài học này chưa có quiz." : code === "PRO_REQUIRED" ? "Bạn cần nâng cấp Pro để làm quiz của bài học này." : code === "LESSON_LOCKED" ? "Hoàn thành quiz của bài học trước để mở khóa bài này." : "Không thể tải quiz. Vui lòng thử lại.");
+        setError(code === "QUIZ_NOT_FOUND" ? t("quiz.noQuiz") : code === "PRO_REQUIRED" ? t("quiz.proRequired") : code === "LESSON_LOCKED" ? t("quiz.lessonLocked") : t("quiz.loadError"));
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [id]);
+  }, [id, t]);
 
   const submit = async () => {
     if (questions.some((question) => !choices[question.id])) return;
@@ -68,7 +71,7 @@ export default function LessonQuizPage({ params }: { params: Promise<{ id: strin
       });
       setResult(response.data.data);
     } catch {
-      setError("Chưa thể nộp bài. Vui lòng thử lại.");
+      setError(t("quiz.submitError"));
     } finally {
       setSubmitting(false);
     }
@@ -90,7 +93,7 @@ export default function LessonQuizPage({ params }: { params: Promise<{ id: strin
         <section className="w-full max-w-lg rounded-3xl border border-zinc-100 bg-white p-8 text-center shadow-sm">
           <ClipboardList className="mx-auto mb-4 text-[#b7152b]" size={32} />
           <p className="font-semibold text-zinc-700">{error}</p>
-          <Button onClick={() => router.back()} className="mt-6 h-10 px-5">Quay lại bài học</Button>
+          <Button onClick={() => router.back()} className="mt-6 h-10 px-5">{t("quiz.back")}</Button>
         </section>
       </main>
     );
@@ -101,25 +104,25 @@ export default function LessonQuizPage({ params }: { params: Promise<{ id: strin
       <div className="mx-auto max-w-3xl">
         <header className="mb-6 flex items-center justify-between gap-4">
           <button onClick={() => router.push(`/lessons/${id}`)} className="inline-flex items-center gap-2 text-sm font-bold text-zinc-500 transition hover:text-zinc-900">
-            <ArrowLeft size={17} /> Quay lại bài học
+            <ArrowLeft size={17} /> {t("quiz.back")}
           </button>
-          {result && <button onClick={retry} className="inline-flex items-center gap-2 text-sm font-bold text-[#b7152b]"><RotateCcw size={16} /> Làm lại</button>}
+          {result && <button onClick={retry} className="inline-flex items-center gap-2 text-sm font-bold text-[#b7152b]"><RotateCcw size={16} /> {t("quiz.retry")}</button>}
         </header>
 
         <section className="mb-5 rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm sm:p-7">
-          <div className="mb-3 flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[#b7152b]"><ClipboardList size={16} /> Quiz bài học</div>
+          <div className="mb-3 flex items-center gap-2 text-xs font-extrabold uppercase tracking-wider text-[#b7152b]"><ClipboardList size={16} /> {t("quiz.title")}</div>
           <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 sm:text-3xl">{title}</h1>
-          <p className="mt-2 text-sm text-zinc-500">{questions.length} câu hỏi · Chọn một đáp án cho mỗi câu.</p>
+          <p className="mt-2 text-sm text-zinc-500">{t("quiz.questionCount").replace("{count}", questions.length.toLocaleString(locale))}</p>
           {result && (
             <div className="mt-5 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-zinc-800">
-              Kết quả: <span className="text-[#b7152b]">{result.score}/{result.total} câu đúng ({result.percent}%)</span>
+              {t("quiz.resultLabel")} <span className="text-[#b7152b]">{t("quiz.correctCount").replace("{count}", `${result.score.toLocaleString(locale)}/${result.total.toLocaleString(locale)}`)} ({result.percent.toLocaleString(locale)}%)</span>
             </div>
           )}
         </section>
 
         {result && !result.lesson_completed && (
           <div role="status" className="mb-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-            Chưa đạt 70%. Hãy làm lại quiz để mở khóa bài tiếp theo.
+            {t("quiz.retryHint")}
           </div>
         )}
 
@@ -130,14 +133,14 @@ export default function LessonQuizPage({ params }: { params: Promise<{ id: strin
               <section key={question.id} className="rounded-3xl border border-zinc-100 bg-white p-5 shadow-sm sm:p-6">
                 <div className="mb-4 flex items-start justify-between gap-3">
                   <div>
-                    <p className="mb-1 text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">Câu {index + 1}{question.quiz_title ? ` · ${question.quiz_title}` : ""}</p>
-                    <h2 className="text-lg font-bold leading-relaxed text-zinc-900">{question.question || "Chọn đáp án đúng"}</h2>
+                    <p className="mb-1 text-[11px] font-extrabold uppercase tracking-wider text-zinc-400">{t("quiz.questionPrefix").replace("{number}", String(index + 1))}{question.quiz_title ? ` · ${question.quiz_title}` : ""}</p>
+                    <h2 className="text-lg font-bold leading-relaxed text-zinc-900">{question.question || t("quiz.chooseAnswer")}</h2>
                   </div>
-                  {question.audio && <button onClick={() => new Audio(question.audio!).play()} aria-label="Nghe câu hỏi" className="rounded-full border border-zinc-200 p-2 text-zinc-500 hover:text-[#b7152b]"><Headphones size={17} /></button>}
+                  {question.audio && <button onClick={() => new Audio(question.audio!).play()} aria-label={t("quiz.listenQuestion")} className="rounded-full border border-zinc-200 p-2 text-zinc-500 hover:text-[#b7152b]"><Headphones size={17} /></button>}
                 </div>
                 {question.image && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={question.image} alt="Minh họa câu hỏi" className="mb-4 max-h-56 rounded-2xl object-contain" />
+                  <img src={question.image} alt={t("quiz.imageAlt")} className="mb-4 max-h-56 rounded-2xl object-contain" />
                 )}
                 <div className="grid gap-2 sm:grid-cols-2">
                   {question.answers.map((answer, answerIndex) => {
@@ -168,12 +171,12 @@ export default function LessonQuizPage({ params }: { params: Promise<{ id: strin
         {error && <p role="alert" className="mt-4 text-sm font-semibold text-rose-600">{error}</p>}
         {result?.course_id && result.lesson_completed && (
           <Button onClick={() => router.push(`/courses/${result.course_id}`)} className="mt-6 h-12 w-full text-sm font-extrabold">
-            Quay về lộ trình và tiếp tục bài học
+            {t("quiz.backToCourse")}
           </Button>
         )}
         {!result && (
           <Button onClick={submit} disabled={submitting || questions.length === 0 || questions.some((question) => !choices[question.id])} className="mt-6 h-12 w-full text-sm font-extrabold disabled:cursor-not-allowed disabled:opacity-50">
-            {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Đang chấm bài...</> : "Nộp bài"}
+            {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> {t("quiz.grading")}</> : t("quiz.submit")}
           </Button>
         )}
       </div>

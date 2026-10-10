@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { BrandLogo } from "@/shared/components/BrandLogo";
+import { useLanguage } from "@/shared/i18n/language";
 import Link from "next/link";
 
 interface SharedAchievement {
@@ -36,6 +37,7 @@ export default function PublicShowcasePage() {
   const searchParams = useSearchParams();
   const userId = params?.userId as string;
   const highlightId = searchParams?.get("highlight");
+  const { language, t } = useLanguage();
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ShowcaseResponse | null>(null);
@@ -44,11 +46,11 @@ export default function PublicShowcasePage() {
   // Update document title dynamically
   useEffect(() => {
     if (data?.display_name) {
-      document.title = `Thành tựu của ${data.display_name} | KujiLingo`;
+      document.title = `${t("share.achievementOf")} ${data.display_name} | KujiLingo`;
     } else {
-      document.title = "Tủ trưng bày thành tựu | KujiLingo";
+      document.title = `${t("share.title")} | KujiLingo`;
     }
-  }, [data?.display_name]);
+  }, [data?.display_name, language, t]);
 
   useEffect(() => {
     const fetchShowcase = async () => {
@@ -58,18 +60,18 @@ export default function PublicShowcasePage() {
         if (response.data?.success) {
           setData(response.data.data);
         } else {
-          setError("Không tìm thấy thông tin chia sẻ.");
+          setError(t("share.fetchError"));
         }
       } catch (err) {
         console.error("Error fetching public showcase:", err);
-        setError("Không tìm thấy thông tin người dùng hoặc tủ trưng bày trống.");
+        setError(t("share.fetchError"));
       } finally {
         setLoading(false);
       }
     };
 
     fetchShowcase();
-  }, [userId]);
+  }, [userId, t]);
 
   const getAchievementIcon = (type: string, size = 24) => {
     switch (type) {
@@ -103,7 +105,7 @@ export default function PublicShowcasePage() {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("vi-VN", {
+    return date.toLocaleDateString(language === "vi" ? "vi-VN" : "en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -114,7 +116,7 @@ export default function PublicShowcasePage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-zinc-50 text-zinc-900 space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-500 font-semibold">Đang tải tủ trưng bày thành tựu...</span>
+        <span className="text-sm text-zinc-500 font-semibold">{t("share.loading")}</span>
       </div>
     );
   }
@@ -126,12 +128,12 @@ export default function PublicShowcasePage() {
           <Award size={32} />
         </div>
         <div className="space-y-2">
-          <h1 className="text-xl font-bold">Tủ trưng bày rỗng hoặc không tồn tại</h1>
-          <p className="text-zinc-500 text-sm max-w-sm">Người dùng này chưa có thành tựu nào được ghim vào tủ trưng bày công khai.</p>
+          <h1 className="text-xl font-bold">{t("share.notFound")}</h1>
+          <p className="text-zinc-500 text-sm max-w-sm">{error || t("share.noPinned")}</p>
         </div>
         <Link href="/">
           <button className="px-6 py-3 bg-zinc-900 hover:bg-zinc-800 text-white rounded-2xl text-xs font-bold transition-all shadow-md">
-            Quay lại Trang chủ
+            {t("share.home")}
           </button>
         </Link>
       </div>
@@ -154,17 +156,17 @@ export default function PublicShowcasePage() {
         <div className="flex items-center justify-between border-b border-zinc-100 pb-6">
           <BrandLogo size="small" />
           <span className="text-[10px] font-black tracking-widest text-[#b7152b] bg-rose-50 px-3 py-1.5 rounded-full uppercase border border-rose-100">
-            Showcase
+            {t("share.badge")}
           </span>
         </div>
 
         {/* User profile statement */}
         <div className="text-center space-y-2">
           <h2 className="text-2xl sm:text-3xl font-black text-zinc-900 leading-tight">
-            Thành tựu của <span className="text-[#b7152b]">{data.display_name}</span>
+            {t("share.achievementOf")} <span className="text-[#b7152b]">{data.display_name}</span>
           </h2>
           <p className="text-zinc-500 text-xs sm:text-sm font-semibold max-w-xs mx-auto leading-relaxed">
-            Hành trình học tiếng Nhật và tích lũy huy hiệu danh giá trên KujiLingo.
+            {t("share.journey")}
           </p>
         </div>
 
@@ -177,13 +179,13 @@ export default function PublicShowcasePage() {
             </div>
             <div className="text-center sm:text-left space-y-2.5 flex-1 z-10">
               <span className="inline-block px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-[#b7152b] text-white">
-                Thành tựu nổi bật
+                {t("share.featured")}
               </span>
               <h3 className="font-black text-zinc-900 text-xl leading-tight">{highlightedItem.title}</h3>
               <p className="text-zinc-600 text-xs font-semibold leading-relaxed line-clamp-2">{highlightedItem.description}</p>
               <div className="flex items-center justify-center sm:justify-start gap-1.5 text-zinc-400 font-bold text-[10px] uppercase tracking-wider">
                 <Award size={12} />
-                Đạt được ngày: {formatDate(highlightedItem.unlocked_at)}
+                {t("share.achievedOn")} {formatDate(highlightedItem.unlocked_at)}
               </div>
             </div>
           </div>
@@ -192,7 +194,7 @@ export default function PublicShowcasePage() {
         {/* Other achievements list */}
         <div className="space-y-4">
           <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.15em] text-left ml-1">
-            Huy hiệu đã đạt ({data.items.length})
+            {t("share.earned")} ({data.items.length})
           </h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -224,17 +226,17 @@ export default function PublicShowcasePage() {
           {data.items.filter(item => item.id !== highlightId).length === 0 && !highlightedItem && (
             <div className="py-12 bg-zinc-50/50 rounded-3xl border border-dashed border-zinc-200 text-center">
                <Award className="w-8 h-8 mx-auto text-zinc-300 mb-2" />
-               <p className="text-sm font-bold text-zinc-400">Tủ trưng bày hiện đang trống.</p>
+               <p className="text-sm font-bold text-zinc-400">{t("share.empty")}</p>
             </div>
           )}
         </div>
 
         {/* CTA (Call to action) */}
         <div className="pt-6 border-t border-zinc-100 flex flex-col items-center gap-5">
-          <span className="text-zinc-500 text-xs font-semibold">Bạn cũng muốn có bộ sưu tập này?</span>
+          <span className="text-zinc-500 text-xs font-semibold">{t("share.collectPrompt")}</span>
           <Link href="/" className="w-full">
             <button className="w-full h-14 bg-[#b7152b] hover:bg-red-700 text-white font-black text-[13px] rounded-2xl transition-all shadow-[0_10px_30px_-5px_rgba(183,21,43,0.3)] flex items-center justify-center gap-2.5 group">
-              Tham gia học cùng KujiLingo miễn phí
+              {t("share.join")}
               <ArrowRight size={16} className="group-hover:translate-x-1.5 transition-transform" />
             </button>
           </Link>

@@ -20,6 +20,7 @@ import {
   Award
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface Vocabulary {
   id: string;
@@ -35,6 +36,7 @@ interface Question {
 }
 
 export default function QuizPage() {
+  const { t } = useLanguage();
   const params = useParams();
   const router = useRouter();
   const folderId = params.folderId as string;
@@ -213,21 +215,21 @@ export default function QuizPage() {
           <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 size={40} />
           </div>
-          <h2 className="text-3xl font-black text-zinc-900">Quiz Complete!</h2>
+          <h2 className="text-3xl font-black text-zinc-900">{t("folderQuiz.complete")}</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
-              <span className="text-sm font-bold text-zinc-500 block mb-1">Score</span>
+              <span className="text-sm font-bold text-zinc-500 block mb-1">{t("folderQuiz.score")}</span>
               <span className="text-2xl font-black text-[#b7152b]">{score}</span>
             </div>
             <div className="bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
-              <span className="text-sm font-bold text-zinc-500 block mb-1">Accuracy</span>
+              <span className="text-sm font-bold text-zinc-500 block mb-1">{t("folderQuiz.accuracy")}</span>
               <span className="text-2xl font-black text-emerald-600">
                 {Math.round((correctCount / questions.length) * 100) || 0}%
               </span>
             </div>
           </div>
           <Link href={`/my-words/${folderId}/learn`} className="block w-full py-4 bg-[#b7152b] text-white rounded-2xl font-bold text-lg hover:bg-[#9a1022] transition-colors">
-            Back to Learn
+            {t("folderQuiz.backToLearn")}
           </Link>
         </div>
       </div>
@@ -248,11 +250,11 @@ export default function QuizPage() {
           {/* Breadcrumb & Controls */}
           <div className="flex items-center justify-between mb-4">
             <div className="text-xs font-semibold text-zinc-500 flex items-center gap-2">
-              <Link href="/my-words" className="hover:text-zinc-900 transition-colors">Home</Link>
+              <Link href="/my-words" className="hover:text-zinc-900 transition-colors">{t("folderQuiz.home")}</Link>
               <span>›</span>
               <Link href={`/my-words/${folderId}/learn`} className="hover:text-zinc-900 transition-colors">{folderName || "Folder"}</Link>
               <span>›</span>
-              <span className="text-zinc-900 font-bold">Vocabulary Quiz</span>
+              <span className="text-zinc-900 font-bold">{t("folderQuiz.quizTitle")}</span>
             </div>
             <div className="flex items-center gap-3">
               <button className="w-10 h-10 flex items-center justify-center text-zinc-400 hover:text-zinc-900 hover:bg-zinc-50 rounded-full transition-all">
@@ -264,15 +266,15 @@ export default function QuizPage() {
             </div>
           </div>
 
-          <h1 className="text-2xl font-black text-zinc-900 mb-2">Vocabulary Quiz Challenge</h1>
-          <p className="text-sm text-zinc-500 font-medium mb-6">Test your vocabulary knowledge and improve your mastery.</p>
+          <h1 className="text-2xl font-black text-zinc-900 mb-2">{t("folderQuiz.title")}</h1>
+          <p className="text-sm text-zinc-500 font-medium mb-6">{t("folderQuiz.description")}</p>
 
           {/* Progress Bar Header */}
           <div className="flex items-center justify-between bg-white border-t border-zinc-100 pt-4 pb-2 text-sm font-bold text-zinc-700">
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <ListOrdered size={16} className="text-[#b7152b]" />
-                <span>Question {currentIndex + 1} <span className="text-zinc-400">/ {questions.length}</span></span>
+                <span>{t("folderQuiz.question")} {currentIndex + 1} <span className="text-zinc-400">/ {questions.length}</span></span>
               </div>
               <div className="flex items-center gap-2">
                 <Clock size={16} className="text-zinc-500" />
@@ -280,15 +282,15 @@ export default function QuizPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Target size={16} className="text-indigo-500" />
-                <span>Accuracy {accuracy}%</span>
+                <span>{t("folderQuiz.accuracyLabel")} {accuracy}%</span>
               </div>
               <div className="flex items-center gap-2">
                 <Star size={16} className="text-amber-500" />
-                <span>Score {score} pts</span>
+                <span>{t("folderQuiz.scoreLabel")} {score} {t("folderQuiz.points")}</span>
               </div>
               <div className="px-3 py-1 bg-[#b7152b] text-white rounded-full text-xs flex items-center gap-1 shadow-sm">
                 <Flame size={12} fill="currentColor" />
-                Streak x{currentCombo}
+                {t("folderQuiz.streak")} x{currentCombo}
               </div>
             </div>
           </div>
@@ -307,28 +309,28 @@ export default function QuizPage() {
           <div className="bg-white rounded-3xl p-6 border border-zinc-100 shadow-sm space-y-6">
             <div className="flex items-center gap-2 text-zinc-900 font-bold text-lg border-b border-zinc-100 pb-4">
               <AlertCircle size={20} className="text-[#b7152b]" />
-              Quiz Information
+              {t("folderQuiz.information")}
             </div>
             <div className="space-y-4">
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-zinc-500 font-semibold"><FolderIcon size={16}/> Folder</span>
+                <span className="flex items-center gap-2 text-zinc-500 font-semibold"><FolderIcon size={16}/> {t("folderQuiz.folder")}</span>
                 <span className="font-bold text-zinc-900">{folderName}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-zinc-500 font-semibold"><Layers size={16}/> Type</span>
-                <span className="font-bold text-zinc-900">Multiple Choice</span>
+                <span className="flex items-center gap-2 text-zinc-500 font-semibold"><Layers size={16}/> {t("folderQuiz.type")}</span>
+                <span className="font-bold text-zinc-900">{t("folderQuiz.multipleChoice")}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-zinc-500 font-semibold"><ListOrdered size={16}/> Questions</span>
+                <span className="flex items-center gap-2 text-zinc-500 font-semibold"><ListOrdered size={16}/> {t("folderQuiz.questions")}</span>
                 <span className="font-bold text-zinc-900">{questions.length}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-zinc-500 font-semibold"><BarChart2 size={16}/> Difficulty</span>
-                <span className="font-bold text-zinc-900">Mixed</span>
+                <span className="flex items-center gap-2 text-zinc-500 font-semibold"><BarChart2 size={16}/> {t("folderQuiz.difficulty")}</span>
+                <span className="font-bold text-zinc-900">{t("folderQuiz.mixed")}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-zinc-500 font-semibold"><Clock size={16}/> Est. Time</span>
-                <span className="font-bold text-zinc-900">10 Minutes</span>
+                <span className="flex items-center gap-2 text-zinc-500 font-semibold"><Clock size={16}/> {t("folderQuiz.estimatedTime")}</span>
+                <span className="font-bold text-zinc-900">{t("folderQuiz.minutes")}</span>
               </div>
             </div>
           </div>
@@ -342,12 +344,12 @@ export default function QuizPage() {
                 Q. {currentIndex + 1}
               </span>
               <span className="px-4 py-1.5 bg-indigo-50 text-indigo-600 font-bold text-xs rounded-full border border-indigo-100">
-                Medium
+                {t("folderQuiz.medium")}
               </span>
             </div>
 
             <div className="text-center flex-1 flex flex-col items-center">
-              <h2 className="text-xl font-bold text-zinc-700 mb-8">What is the meaning of this Japanese word?</h2>
+              <h2 className="text-xl font-bold text-zinc-700 mb-8">{t("folderQuiz.meaningPrompt")}</h2>
               
               <div className="text-5xl lg:text-6xl font-black text-zinc-900 mb-6 tracking-wide">
                 {currentQuestion.vocab.kanji || currentQuestion.vocab.hiragana}
@@ -407,14 +409,14 @@ export default function QuizPage() {
                 disabled={isSubmitted}
                 className="text-zinc-500 font-bold text-sm hover:text-zinc-900 transition-colors disabled:opacity-50"
               >
-                Skip Question ⏭
+                {t("folderQuiz.skip")}
               </button>
               <button 
                 onClick={handleSubmit}
                 disabled={!selectedAnswer || isSubmitted}
                 className="px-8 py-4 bg-[#b7152b] hover:bg-[#9a1022] text-white font-bold rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
               >
-                Submit Answer <CheckCircle2 size={18} />
+                {t("folderQuiz.submit")} <CheckCircle2 size={18} />
               </button>
             </div>
           </div>
@@ -425,7 +427,7 @@ export default function QuizPage() {
           <div className="bg-white rounded-3xl p-6 border border-zinc-100 shadow-sm h-full">
             <div className="flex items-center gap-2 text-zinc-900 font-bold text-lg border-b border-zinc-100 pb-4 mb-6">
               <BarChart2 size={20} className="text-indigo-500" />
-              Live Statistics
+              {t("folderQuiz.statistics")}
             </div>
             
             {/* Circular Progress */}
@@ -444,7 +446,7 @@ export default function QuizPage() {
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-2xl font-black text-zinc-900">{progressPercent}%</span>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Done</span>
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">{t("folderQuiz.done")}</span>
                 </div>
               </div>
             </div>
@@ -452,11 +454,11 @@ export default function QuizPage() {
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-emerald-50 rounded-2xl p-4 text-center border border-emerald-100">
                 <span className="block text-2xl font-black text-emerald-600 mb-1">{correctCount}</span>
-                <span className="text-xs font-bold text-emerald-800">Correct</span>
+                <span className="text-xs font-bold text-emerald-800">{t("folderQuiz.correct")}</span>
               </div>
               <div className="bg-rose-50 rounded-2xl p-4 text-center border border-rose-100">
                 <span className="block text-2xl font-black text-rose-600 mb-1">{wrongCount}</span>
-                <span className="text-xs font-bold text-rose-800">Incorrect</span>
+                <span className="text-xs font-bold text-rose-800">{t("folderQuiz.incorrect")}</span>
               </div>
             </div>
 
@@ -464,14 +466,14 @@ export default function QuizPage() {
               <div className="flex items-center justify-between bg-[#b7152b] text-white p-4 rounded-2xl shadow-sm">
                 <span className="flex items-center gap-2 font-bold text-sm">
                   <Flame size={16} fill="currentColor" />
-                  Current Combo
+                  {t("folderQuiz.currentCombo")}
                 </span>
                 <span className="text-xl font-black">x{currentCombo}</span>
               </div>
               <div className="flex items-center justify-between bg-zinc-50 border border-zinc-100 text-zinc-700 p-4 rounded-2xl">
                 <span className="flex items-center gap-2 font-bold text-sm">
                   <Award size={16} />
-                  Best Combo
+                  {t("folderQuiz.bestCombo")}
                 </span>
                 <span className="text-xl font-black">x{bestCombo}</span>
               </div>

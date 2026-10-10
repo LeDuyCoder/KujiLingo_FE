@@ -11,8 +11,8 @@ const supportEmail = "REPLACE_WITH_SUPPORT_EMAIL";
 export default function TermsOfServicePage() {
   return (
     <LegalDocument
-      title="Terms of Service"
-      description="These terms apply when you access or use KujiLingo. By creating an account or using the service, you agree to them."
+      documentType="terms"
+      supportEmail={supportEmail}
       sections={[
         {
           title: "Using KujiLingo",

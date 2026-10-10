@@ -18,8 +18,11 @@ import {
   BookMarked
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useAppDialog } from "@/shared/components/ui/AppDialogProvider";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { Button } from "@/shared/components/ui/Button";
+import { Select } from "@/shared/components/ui/Select";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface Achievement {
   id: string;
@@ -49,6 +52,9 @@ interface UserStats {
 }
 
 export default function AchievementsPage() {
+  const { t, language } = useLanguage();
+  const locale = language === "vi" ? "vi-VN" : "en-US";
+  const { alert } = useAppDialog();
   const { user } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -66,12 +72,12 @@ export default function AchievementsPage() {
   const [detailLoading, setDetailLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "Thành tựu | KujiLingo";
+    document.title = `${t("achievements.title")} | KujiLingo`;
     const handle = setTimeout(() => {
       setMounted(true);
     }, 0);
     return () => clearTimeout(handle);
-  }, []);
+  }, [t]);
 
   const fetchAchievementsData = useCallback(async () => {
     if (!user) return;
@@ -141,7 +147,7 @@ export default function AchievementsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-400 font-semibold">Đang tải thành tựu KujiLingo...</span>
+        <span className="text-sm text-zinc-400 font-semibold">{t("achievements.loading")}</span>
       </div>
     );
   }
@@ -226,7 +232,7 @@ export default function AchievementsPage() {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
-    return date.toLocaleDateString("vi-VN", {
+    return date.toLocaleDateString(locale, {
       year: "numeric",
       month: "short",
       day: "numeric",
@@ -238,7 +244,7 @@ export default function AchievementsPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4 text-zinc-800">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-400 font-semibold">Đang tải chi tiết thành tựu...</span>
+        <span className="text-sm text-zinc-400 font-semibold">{t("achievements.loadingDetail")}</span>
       </div>
     );
   }
@@ -259,11 +265,11 @@ export default function AchievementsPage() {
             className="flex items-center gap-1.5 text-xs font-extrabold text-zinc-500 hover:text-zinc-800 transition-colors group cursor-pointer"
           >
             <ChevronLeft size={14} strokeWidth={3} className="text-zinc-400 group-hover:text-zinc-650 transition-colors" />
-            Quay lại danh sách
+            {t("achievements.backToList")}
           </button>
         </div>
 
-        <h1 className="text-3xl font-extrabold text-zinc-950 tracking-tight text-left">Chi tiết Thành tựu</h1>
+        <h1 className="text-3xl font-extrabold text-zinc-950 tracking-tight text-left">{t("achievements.detailTitle")}</h1>
 
         {/* Detail Cards Row */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -296,9 +302,9 @@ export default function AchievementsPage() {
                 {detailAchievement.title}
               </h2>
               <span className="inline-block px-3 py-1 rounded-full text-[10px] font-black bg-zinc-100 text-zinc-500 border border-zinc-200/50 uppercase tracking-widest">
-                {detailAchievement.type === "STREAK" ? "Mục tiêu Chuỗi học" :
-                 detailAchievement.type === "EXP" ? "Mục tiêu Kinh nghiệm" :
-                 detailAchievement.type === "VOCAB_MASTER" ? "Mục tiêu Từ vựng" : "Mục tiêu Hoàn hảo"}
+                {detailAchievement.type === "STREAK" ? t("achievements.targetStreak") :
+                 detailAchievement.type === "EXP" ? t("achievements.targetExp") :
+                 detailAchievement.type === "VOCAB_MASTER" ? t("achievements.targetVocabulary") : t("achievements.targetPerfect")}
               </span>
             </div>
 
@@ -307,12 +313,12 @@ export default function AchievementsPage() {
               {detailAchievement.is_unlocked ? (
                 <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 rounded-2xl px-4 py-2.5">
                   <CheckCircle2 size={14} strokeWidth={2.5} />
-                  <span>Đã hoàn thành: {formatDate(detailAchievement.unlocked_at)}</span>
+                  <span>{t("achievements.completedDate").replace("{date}", formatDate(detailAchievement.unlocked_at))}</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-zinc-500 bg-zinc-50 rounded-2xl px-4 py-2.5">
                   <Lock size={14} />
-                  <span>Chưa mở khóa</span>
+                  <span>{t("achievements.locked")}</span>
                 </div>
               )}
             </div>
@@ -324,7 +330,7 @@ export default function AchievementsPage() {
               
               {/* Mission Statement */}
               <div className="space-y-2 text-left">
-                <span className="text-[10px] font-extrabold text-[#b7152b] uppercase tracking-wider block">Nhiệm vụ</span>
+                <span className="text-[10px] font-extrabold text-[#b7152b] uppercase tracking-wider block">{t("achievements.mission")}</span>
                 <p className="text-zinc-600 text-sm md:text-base font-semibold leading-relaxed">
                   {detailAchievement.description}
                 </p>
@@ -333,9 +339,9 @@ export default function AchievementsPage() {
               {/* Progress display */}
               <div className="space-y-3 text-left">
                 <div className="flex justify-between items-end text-xs font-bold text-zinc-500">
-                  <span>Tiến độ hiện tại</span>
+                  <span>{t("achievements.currentProgress")}</span>
                   <span className="text-zinc-955 font-black text-sm text-zinc-950">
-                    {detailAchievement.current_value.toLocaleString()} / {detailAchievement.condition_value.toLocaleString()}
+                    {detailAchievement.current_value.toLocaleString(locale)} / {detailAchievement.condition_value.toLocaleString(locale)}
                   </span>
                 </div>
                 
@@ -347,7 +353,7 @@ export default function AchievementsPage() {
                   />
                 </div>
                 <span className="text-[10px] font-extrabold text-zinc-400 block text-right uppercase tracking-wider">
-                  Đạt {detailAchievement.progress_percent}% mục tiêu
+                  {t("achievements.progressPercent").replace("{percent}", String(detailAchievement.progress_percent))}
                 </span>
               </div>
 
@@ -358,8 +364,8 @@ export default function AchievementsPage() {
                     <Trophy size={20} className="fill-amber-500/10" />
                   </div>
                   <div className="text-left">
-                    <span className="text-[9px] font-extrabold text-amber-500 uppercase tracking-wider block">Phần thưởng</span>
-                    <span className="text-zinc-850 font-extrabold text-xs text-zinc-800">Điểm kinh nghiệm thưởng</span>
+                    <span className="text-[9px] font-extrabold text-amber-500 uppercase tracking-wider block">{t("achievements.reward")}</span>
+                    <span className="text-zinc-850 font-extrabold text-xs text-zinc-800">{t("achievements.expReward")}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1 bg-amber-100/50 border border-amber-200/50 rounded-xl px-3 py-1.5 font-black text-sm text-amber-800">
@@ -377,25 +383,24 @@ export default function AchievementsPage() {
                   if (navigator.share) {
                     navigator.share({
                       title: `KujiLingo - ${detailAchievement.title}`,
-                      text: `Tôi vừa đạt được thành tựu: ${detailAchievement.title}! ${detailAchievement.description}`,
+                      text: `${t("achievements.share")}: ${detailAchievement.title}. ${detailAchievement.description}`,
                       url: shareUrl,
                     }).catch(console.error);
                   } else {
-                    navigator.clipboard.writeText(shareUrl);
-                    alert("Đã sao chép liên kết chia sẻ!");
+                    void navigator.clipboard.writeText(shareUrl).then(() => alert({ title: t("achievements.linkCopied"), description: t("achievements.linkCopiedDescription") })).catch(() => alert({ title: t("achievements.copyUnavailable"), description: t("achievements.copyUnavailableDescription") }));
                   }
                 }}
                 className="flex-1 h-11 bg-[#b7152b] hover:bg-red-700 text-white font-bold text-xs rounded-xl transition-all shadow-sm"
               >
-                Chia sẻ thành tựu
+                {t("achievements.share")}
               </Button>
               {detailAchievement.is_unlocked ? (
                 <Button className="flex-1 h-11 bg-zinc-100 hover:bg-zinc-100 text-zinc-400 font-bold text-xs rounded-xl cursor-default" disabled>
-                  Đã nhận thưởng
+                  {t("achievements.rewardClaimed")}
                 </Button>
               ) : (
                 <Button className="flex-1 h-11 bg-zinc-950 hover:bg-zinc-900 text-white font-bold text-xs rounded-xl transition-all">
-                  Đang thực hiện
+                  {t("achievements.currentlyWorking")}
                 </Button>
               )}
             </div>
@@ -405,7 +410,7 @@ export default function AchievementsPage() {
 
         {/* Bottom Section: Subsequent Tiers */}
         <div className="space-y-4">
-          <h3 className="text-lg font-black text-zinc-900 text-left">Các cấp độ thành tựu tiếp theo</h3>
+          <h3 className="text-lg font-black text-zinc-900 text-left">{t("achievements.nextLevels")}</h3>
           {subsequentTiers.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {subsequentTiers.map((tier) => (
@@ -422,14 +427,16 @@ export default function AchievementsPage() {
                       {tier.title}
                     </span>
                     <span className="block text-[10px] font-extrabold text-[#b7152b] uppercase tracking-wider">
-                      Cần {tier.condition_value.toLocaleString()} {tier.type === "STREAK" ? "ngày" : tier.type === "EXP" ? "EXP" : "từ"}
+                      {t("achievements.requiredCount")
+                        .replace("{count}", tier.condition_value.toLocaleString(locale))
+                        .replace("{unit}", tier.type === "STREAK" ? t("achievements.days") : tier.type === "EXP" ? "EXP" : t("achievements.words"))}
                     </span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm font-semibold text-zinc-400 text-left">Bạn đã xem cấp độ thành tích cao nhất của thể loại này!</p>
+            <p className="text-sm font-semibold text-zinc-400 text-left">{t("achievements.maxLevel")}</p>
           )}
         </div>
       </div>
@@ -449,10 +456,10 @@ export default function AchievementsPage() {
       <div className="text-left">
         <h1 className="text-3xl font-extrabold text-zinc-950 tracking-tight flex items-center gap-2">
           <Award className="text-[#b7152b]" />
-          Thành tựu
+          {t("achievements.title")}
         </h1>
         <p className="text-zinc-500 text-sm mt-1">
-          Theo dõi tiến trình và mở khóa các huy hiệu thông thái KujiLingo.
+          {t("achievements.subtitle")}
         </p>
       </div>
 
@@ -469,25 +476,25 @@ export default function AchievementsPage() {
             
             <div className="space-y-5 text-left max-w-md z-10">
               <div className="space-y-1.5">
-                <h2 className="text-xl md:text-2xl font-black">Hành trình Thông thạo</h2>
+                <h2 className="text-xl md:text-2xl font-black">{t("achievements.masteryJourney")}</h2>
                 <p className="text-red-100 text-xs md:text-sm leading-relaxed font-semibold">
-                  Bạn đang tiến bộ rất vững chắc. Hãy mở khóa thêm nhiều thành tựu bằng cách duy trì chuỗi học và tích lũy từ vựng mới mỗi ngày.
+                  {t("achievements.masteryDescription")}
                 </p>
               </div>
               
               <div className="flex gap-4 md:gap-6 border-t border-white/10 pt-4">
                 <div>
-                  <span className="text-[9px] font-black text-red-200 uppercase tracking-wider block">Tổng tiến độ</span>
+                  <span className="text-[9px] font-black text-red-200 uppercase tracking-wider block">{t("achievements.totalProgress")}</span>
                   <span className="text-lg md:text-xl font-black">{progressPercent}%</span>
                 </div>
                 <div className="w-px h-8 bg-white/10" />
                 <div>
-                  <span className="text-[9px] font-black text-red-200 uppercase tracking-wider block">Đã mở khóa</span>
+                  <span className="text-[9px] font-black text-red-200 uppercase tracking-wider block">{t("achievements.unlocked")}</span>
                   <span className="text-lg md:text-xl font-black">{unlockedCount} / {totalAchievements}</span>
                 </div>
                 <div className="w-px h-8 bg-white/10" />
                 <div>
-                  <span className="text-[9px] font-black text-red-200 uppercase tracking-wider block">Còn khóa</span>
+                  <span className="text-[9px] font-black text-red-200 uppercase tracking-wider block">{t("achievements.remaining")}</span>
                   <span className="text-lg md:text-xl font-black">{lockedCount}</span>
                 </div>
               </div>
@@ -505,11 +512,11 @@ export default function AchievementsPage() {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-zinc-100 pb-4">
           <div className="flex flex-wrap gap-2 self-start sm:self-auto">
             {[
-              { id: "all", label: "Tất cả" },
-              { id: "unlocked", label: "Đã mở khóa" },
-              { id: "in_progress", label: "Đang tiến hành" },
-              { id: "locked", label: "Còn khóa" },
-              { id: "rare", label: "Huy hiệu Hiếm ⭐" }
+              { id: "all", label: t("achievements.filterAll") },
+              { id: "unlocked", label: t("achievements.unlocked") },
+              { id: "in_progress", label: t("achievements.inProgress") },
+              { id: "locked", label: t("achievements.remaining") },
+              { id: "rare", label: t("achievements.rare") }
             ].map((tag) => (
               <button
                 key={tag.id}
@@ -529,17 +536,19 @@ export default function AchievementsPage() {
           <div className="flex gap-2 self-end sm:self-auto">
             <div className="flex items-center bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-zinc-500 shadow-sm text-xs font-bold gap-1">
               <Filter size={12} />
-              <span>Lọc:</span>
+              <span>{t("achievements.filter")}</span>
             </div>
-            <select
+            <Select
               value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as typeof sortOrder)}
-              className="bg-white border border-zinc-200 rounded-xl px-3 py-1.5 text-zinc-700 text-xs font-bold focus:outline-none shadow-sm cursor-pointer"
-            >
-              <option value="default">Mặc định (Ưu tiên đã mở)</option>
-              <option value="progress">Tiến độ cao nhất</option>
-              <option value="reward">Phần thưởng EXP cao nhất</option>
-            </select>
+              onValueChange={(value) => setSortOrder(value as typeof sortOrder)}
+              ariaLabel={t("achievements.sort")}
+              className="h-9 text-xs"
+              options={[
+                { value: "default", label: t("achievements.sortDefault") },
+                { value: "progress", label: t("achievements.sortProgress") },
+                { value: "reward", label: t("achievements.sortReward") },
+              ]}
+            />
           </div>
         </div>
 
@@ -567,15 +576,15 @@ export default function AchievementsPage() {
                   {isUnlocked ? (
                     <span className="text-[9px] font-black text-emerald-600 flex items-center gap-0.5 bg-emerald-50 px-2 py-0.5 rounded-lg">
                       <CheckCircle2 size={10} strokeWidth={3} />
-                      UNLOCKED
+                      {t("achievements.unlocked")}
                     </span>
                   ) : isInProgress ? (
                     <span className="text-[9px] font-black text-blue-600 flex items-center gap-0.5 bg-blue-50 px-2 py-0.5 rounded-lg">
-                      IN PROGRESS
+                      {t("achievements.inProgress")}
                     </span>
                   ) : (
                     <span className="text-[9px] font-black text-zinc-400 flex items-center gap-0.5 bg-zinc-50 px-2 py-0.5 rounded-lg">
-                      LOCKED
+                      {t("achievements.locked")}
                     </span>
                   )}
                 </div>
@@ -591,7 +600,7 @@ export default function AchievementsPage() {
                         {item.title}
                       </h3>
                       <span className="text-[9px] font-extrabold text-zinc-400 uppercase tracking-widest">
-                        {rarity === "Rare" ? "⭐ HIẾM" : "THƯỜNG"}
+                        {rarity === "Rare" ? `⭐ ${t("achievements.rarity.rare")}` : t("achievements.rarity.common")}
                       </span>
                     </div>
                   </div>
@@ -626,7 +635,7 @@ export default function AchievementsPage() {
           {sortedAchievements.length === 0 && (
             <div className="col-span-full py-16 text-center text-zinc-400 font-bold space-y-2">
               <Award className="w-12 h-12 mx-auto text-zinc-300" />
-              <p>Không tìm thấy thành tựu nào khớp với bộ lọc hiện tại.</p>
+              <p>{t("achievements.noMatch")}</p>
             </div>
           )}
         </div>
@@ -641,40 +650,40 @@ export default function AchievementsPage() {
           <div className="bg-white border border-zinc-100 rounded-3xl p-5 shadow-sm space-y-4 text-left">
             <h3 className="text-sm font-black text-zinc-900 flex items-center gap-1.5 pb-3 border-b border-zinc-100">
               <Star size={16} className="text-yellow-500 fill-yellow-500/10" />
-              Thống kê Học tập
+              {t("achievements.stats")}
             </h3>
 
             <div className="space-y-3.5">
               <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-zinc-500">Cấp độ hiện tại:</span>
+                <span className="font-semibold text-zinc-500">{t("achievements.currentLevel")}</span>
                 <span className="font-black text-[#b7152b] uppercase text-right">
                   Lv {userStats.level}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-zinc-500">Tổng điểm kinh nghiệm:</span>
+                <span className="font-semibold text-zinc-500">{t("achievements.totalExp")}</span>
                 <span className="font-black text-zinc-950 text-right">
-                  {userStats.exp.toLocaleString()} XP
+                  {userStats.exp.toLocaleString(locale)} XP
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-zinc-500">Chuỗi liên tục:</span>
+                <span className="font-semibold text-zinc-500">{t("achievements.streak")}</span>
                 <span className="font-black text-amber-600 text-right flex items-center gap-0.5">
                   <Flame size={12} className="fill-amber-500 text-amber-500" />
                   {userStats.streak} Ngày
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-zinc-500">Từ vựng đã thuộc:</span>
+                <span className="font-semibold text-zinc-500">{t("achievements.vocabMastered")}</span>
                 <span className="font-black text-blue-600 text-right flex items-center gap-0.5">
                   <BookMarked size={12} />
-                  {userStats.total_mastered} từ
+                  {userStats.total_mastered.toLocaleString(locale)} {t("achievements.words")}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="font-semibold text-zinc-500">Xếp hạng thành tích:</span>
+                <span className="font-semibold text-zinc-500">{t("achievements.rankLabel")}</span>
                 <span className="bg-rose-50 text-rose-600 text-[10px] font-black uppercase px-2 py-0.5 rounded-lg border border-rose-100">
-                  {userRank ? `Hạng #${userRank}` : "Top 10%"}
+                  {userRank ? t("achievements.rankValue").replace("{rank}", userRank.toLocaleString(locale)) : t("achievements.topPercent")}
                 </span>
               </div>
             </div>
@@ -686,7 +695,7 @@ export default function AchievementsPage() {
           <div className="bg-white border border-zinc-100 rounded-3xl p-5 shadow-sm space-y-4 text-left">
             <h3 className="text-sm font-black text-zinc-900 flex items-center gap-1.5 pb-3 border-b border-zinc-100">
               <Calendar size={16} className="text-zinc-500" />
-              Mở khóa gần đây
+              {t("achievements.recent")}
             </h3>
 
             <div className="relative pl-4 border-l border-zinc-100 space-y-5">
@@ -714,7 +723,7 @@ export default function AchievementsPage() {
           <div className="bg-white border border-zinc-100 rounded-3xl p-5 shadow-sm space-y-4 text-left">
             <h3 className="text-sm font-black text-zinc-900 flex items-center gap-1.5 pb-3 border-b border-zinc-100">
               <Sparkles size={16} className="text-yellow-500" />
-              Huy hiệu Hiếm nhất
+              {t("achievements.rarest")}
             </h3>
 
             <div className="space-y-3.5">
@@ -732,11 +741,11 @@ export default function AchievementsPage() {
                       {badge.title}
                     </span>
                     <span className="block text-[9px] font-bold text-zinc-400 leading-normal uppercase">
-                      Cần đạt: {badge.condition_value.toLocaleString()}
+                      {t("achievements.requiredValue").replace("{count}", badge.condition_value.toLocaleString(locale))}
                     </span>
                   </div>
                   <span className="bg-zinc-50 border border-zinc-100 text-zinc-500 text-[10px] font-black px-1.5 py-0.5 rounded-lg">
-                    ⭐ Hiếm
+                    ⭐ {t("achievements.rarity.rare")}
                   </span>
                 </div>
               ))}

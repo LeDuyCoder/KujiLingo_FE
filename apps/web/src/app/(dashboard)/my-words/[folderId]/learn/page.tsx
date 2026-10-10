@@ -18,6 +18,7 @@ import {
   PenLine
 } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface FolderContents {
   folder_id: string;
@@ -49,6 +50,7 @@ interface LearningProgress {
 }
 
 export default function LearnFolderPage() {
+  const { t } = useLanguage();
   const params = useParams();
   const router = useRouter();
   const folderId = params.folderId as string;
@@ -101,7 +103,7 @@ export default function LearnFolderPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
         <div className="w-10 h-10 border-4 border-[#b7152b] border-t-transparent rounded-full animate-spin"></div>
-        <p className="text-zinc-500 font-semibold">Loading your learning dashboard...</p>
+        <p className="text-zinc-500 font-semibold">{t("learn.loadingDashboard")}</p>
       </div>
     );
   }
@@ -109,9 +111,9 @@ export default function LearnFolderPage() {
   if (!folderData) {
     return (
       <div className="text-center py-20">
-        <p className="text-zinc-500 font-semibold">Folder not found.</p>
+        <p className="text-zinc-500 font-semibold">{t("learn.folderNotFound")}</p>
         <Link href="/my-words" className="text-[#b7152b] hover:underline font-bold mt-2 inline-block">
-          Return to My Words
+          {t("learn.returnWords")}
         </Link>
       </div>
     );
@@ -134,18 +136,18 @@ export default function LearnFolderPage() {
       {/* Breadcrumbs & Header */}
       <div>
         <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500 mb-4">
-          <Link href="/home" className="hover:text-zinc-800 transition-colors">Home</Link>
+          <Link href="/home" className="hover:text-zinc-800 transition-colors">{t("learn.home")}</Link>
           <ChevronRight size={14} />
-          <Link href="/my-words" className="hover:text-zinc-800 transition-colors">My Folder</Link>
+          <Link href="/my-words" className="hover:text-zinc-800 transition-colors">{t("learn.myFolder")}</Link>
           <ChevronRight size={14} />
           <span className="text-zinc-800 font-bold">{folderData.name}</span>
         </div>
         
         <h1 className="text-3xl font-extrabold text-zinc-950 font-sans tracking-tight">
-          {folderData.name} Vocabulary
+          {folderData.name} {t("learn.vocabularyTitle")}
         </h1>
         <p className="text-zinc-500 text-sm mt-1.5 font-medium">
-          Master all vocabulary using multiple learning modes.
+          {t("learn.description")}
         </p>
       </div>
 
@@ -163,22 +165,22 @@ export default function LearnFolderPage() {
                   <FolderIcon size={28} className="text-[#b7152b]" fill="currentColor" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">TOTAL WORDS</p>
+                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">{t("learn.totalWords")}</p>
                   <p className="text-3xl font-extrabold text-zinc-900">{totalWords}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-6 sm:gap-10">
                 <div>
-                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">LEARNED</p>
+                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">{t("learn.learned")}</p>
                   <p className="text-3xl font-extrabold text-[#b7152b]">{learned}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">NEED REVIEW</p>
+                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">{t("learn.needReview")}</p>
                   <p className="text-3xl font-extrabold text-[#b7152b]">{needReview}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">MASTERED</p>
+                  <p className="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">{t("learn.mastered")}</p>
                   <p className="text-3xl font-extrabold text-blue-600">{mastered}</p>
                 </div>
               </div>
@@ -197,14 +199,14 @@ export default function LearnFolderPage() {
               </div>
               <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500">
                 <Clock size={14} />
-                Estimated Learning Time: {estTimeMins} mins
+                {t("learn.estimatedTime")} {estTimeMins} {t("learn.minutes")}
               </div>
             </div>
           </div>
 
           {/* Learning Modes */}
           <div>
-            <h2 className="text-xl font-bold text-zinc-900 font-sans mb-4">Choose Your Learning Mode</h2>
+            <h2 className="text-xl font-bold text-zinc-900 font-sans mb-4">{t("learn.chooseMode")}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               
               {/* Flashcards */}
@@ -214,23 +216,23 @@ export default function LearnFolderPage() {
                     <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-[#b7152b]">
                       <Layers size={24} />
                     </div>
-                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-zinc-100 text-zinc-500 rounded-lg">Easy</span>
+                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-zinc-100 text-zinc-500 rounded-lg">{t("learn.easy")}</span>
                   </div>
-                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">Flashcards</h3>
+                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">{t("learn.flashcards")}</h3>
                   <p className="text-xs text-zinc-500 font-semibold line-clamp-2">
-                    Classic spaced repetition review.
+                    {t("learn.flashcardsHint")}
                   </p>
                 </div>
                 <div className="flex items-center justify-between mt-6">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500">
                     <Clock size={14} />
-                    5 mins
+                    5 {t("learn.minutes")}
                   </div>
                   <Link 
                     href={`/my-words/${folderId}/learn/flashcards`}
                     className="px-4 py-1.5 text-xs font-bold text-[#b7152b] border border-[#b7152b] rounded-xl hover:bg-red-50 transition-colors"
                   >
-                    Start
+                    {t("learn.start")}
                   </Link>
                 </div>
               </div>
@@ -242,11 +244,11 @@ export default function LearnFolderPage() {
                     <div className="w-12 h-12 bg-red-50 rounded-2xl flex items-center justify-center text-[#b7152b]">
                       <BrainCircuit size={24} />
                     </div>
-                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-red-50 text-[#b7152b] rounded-lg border border-red-100">Hard</span>
+                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-red-50 text-[#b7152b] rounded-lg border border-red-100">{t("learn.hard")}</span>
                   </div>
-                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">Quiz Test</h3>
+                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">{t("learn.quiz")}</h3>
                   <p className="text-xs text-zinc-500 font-semibold line-clamp-2">
-                    Beat the clock. Fast recall required.
+                    {t("learn.quizHint")}
                   </p>
                 </div>
                 <div className="flex items-center justify-between mt-6">
@@ -258,7 +260,7 @@ export default function LearnFolderPage() {
                     href={`/my-words/${folderId}/learn/quiz`}
                     className="px-4 py-1.5 text-xs font-bold text-white bg-[#b7152b] rounded-xl hover:bg-[#9a1022] transition-colors"
                   >
-                    Start
+                    {t("learn.start")}
                   </Link>
                 </div>
               </div>
@@ -270,23 +272,23 @@ export default function LearnFolderPage() {
                     <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center text-emerald-600">
                       <Shuffle size={24} />
                     </div>
-                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">Dynamic</span>
+                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-emerald-50 text-emerald-600 rounded-lg border border-emerald-100">{t("learn.dynamic")}</span>
                   </div>
-                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">Random Practice</h3>
+                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">{t("learn.practice")}</h3>
                   <p className="text-xs text-zinc-500 font-semibold line-clamp-2">
-                    Mixed exercises (listening, writing, matching) to boost memory.
+                    {t("learn.practiceHint")}
                   </p>
                 </div>
                 <div className="flex items-center justify-between mt-6">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600">
                     <Clock size={14} />
-                    Dynamic
+                    {t("learn.dynamic")}
                   </div>
                   <Link 
                     href={`/my-words/${folderId}/learn/practice`}
                     className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 transition-colors"
                   >
-                    Start
+                    {t("learn.start")}
                   </Link>
                 </div>
               </div>
@@ -298,20 +300,20 @@ export default function LearnFolderPage() {
                     <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
                       <Gamepad2 size={24} />
                     </div>
-                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-zinc-100 text-zinc-500 rounded-lg">Fun</span>
+                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-zinc-100 text-zinc-500 rounded-lg">{t("learn.fun")}</span>
                   </div>
-                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">Mini Games</h3>
+                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">{t("learn.miniGames")}</h3>
                   <p className="text-xs text-zinc-500 font-semibold line-clamp-2">
-                    Learn through interactive challenges.
+                    {t("learn.miniGamesHint")}
                   </p>
                 </div>
                 <div className="flex items-center justify-between mt-6">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500">
                     <Clock size={14} />
-                    10 mins
+                    10 {t("learn.minutes")}
                   </div>
                   <button className="px-4 py-1.5 text-xs font-bold text-blue-600 border border-blue-200 rounded-xl hover:bg-blue-50 transition-colors">
-                    Play
+                    {t("learn.play")}
                   </button>
                 </div>
               </div>
@@ -323,23 +325,23 @@ export default function LearnFolderPage() {
                     <div className="w-12 h-12 bg-violet-50 rounded-2xl flex items-center justify-center text-violet-600">
                       <PenLine size={24} />
                     </div>
-                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-violet-50 text-violet-600 rounded-lg border border-violet-100">Writing</span>
+                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-violet-50 text-violet-600 rounded-lg border border-violet-100">{t("learn.writing")}</span>
                   </div>
-                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">Kanji Writing</h3>
+                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">{t("learn.kanjiWriting")}</h3>
                   <p className="text-xs text-zinc-500 font-semibold line-clamp-2">
-                    Recall Kanji vocabulary from this folder and write it by hand.
+                    {t("learn.kanjiWritingHint")}
                   </p>
                 </div>
                 <div className="flex items-center justify-between mt-6">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-600">
                     <PenLine size={14} />
-                    From this folder
+                    {t("learn.fromFolder")}
                   </div>
                   <Link
                     href={`/my-words/${folderId}/learn/kanji-writing`}
                     className="px-4 py-1.5 text-xs font-bold text-white bg-violet-600 rounded-xl hover:bg-violet-700 transition-colors"
                   >
-                    Start
+                    {t("learn.start")}
                   </Link>
                 </div>
               </div>
@@ -351,14 +353,14 @@ export default function LearnFolderPage() {
         {/* Sidebar (Right) */}
         <div className="w-full lg:w-[320px] shrink-0">
           <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm sticky top-24">
-            <h3 className="text-lg font-extrabold text-zinc-900 mb-5">Achievements</h3>
+            <h3 className="text-lg font-extrabold text-zinc-900 mb-5">{t("learn.achievements")}</h3>
             
             <div className="grid grid-cols-2 gap-3">
               {/* Streak */}
               <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
                 <Flame size={28} className="text-[#b7152b] mb-2" fill="currentColor" />
                 <p className="text-xl font-extrabold text-zinc-900">{stats?.streak || 0}</p>
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide mt-1">Day Streak</p>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide mt-1">{t("learn.dayStreak")}</p>
               </div>
 
               {/* XP */}
@@ -374,7 +376,7 @@ export default function LearnFolderPage() {
               <div className="bg-zinc-50 border border-zinc-100 rounded-2xl p-4 flex flex-col items-center justify-center text-center">
                 <Award size={28} className="text-indigo-500 mb-2" />
                 <p className="text-xl font-extrabold text-zinc-900">Lvl {stats?.level || 1}</p>
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide mt-1">Rank</p>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide mt-1">{t("learn.rank")}</p>
               </div>
 
               {/* Accuracy */}
@@ -383,7 +385,7 @@ export default function LearnFolderPage() {
                   <CheckCircle2 size={28} className="text-red-500" fill="#fee2e2" />
                 </div>
                 <p className="text-xl font-extrabold text-zinc-900">{stats?.accuracy_percent || 0}%</p>
-                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide mt-1">Accuracy</p>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide mt-1">{t("learn.accuracy")}</p>
               </div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { Lock, FileText, ArrowRight } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface Course {
   id: string;
@@ -28,6 +29,7 @@ import { axiosClient } from "@/shared/api/axiosClient";
 
 export default function CourseCatalogPage() {
   const router = useRouter();
+  const { t } = useLanguage();
   const isPremium = useAuthStore((state) => state.user?.is_premium ?? false);
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -199,17 +201,17 @@ export default function CourseCatalogPage() {
         {/* Header Info */}
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 mb-2">
-            Course Catalog
+            {t("courses.title")}
           </h1>
           <p className="text-zinc-500 text-sm max-w-2xl leading-relaxed">
-            Master Japanese from N5 to N1 with structured, intuitive lessons designed for modern learners.
+            {t("courses.description")}
           </p>
         </div>
         
         {/* Empty State */}
         <div className="flex flex-col items-center justify-center min-h-[40vh] text-center bg-white border border-zinc-100 rounded-3xl p-8 shadow-sm">
-          <p className="text-zinc-500 mb-2">Không tìm thấy khóa học nào trong cơ sở dữ liệu.</p>
-          <p className="text-zinc-400 text-xs">Vui lòng chạy kịch bản seed dữ liệu hoặc thêm khóa học từ trang quản trị.</p>
+          <p className="text-zinc-500 mb-2">{t("courses.empty")}</p>
+          <p className="text-zinc-400 text-xs">{t("courses.emptyHint")}</p>
         </div>
       </div>
     );
@@ -220,10 +222,10 @@ export default function CourseCatalogPage() {
       {/* Header Info */}
       <div>
         <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 mb-2">
-          Course Catalog
+          {t("courses.title")}
         </h1>
         <p className="text-zinc-500 text-sm max-w-2xl leading-relaxed">
-          Master Japanese from N5 to N1 with structured, intuitive lessons designed for modern learners.
+          {t("courses.description")}
         </p>
       </div>
 
@@ -265,7 +267,7 @@ export default function CourseCatalogPage() {
                 {course.progress !== undefined ? (
                   <div>
                     <div className="flex items-center justify-between text-[10px] font-extrabold tracking-wider text-zinc-400 uppercase">
-                      <span>Progress</span>
+                      <span>{t("courses.progress")}</span>
                       <span className="text-blue-600 font-bold">{course.progress}%</span>
                     </div>
                     {/* Progress Bar */}
@@ -278,7 +280,7 @@ export default function CourseCatalogPage() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between text-[10px] font-extrabold tracking-wider text-zinc-400 uppercase">
-                    <span>Status</span>
+                    <span>{t("courses.status")}</span>
                     <span className="text-zinc-500 font-bold flex items-center gap-1">
                       {isLocked ? "Locked" : "Not Started"}
                     </span>
@@ -321,19 +323,19 @@ export default function CourseCatalogPage() {
 
         <div className="relative z-10 flex flex-col items-center max-w-3xl">
           <span className="inline-block bg-red-600/15 text-red-500 border border-red-500/20 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest rounded-full mb-6">
-            Pro Feature
+            {t("courses.proFeature")}
           </span>
 
           <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight mb-4 leading-tight">
-            Master Kanji faster with <span className="text-yellow-400">spaced repetition.</span>
+            {t("courses.proTitle")}
           </h2>
 
           <p className="text-slate-400 text-sm lg:text-base leading-relaxed mb-8">
-            Unlock all structured decks and personalized learning paths designed to get you from N5 to N1 efficiently.
+            {t("courses.proDescription")}
           </p>
 
-          <Button variant="unstyled" className="bg-white hover:bg-zinc-100 text-slate-950 font-bold px-8 h-12.5 rounded-full transition-colors flex items-center justify-center gap-2">
-            Upgrade to Pro Now
+          <Button variant="unstyled" onClick={() => router.push("/premium/plans")} className="bg-white hover:bg-zinc-100 text-slate-950 font-bold px-8 h-12.5 rounded-full transition-colors flex items-center justify-center gap-2">
+            {t("courses.upgrade")}
             <ArrowRight size={16} />
           </Button>
         </div>

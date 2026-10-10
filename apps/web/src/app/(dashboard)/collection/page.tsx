@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
+import { useLanguage } from "@/shared/i18n/language";
 import { 
   Package, User, Flame, Shield, Compass,
   ArrowRight, Loader2, CheckCircle2, AlertCircle, Star, Gem
@@ -41,6 +42,7 @@ import {
   
   export default function MyCollectionPage() {
     const { user } = useAuthStore();
+    const { language, t } = useLanguage();
     const [shopItems, setShopItems] = useState<ShopItem[]>([]);
     const [inventory, setInventory] = useState<InventoryItem[]>([]);
     const [equipped, setEquipped] = useState<EquippedItem[]>([]);
@@ -88,17 +90,20 @@ import {
           setWallet(walletRes.data.data);
         }
       } catch {
-        showToast("Có lỗi xảy ra khi tải tủ đồ.", "error");
+        showToast(t("collection.loadError"), "error");
       } finally {
         setLoading(false);
       }
     };
   
     useEffect(() => {
-      document.title = "Tủ đồ của tôi | KujiLingo";
       setTimeout(() => fetchCollectionData(), 0);
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+      document.title = `${t("collection.title")} | KujiLingo`;
+    }, [t]);
 
   const handleEquip = async (itemId: string) => {
     setEquippingId(itemId);
@@ -108,13 +113,13 @@ import {
       });
 
       if (response.data?.success) {
-        showToast("Trang bị vật phẩm thành công!", "success");
+        showToast(t("collection.equipSuccess"), "success");
         // Refetch inventory, equipped items and wallet
         await fetchCollectionData();
       }
     } catch (err) {
       console.error("Equip item error:", err);
-      showToast("Không thể trang bị vật phẩm này.", "error");
+      showToast(t("collection.equipError"), "error");
     } finally {
       setEquippingId(null);
     }
@@ -129,12 +134,12 @@ import {
       });
 
       if (response.data?.success) {
-        showToast("Tháo trang bị vật phẩm thành công!", "success");
+        showToast(t("collection.unequipSuccess"), "success");
         await fetchCollectionData();
       }
     } catch (err) {
       console.error("Unequip item error:", err);
-      showToast("Không thể tháo trang bị vật phẩm này.", "error");
+      showToast(t("collection.unequipError"), "error");
     } finally {
       setUnequippingId(null);
     }
@@ -144,7 +149,7 @@ import {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-500 font-semibold">Đang tải tủ đồ...</span>
+        <span className="text-sm text-zinc-500 font-semibold">{t("collection.loading")}</span>
       </div>
     );
   }
@@ -189,10 +194,10 @@ import {
 
   const getRarityTag = (rarity: string | null) => {
     switch (rarity) {
-      case "LEGENDARY": return "Legendary";
-      case "EPIC": return "Epic";
-      case "RARE": return "Rare";
-      default: return "Common";
+      case "LEGENDARY": return t("collection.rarity.legendary");
+      case "EPIC": return t("collection.rarity.epic");
+      case "RARE": return t("collection.rarity.rare");
+      default: return t("collection.rarity.common");
     }
   };
 
@@ -216,7 +221,7 @@ import {
             {toastType === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           </div>
           <div>
-            <span className="font-extrabold text-xs block">Thông báo</span>
+            <span className="font-extrabold text-xs block">{t("collection.notice")}</span>
             <span className="text-[10px] text-zinc-400">{toastMessage}</span>
           </div>
         </div>
@@ -224,19 +229,19 @@ import {
 
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400">
-        <Link href="/home" className="hover:text-zinc-650">Home</Link>
+        <Link href="/home" className="hover:text-zinc-650">{t("collection.home")}</Link>
         <span>&gt;</span>
-        <Link href="/profile" className="hover:text-zinc-650">Profile</Link>
+        <Link href="/profile" className="hover:text-zinc-650">{t("collection.profile")}</Link>
         <span>&gt;</span>
-        <span className="text-zinc-800 font-bold">My Collection</span>
+        <span className="text-zinc-800 font-bold">{t("collection.title")}</span>
       </div>
 
       {/* Title block with completion percentage */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-black text-zinc-950 tracking-tight">My Collection</h1>
+          <h1 className="text-3xl font-black text-zinc-950 tracking-tight">{t("collection.title")}</h1>
           <p className="text-sm font-semibold text-zinc-500">
-            Manage all cosmetic items you have unlocked.
+            {t("collection.manageDescription")}
           </p>
         </div>
 
@@ -264,8 +269,8 @@ import {
             <div className="absolute text-[10px] font-black text-zinc-950">{completionPercentage}%</div>
           </div>
           <div>
-            <span className="text-[10px] font-black text-zinc-400 block uppercase tracking-wider">Collection</span>
-            <span className="text-xs font-black text-zinc-800">Completion</span>
+            <span className="text-[10px] font-black text-zinc-400 block uppercase tracking-wider">{t("collection.title")}</span>
+            <span className="text-xs font-black text-zinc-800">{t("collection.completion")}</span>
           </div>
         </div>
       </div>
@@ -278,7 +283,7 @@ import {
           <div className="mx-auto w-8 h-8 rounded-full bg-zinc-50 border border-zinc-150 flex items-center justify-center text-zinc-650 shadow-inner">
             <Package size={15} />
           </div>
-          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Total Items</span>
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">{t("collection.totalItems")}</span>
           <span className="text-lg font-black text-zinc-950 block">{totalOwned}</span>
         </div>
 
@@ -287,7 +292,7 @@ import {
           <div className="mx-auto w-8 h-8 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shadow-inner">
             <User size={15} />
           </div>
-          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Avatars</span>
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">{t("collection.avatars")}</span>
           <span className="text-lg font-black text-zinc-950 block">{ownedAvatars.length}</span>
         </div>
 
@@ -296,7 +301,7 @@ import {
           <div className="mx-auto w-8 h-8 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-inner">
             <Compass size={15} />
           </div>
-          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Backgrounds</span>
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">{t("collection.backgrounds")}</span>
           <span className="text-lg font-black text-zinc-950 block">{ownedBackgrounds.length}</span>
         </div>
 
@@ -305,7 +310,7 @@ import {
           <div className="mx-auto w-8 h-8 rounded-full bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 shadow-inner">
             <Shield size={15} />
           </div>
-          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Frames</span>
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">{t("collection.frames")}</span>
           <span className="text-lg font-black text-zinc-950 block">{ownedFrames.length}</span>
         </div>
 
@@ -314,7 +319,7 @@ import {
           <div className="mx-auto w-8 h-8 rounded-full bg-amber-50 border border-amber-150 flex items-center justify-center text-amber-500 font-extrabold text-[13px] shadow-inner">
             🪙
           </div>
-          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Coins</span>
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">{t("collection.coins")}</span>
           <span className="text-lg font-black text-zinc-950 block">{wallet ? formatBalance(wallet.coins) : "0"}</span>
         </div>
 
@@ -323,7 +328,7 @@ import {
           <div className="mx-auto w-8 h-8 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-[#b7152b] font-extrabold text-[13px] shadow-inner animate-pulse">
             <Gem size={14} className="fill-[#b7152b] text-[#b7152b]" />
           </div>
-          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Gems</span>
+          <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">{t("collection.gems")}</span>
           <span className="text-lg font-black text-zinc-950 block">{wallet ? formatBalance(wallet.gems) : "0"}</span>
         </div>
 
@@ -335,7 +340,7 @@ import {
         {/* Left Column: Discord Profile Popout Card (Light Theme) */}
         <div className="lg:col-span-4 flex flex-col items-center">
           <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block self-start pl-1 mb-2.5">
-            Profile Preview
+            {t("collection.profilePreview")}
           </span>
 
           <div className="w-full bg-white text-zinc-800 rounded-3xl border border-zinc-200/70 shadow-xl relative overflow-hidden flex flex-col">
@@ -377,7 +382,7 @@ import {
               {/* Display name & username */}
               <div className="space-y-0.5">
                 <h3 className="text-lg font-black text-zinc-950 leading-tight">
-                  {user?.display_name || "Lê Hữu Duy"}
+                  {user?.display_name || "KujiLingo Learner"}
                 </h3>
                 <span className="text-[10px] font-bold text-zinc-500 block tracking-wide">
                   @{user?.email?.split('@')[0] || "duyle"}
@@ -392,7 +397,7 @@ import {
                 </span>
                 <span className="px-2 py-0.5 bg-zinc-50 rounded-md text-[8.5px] font-extrabold text-amber-600 border border-zinc-200/60 flex items-center gap-1 uppercase tracking-wider shadow-sm">
                   <Flame size={9} className="fill-amber-500 text-amber-500" />
-                  {user?.display_name ? "45 DAYS" : "0 DAYS"}
+                  {user?.display_name ? `45 ${t("collection.days")}` : `0 ${t("collection.days")}`}
                 </span>
                 <span className="px-2 py-0.5 bg-zinc-50 rounded-md text-[8.5px] font-extrabold text-indigo-600 border border-zinc-200/60 flex items-center gap-1 uppercase tracking-wider shadow-sm">
                   LVL 1
@@ -403,24 +408,24 @@ import {
                 
                 {/* ABOUT ME */}
                 <div className="space-y-1 text-xs">
-                  <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block">ABOUT ME</span>
+                  <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block">{t("collection.aboutMe")}</span>
                   <p className="text-zinc-700 font-bold leading-relaxed">
-                    Học tiếng Nhật hàng ngày cùng KujiLingo! 🎯
+                    {t("collection.aboutText")}
                   </p>
                 </div>
 
                 {/* STATISTICS */}
                 <div className="space-y-1.5 text-xs text-zinc-700">
-                  <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block">KUJILINGO STATUS</span>
+                  <span className="text-[9px] font-black text-zinc-400 uppercase tracking-widest block">{t("collection.status")}</span>
                   
                   <div className="grid grid-cols-2 gap-2 text-[10.5px] font-bold">
                     <div className="bg-zinc-50 p-2 rounded-xl border border-zinc-200/60 space-y-0.5">
-                      <span className="text-[8px] text-zinc-450 uppercase block tracking-wider font-extrabold">JLPT Target</span>
+                      <span className="text-[8px] text-zinc-450 uppercase block tracking-wider font-extrabold">{t("collection.jlptTarget")}</span>
                       <span className="text-zinc-950 font-black">{user?.jlpt_target_level || "N5"}</span>
                     </div>
                     <div className="bg-zinc-50 p-2 rounded-xl border border-zinc-200/60 space-y-0.5">
-                      <span className="text-[8px] text-zinc-450 uppercase block tracking-wider font-extrabold">Daily Goal</span>
-                      <span className="text-zinc-950 font-black">{user?.learning_goal_minutes || 15} mins</span>
+                      <span className="text-[8px] text-zinc-450 uppercase block tracking-wider font-extrabold">{t("collection.dailyGoal")}</span>
+                      <span className="text-zinc-950 font-black">{user?.learning_goal_minutes || 15} {t("collection.minutes")}</span>
                     </div>
                   </div>
 
@@ -430,7 +435,7 @@ import {
                 {selectedItem && (
                   <div className="bg-zinc-50 border border-zinc-200/60 rounded-2xl p-3.5 space-y-2">
                     <div className="flex items-center justify-between text-[9px] font-black text-zinc-400">
-                      <span>SELECTED ITEM</span>
+                      <span>{t("collection.selectedItem")}</span>
                       <span className={`px-1.5 py-0.2 rounded border uppercase text-[7px] ${
                         getRarityColor(selectedShopInfo?.rarity || "COMMON")
                       }`}>
@@ -463,7 +468,7 @@ import {
         {/* Right Column: Collection Analytics & Progress Grid */}
         <div className="lg:col-span-8 flex flex-col justify-between">
           <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block pl-1 mb-2.5">
-            Collection Analytics
+            {t("collection.analytics")}
           </span>
 
           <div className="bg-white border border-zinc-200/60 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col justify-between flex-grow">
@@ -473,7 +478,7 @@ import {
               {/* Progress Bars Column */}
               <div className="space-y-5">
                 <h3 className="text-sm font-black text-zinc-950 uppercase tracking-widest border-b border-zinc-100 pb-2 text-left">
-                  Collection Progress
+                  {t("collection.progress")}
                 </h3>
 
                 {/* Avatar progress */}
@@ -481,7 +486,7 @@ import {
                   <div className="flex items-center justify-between text-xs font-bold text-zinc-700">
                     <span className="flex items-center gap-1.5 font-bold">
                       <User size={13} className="text-zinc-500" />
-                      Avatar
+                      {t("collection.itemType.AVATAR")}
                     </span>
                     <span className="text-zinc-955 font-black">
                       {ownedAvatars.length} / {totalShopAvatars}
@@ -500,7 +505,7 @@ import {
                   <div className="flex items-center justify-between text-xs font-bold text-zinc-700">
                     <span className="flex items-center gap-1.5 font-bold">
                       <Compass size={13} className="text-zinc-550" />
-                      Background
+                      {t("collection.itemType.BACKGROUND")}
                     </span>
                     <span className="text-zinc-955 font-black">
                       {ownedBackgrounds.length} / {totalShopBackgrounds}
@@ -519,7 +524,7 @@ import {
                   <div className="flex items-center justify-between text-xs font-bold text-zinc-700">
                     <span className="flex items-center gap-1.5 font-bold">
                       <Shield size={13} className="text-zinc-550" />
-                      Frame
+                      {t("collection.itemType.FRAME")}
                     </span>
                     <span className="text-zinc-955 font-black">
                       {ownedFrames.length} / {totalShopFrames}
@@ -537,42 +542,41 @@ import {
               {/* Collector Milestones & Loadout Column */}
               <div className="space-y-5">
                 <h3 className="text-sm font-black text-zinc-955 uppercase tracking-widest border-b border-zinc-100 pb-2 text-left">
-                  Collector Milestones
+                  {t("collection.collectorMilestones")}
                 </h3>
 
                 {/* Collector Rank Info */}
                 <div className="bg-zinc-50 border border-zinc-200/50 rounded-2xl p-4 text-left space-y-2.5 shadow-sm">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">Collector Level</span>
+                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-wider">{t("collection.collectorLevel")}</span>
                     <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
                       totalOwned >= 10 ? "text-amber-700 bg-amber-50 border border-amber-200 animate-pulse" :
                       totalOwned >= 5 ? "text-indigo-700 bg-indigo-50 border border-indigo-200" :
                       totalOwned >= 2 ? "text-emerald-700 bg-emerald-50 border border-emerald-200" :
                       "text-[#b7152b] bg-red-50 border border-red-100"
                     }`}>
-                      {totalOwned >= 10 ? "Huyền thoại" :
-                       totalOwned >= 5 ? "Chuyên gia" :
-                       totalOwned >= 2 ? "Thợ săn Đồ" : "Tập sự"}
+                      {totalOwned >= 10 ? t("collection.collectorLegend") :
+                       totalOwned >= 5 ? t("collection.collectorExpert") :
+                       totalOwned >= 2 ? t("collection.collectorHunter") : t("collection.collectorBeginner")}
                     </span>
                   </div>
                   <p className="text-[11px] text-zinc-550 font-semibold leading-relaxed">
-                    {totalOwned >= 10 ? "Sở hữu bộ sưu tập đồ sộ vạn người mê! ⭐" :
-                     totalOwned >= 5 ? "Bộ sưu tập đã khá phong phú và đa dạng. 💎" :
-                     totalOwned >= 2 ? "Đã sở hữu một vài vật phẩm chất lượng. 💫" :
-                     "Bắt đầu con đường sưu tầm vật phẩm độc quyền. 🚀"}
+                    {totalOwned >= 10 ? t("collection.collectorLegendHint") :
+                     totalOwned >= 5 ? t("collection.collectorExpertHint") :
+                     totalOwned >= 2 ? t("collection.collectorHunterHint") : t("collection.collectorBeginnerHint")}
                   </p>
                 </div>
 
                 {/* Quick stats details grid */}
                 <div className="grid grid-cols-2 gap-3 text-left">
                   <div className="bg-zinc-50 border border-zinc-200/50 rounded-2xl p-3.5 space-y-1 shadow-sm">
-                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Coin Value</span>
+                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">{t("collection.coinValue")}</span>
                     <span className="text-sm font-black text-zinc-900 flex items-center gap-0.5">
                       🪙 {inventory.reduce((sum, item) => sum + (shopItems.find(i => i.id === item.shop_item_id && i.currency === "COIN")?.price || 0), 0)}
                     </span>
                   </div>
                   <div className="bg-zinc-50 border border-zinc-200/50 rounded-2xl p-3.5 space-y-1 shadow-sm">
-                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">Gem Value</span>
+                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block">{t("collection.gemValue")}</span>
                     <span className="text-sm font-black text-zinc-900 flex items-center gap-0.5">
                       💎 {inventory.reduce((sum, item) => sum + (shopItems.find(i => i.id === item.shop_item_id && i.currency === "GEM")?.price || 0), 0)}
                     </span>
@@ -581,18 +585,18 @@ import {
 
                 {/* Loadout details */}
                 <div className="bg-zinc-50 border border-zinc-200/50 rounded-2xl p-4 text-left space-y-2 text-xs font-bold text-zinc-650 shadow-sm">
-                  <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block mb-1">Equipped Loadout</span>
+                  <span className="text-[9px] font-black text-zinc-400 uppercase tracking-wider block mb-1">{t("collection.equipped")}</span>
                   <div className="flex items-center justify-between">
-                    <span>Avatar:</span>
-                    <span className="text-zinc-800 font-extrabold truncate max-w-[155px]">{equipped.find(e => e.item_type === "AVATAR")?.name || "Mặc định"}</span>
+                    <span>{t("collection.avatar")}</span>
+                    <span className="text-zinc-800 font-extrabold truncate max-w-[155px]">{equipped.find(e => e.item_type === "AVATAR")?.name || t("collection.default")}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Frame:</span>
-                    <span className="text-indigo-650 font-extrabold truncate max-w-[155px]">{equipped.find(e => e.item_type === "FRAME")?.name || "Mặc định"}</span>
+                    <span>{t("collection.frame")}</span>
+                    <span className="text-indigo-650 font-extrabold truncate max-w-[155px]">{equipped.find(e => e.item_type === "FRAME")?.name || t("collection.default")}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Background:</span>
-                    <span className="text-emerald-700 font-extrabold truncate max-w-[155px]">{equipped.find(e => e.item_type === "BACKGROUND")?.name || "Mặc định"}</span>
+                    <span>{t("collection.background")}</span>
+                    <span className="text-emerald-700 font-extrabold truncate max-w-[155px]">{equipped.find(e => e.item_type === "BACKGROUND")?.name || t("collection.default")}</span>
                   </div>
                 </div>
 
@@ -601,7 +605,7 @@ import {
             </div>
 
             <Link href="/shop" className="group pt-5 border-t border-zinc-150 flex items-center justify-between text-xs font-black text-[#b7152b] hover:text-red-750 transition-colors mt-6">
-              <span>Ghé cửa hàng để mở khóa thêm vật phẩm</span>
+              <span>{t("collection.visitShop")}</span>
               <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
@@ -612,10 +616,10 @@ import {
       {/* Tabs Filter Bar */}
       <div className="flex items-center gap-2 border-b border-zinc-200/80 overflow-x-auto pb-px shrink-0">
         {[
-          { id: "ALL", label: `All Items (${totalOwned})` },
-          { id: "AVATAR", label: `Avatar (${ownedAvatars.length})` },
-          { id: "BACKGROUND", label: `Background (${ownedBackgrounds.length})` },
-          { id: "FRAME", label: `Frame (${ownedFrames.length})` }
+          { id: "ALL", label: `${t("collection.allItems")} (${totalOwned})` },
+          { id: "AVATAR", label: `${t("collection.itemType.AVATAR")} (${ownedAvatars.length})` },
+          { id: "BACKGROUND", label: `${t("collection.itemType.BACKGROUND")} (${ownedBackgrounds.length})` },
+          { id: "FRAME", label: `${t("collection.itemType.FRAME")} (${ownedFrames.length})` }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -639,10 +643,10 @@ import {
           {filteredInventory.length === 0 ? (
             <div className="bg-white border border-zinc-200/60 rounded-3xl p-12 text-center text-zinc-400 space-y-3.5 shadow-sm">
               <Package size={38} strokeWidth={1.2} className="mx-auto text-zinc-300" />
-              <p className="text-xs font-bold">Chưa sở hữu vật phẩm nào trong phân mục này.</p>
+              <p className="text-xs font-bold">{t("collection.noItems")}</p>
               <Link href="/shop">
                 <button className="h-9 px-5 bg-[#b7152b] hover:bg-red-700 text-white font-bold text-xs rounded-full transition-all cursor-pointer mt-2 shadow-sm">
-                  Ghé cửa hàng
+                  {t("collection.shop")}
                 </button>
               </Link>
             </div>
@@ -704,7 +708,7 @@ import {
                       {/* Equipped badge status overlay */}
                       {item.is_equipped && (
                         <div className="absolute top-2.5 right-2.5 px-2 py-0.5 bg-zinc-950 text-white text-[8px] font-black rounded-md tracking-wider border border-zinc-800">
-                          EQUIPPED
+                          {t("collection.equippedBadge")}
                         </div>
                       )}
 
@@ -721,7 +725,7 @@ import {
                       </div>
                       <h4 className="text-xs font-black text-zinc-950 line-clamp-1">{item.name}</h4>
                       <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest block">
-                        {item.item_type}
+                        {item.item_type ? t(`collection.itemType.${item.item_type}`) : ""}
                       </span>
                     </div>
 
@@ -791,7 +795,7 @@ import {
                       {getRarityTag(selectedShopInfo?.rarity || "COMMON")}
                     </span>
                     <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">
-                      {selectedItem.item_type}
+                      {selectedItem.item_type ? t(`collection.itemType.${selectedItem.item_type}`) : ""}
                     </span>
                   </div>
                   
@@ -800,7 +804,7 @@ import {
                   </h3>
                   
                   <p className="text-xs text-zinc-500 font-semibold leading-relaxed">
-                    {selectedShopInfo?.description || "Một vật phẩm trang trí tinh tế giúp tùy chỉnh giao diện và làm phong phú hồ sơ học tập của bạn trên KujiLingo."}
+                    {selectedShopInfo?.description || t("collection.itemDescriptionFallback")}
                   </p>
                 </div>
 
@@ -808,18 +812,18 @@ import {
                 <div className="pt-3 border-t border-zinc-100 space-y-2.5 text-xs text-zinc-650 font-bold">
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">Acquired:</span>
+                    <span className="text-zinc-400">{t("collection.acquired")}</span>
                     <span className="text-zinc-950 font-black">
-                      {selectedItem.purchased_at ? new Date(selectedItem.purchased_at).toLocaleDateString("vi-VN", {
+                      {selectedItem.purchased_at ? new Date(selectedItem.purchased_at).toLocaleDateString(language === "vi" ? "vi-VN" : "en-US", {
                         year: "numeric", month: "short", day: "numeric"
-                      }) : "Oct 12, 2023"}
+                      }) : "—"}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-zinc-400">Set:</span>
+                    <span className="text-zinc-400">{t("collection.set")}</span>
                     <span className="text-indigo-600 hover:underline cursor-pointer font-black">
-                      {selectedShopInfo?.is_limited ? "Lễ Hội Hoa Anh Đào" : "Cyberpunk Origins"}
+                      {selectedShopInfo?.is_limited ? t("collection.setFestival") : t("collection.setCyberpunk")}
                     </span>
                   </div>
 
@@ -834,7 +838,7 @@ import {
                       className="w-full h-10 bg-zinc-100 border border-zinc-200 text-zinc-450 font-extrabold text-xs rounded-full flex items-center justify-center gap-1.5 shadow-inner cursor-not-allowed"
                     >
                       <CheckCircle2 size={13} />
-                      <span>Currently Equipped</span>
+                      <span>{t("collection.currentlyEquipped")}</span>
                     </button>
                   ) : (
                     <button 
@@ -845,10 +849,10 @@ import {
                       {equippingId === selectedItem.shop_item_id ? (
                         <>
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>Đang trang bị...</span>
+                          <span>{t("collection.equipping")}</span>
                         </>
                       ) : (
-                        <span>Equip Item</span>
+                        <span>{t("collection.equip")}</span>
                       )}
                     </button>
                   )}
@@ -862,10 +866,10 @@ import {
                       {unequippingId === selectedItem.item_type ? (
                         <>
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>Đang tháo...</span>
+                          <span>{t("collection.unequipping")}</span>
                         </>
                       ) : (
-                        <span>Unequip</span>
+                        <span>{t("collection.unequip")}</span>
                       )}
                     </button>
                   )}
@@ -878,7 +882,7 @@ import {
           ) : (
             <div className="p-8 text-center text-zinc-400 space-y-3">
               <Package size={32} strokeWidth={1.2} className="mx-auto text-zinc-300" />
-              <p className="text-xs font-bold">Vui lòng chọn một vật phẩm để xem chi tiết.</p>
+              <p className="text-xs font-bold">{t("collection.selectItem")}</p>
             </div>
           )}
         </div>

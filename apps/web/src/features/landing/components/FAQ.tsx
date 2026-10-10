@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useLanguage } from "@/shared/i18n/language";
 
 interface FaqItem {
   question: string;
@@ -9,20 +10,21 @@ interface FaqItem {
 }
 
 export const FAQ = () => {
+  const { t } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const faqData: FaqItem[] = [
     {
-      question: "Do I need prior Japanese knowledge to start?",
-      answer: "Not at all. KujiLingo is built for all learning levels. We provide an initial N5 onboarding path covering Hiragana and Katakana for complete beginners before you enter the Arena.",
+      question: "landing.faq.q1",
+      answer: "landing.faq.a1",
     },
     {
-      question: "How does the PvP Arena help me learn?",
-      answer: "Under pressure, your brain is forced to access recall memory much faster. The real-time duel dynamic transitions your vocabulary and grammar knowledge from slow calculation to fast, instinctual recognition.",
+      question: "landing.faq.q2",
+      answer: "landing.faq.a2",
     },
     {
-      question: "Is KujiLingo a complete study resource?",
-      answer: "KujiLingo is designed as the ultimate performance engine for vocabulary, kanji, and grammar retention. For complete fluency, we recommend pairing it with conversational practice and reading native materials.",
+      question: "landing.faq.q3",
+      answer: "landing.faq.a3",
     },
   ];
 
@@ -37,7 +39,7 @@ export const FAQ = () => {
         {/* Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl">
-            Frequently Asked Questions
+            {t("landing.faqTitle")}
           </h2>
         </div>
 
@@ -54,7 +56,7 @@ export const FAQ = () => {
                   onClick={() => toggleFaq(index)}
                   className="flex w-full items-center justify-between p-6 text-left font-semibold text-zinc-800 hover:text-zinc-950 focus:outline-none cursor-pointer"
                 >
-                  <span>{item.question}</span>
+                  <span>{t(item.question)}</span>
                   <ChevronDown
                     size={18}
                     className={`text-zinc-400 transition-transform duration-300 ${
@@ -70,7 +72,7 @@ export const FAQ = () => {
                   } overflow-hidden`}
                 >
                   <p className="p-6 text-sm text-zinc-500 leading-relaxed bg-zinc-50/30">
-                    {item.answer}
+                    {t(item.answer)}
                   </p>
                 </div>
               </div>

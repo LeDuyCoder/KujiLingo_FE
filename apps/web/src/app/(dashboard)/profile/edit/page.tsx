@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { createPortal } from "react-dom";
+import { useLanguage } from "@/shared/i18n/language";
 import { 
   User, Lock, Key, Flame, Globe, Star, Loader2, CheckCircle2, Flag
 } from "lucide-react";
@@ -22,6 +23,7 @@ interface UserStats {
 export default function EditProfilePage() {
   const router = useRouter();
   const { user, updateUser } = useAuthStore();
+  const { language, t } = useLanguage();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [rank, setRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,7 +50,6 @@ export default function EditProfilePage() {
 
   useEffect(() => {
     setTimeout(() => setMounted(true), 0);
-    document.title = "Chỉnh sửa hồ sơ | KujiLingo";
 
     const fetchData = async () => {
       try {
@@ -85,11 +86,15 @@ export default function EditProfilePage() {
     }
   }, [user]);
 
+  useEffect(() => {
+    document.title = `${t("profileEdit.title")} | KujiLingo`;
+  }, [t]);
+
   if (!user || loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <Loader2 className="w-10 h-10 animate-spin text-[#b7152b]" />
-        <span className="text-sm text-zinc-500 font-semibold">Đang tải biểu mẫu...</span>
+        <span className="text-sm text-zinc-500 font-semibold">{t("profileEdit.loading")}</span>
       </div>
     );
   }
@@ -109,19 +114,19 @@ export default function EditProfilePage() {
 
     // Client-side validations
     if (!currentPassword) {
-      setPwError("Mật khẩu hiện tại không được để trống.");
+      setPwError(t("profileEdit.currentPasswordRequired"));
       return;
     }
     if (newPassword.length < 8) {
-      setPwError("Mật khẩu mới phải có ít nhất 8 ký tự.");
+      setPwError(t("settings.passwordInvalid"));
       return;
     }
     if (!/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {
-      setPwError("Mật khẩu mới phải chứa ít nhất 1 chữ cái và 1 chữ số.");
+      setPwError(t("profileEdit.passwordNeedsLettersDigits"));
       return;
     }
     if (newPassword !== newPasswordConfirmation) {
-      setPwError("Xác nhận mật khẩu mới không khớp.");
+      setPwError(t("settings.passwordMismatch"));
       return;
     }
 
@@ -134,7 +139,7 @@ export default function EditProfilePage() {
       });
 
       if (response.data?.success) {
-        setPwSuccess("Đổi mật khẩu thành công!");
+        setPwSuccess(t("settings.passwordChanged"));
         setCurrentPassword("");
         setNewPassword("");
         setNewPasswordConfirmation("");
@@ -149,16 +154,16 @@ export default function EditProfilePage() {
       const resError = axiosError.response?.data?.error;
       if (resError) {
         if (resError.code === "INVALID_CURRENT_PASSWORD") {
-          setPwError("Mật khẩu hiện tại không chính xác.");
+          setPwError(t("settings.passwordWrong"));
         } else if (resError.code === "PASSWORD_UNCHANGED") {
-          setPwError("Mật khẩu mới phải khác mật khẩu hiện tại.");
+          setPwError(t("settings.passwordUnchanged"));
         } else if (resError.code === "VALIDATION_ERROR") {
-          setPwError("Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm cả chữ cái và chữ số.");
+          setPwError(t("settings.passwordInvalid"));
         } else {
-          setPwError(resError.message || "Đã xảy ra lỗi khi đổi mật khẩu.");
+          setPwError(resError.message || t("profileEdit.passwordServerError"));
         }
       } else {
-        setPwError("Không thể kết nối đến máy chủ. Vui lòng thử lại sau.");
+        setPwError(t("profileEdit.connectionError"));
       }
     } finally {
       setPwLoading(false);
@@ -197,26 +202,26 @@ export default function EditProfilePage() {
             <CheckCircle2 size={16} />
           </div>
           <div>
-            <span className="font-extrabold text-xs block">Lưu thành công!</span>
-            <span className="text-[10px] text-zinc-400">Thông tin hồ sơ đã được cập nhật.</span>
+            <span className="font-extrabold text-xs block">{t("profileEdit.saved")}</span>
+            <span className="text-[10px] text-zinc-400">{t("profileEdit.savedHint")}</span>
           </div>
         </div>
       )}
 
       {/* Breadcrumbs */}
       <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400">
-        <Link href="/home" className="hover:text-zinc-600">Home</Link>
+        <Link href="/home" className="hover:text-zinc-600">{t("collection.home")}</Link>
         <span>&gt;</span>
-        <Link href="/profile" className="hover:text-zinc-600">Profile</Link>
+        <Link href="/profile" className="hover:text-zinc-600">{t("collection.profile")}</Link>
         <span>&gt;</span>
-        <span className="text-zinc-800 font-bold">Edit Profile</span>
+        <span className="text-zinc-800 font-bold">{t("profileEdit.title")}</span>
       </div>
 
       {/* Header Info */}
       <div className="space-y-1">
-        <h1 className="text-3xl font-black text-zinc-950 tracking-tight">Edit Profile</h1>
+        <h1 className="text-3xl font-black text-zinc-950 tracking-tight">{t("profileEdit.title")}</h1>
         <p className="text-sm font-semibold text-zinc-500">
-          Manage your personal information and customize your learning profile.
+          {t("profileEdit.description")}
         </p>
       </div>
 
@@ -230,14 +235,14 @@ export default function EditProfilePage() {
           <div className="bg-white border border-zinc-200/60 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center gap-2 pb-4 border-b border-zinc-150">
               <User size={18} className="text-zinc-700" />
-              <h2 className="text-base font-black text-zinc-900">Personal Information</h2>
+              <h2 className="text-base font-black text-zinc-900">{t("profileEdit.personalInfo")}</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               
               {/* User ID (Read Only) */}
               <div className="sm:col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">User ID (Read Only)</label>
+                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">{t("profileEdit.userId")}</label>
                 <div className="relative">
                   <input 
                     type="text" 
@@ -251,19 +256,19 @@ export default function EditProfilePage() {
 
               {/* Display Name */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">Display Name</label>
+                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">{t("profileEdit.displayName")}</label>
                 <input 
                   type="text" 
                   value={displayName} 
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="w-full h-11 px-4 bg-white border border-zinc-200 rounded-xl text-xs text-zinc-800 font-bold focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] transition-all"
-                  placeholder="Nhập tên hiển thị"
+                  placeholder={t("profileEdit.namePlaceholder")}
                 />
               </div>
 
               {/* Email (Read Only) */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">Email (Read Only)</label>
+                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">{t("profileEdit.email")}</label>
                 <div className="relative">
                   <input 
                     type="email" 
@@ -277,7 +282,7 @@ export default function EditProfilePage() {
 
               {/* Joined Date */}
               <div className="sm:col-span-2 space-y-2">
-                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">Joined Date (Read Only)</label>
+                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">{t("profileEdit.joinedDate")}</label>
                 <div className="relative">
                   <input 
                     type="text" 
@@ -297,7 +302,7 @@ export default function EditProfilePage() {
                   className="h-10 px-5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 text-xs font-bold rounded-full transition-all flex items-center gap-2 cursor-pointer shadow-inner"
                 >
                   <Key size={14} />
-                  <span>Change Password</span>
+                  <span>{t("profileEdit.changePassword")}</span>
                 </button>
               </div>
 
@@ -308,14 +313,14 @@ export default function EditProfilePage() {
           <div className="bg-white border border-zinc-200/60 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
             <div className="flex items-center gap-2 pb-4 border-b border-zinc-150">
               <Flag size={18} className="text-zinc-700" />
-              <h2 className="text-base font-black text-zinc-900">Learning Preferences</h2>
+              <h2 className="text-base font-black text-zinc-900">{t("profileEdit.learningPreferences")}</h2>
             </div>
 
             {/* Target JLPT Level Selection */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-0.5">
-                <h3 className="text-xs font-black text-zinc-800">Target JLPT Level</h3>
-                <p className="text-[10px] font-semibold text-zinc-400">Adjust course difficulty based on your goal.</p>
+                <h3 className="text-xs font-black text-zinc-800">{t("profileEdit.targetJlpt")}</h3>
+                <p className="text-[10px] font-semibold text-zinc-400">{t("profileEdit.targetJlptHint")}</p>
               </div>
 
               {/* Level Buttons Group */}
@@ -335,8 +340,8 @@ export default function EditProfilePage() {
             {/* Daily Goal Minutes Selection */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-zinc-100">
               <div className="space-y-0.5">
-                <h3 className="text-xs font-black text-zinc-800">Daily Goal</h3>
-                <p className="text-[10px] font-semibold text-zinc-400">How long do you want to study daily?</p>
+                <h3 className="text-xs font-black text-zinc-800">{t("profileEdit.dailyGoal")}</h3>
+                <p className="text-[10px] font-semibold text-zinc-400">{t("profileEdit.dailyGoalHint")}</p>
               </div>
 
               {/* Minutes Buttons Group */}
@@ -360,7 +365,7 @@ export default function EditProfilePage() {
         {/* Right Column: Live Profile Preview Card */}
         <div className="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
           <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block pl-1">
-            Live Preview Card
+            {t("profileEdit.livePreview")}
           </span>
 
           <div className="bg-white border border-zinc-200/60 rounded-3xl overflow-hidden shadow-md">
@@ -394,7 +399,7 @@ export default function EditProfilePage() {
                 <div className="flex items-center justify-center gap-1.5 pt-1">
                   <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest flex items-center gap-1 ${isPremium ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-zinc-100 text-zinc-500 border border-zinc-200"}`}>
                     {isPremium ? <Star size={9} className="fill-amber-500 text-amber-500" /> : null}
-                    {isPremium ? "Pro Member" : "Free Plan"}
+                    {isPremium ? t("profileEdit.proMember") : t("profileEdit.freePlan")}
                   </span>
                 </div>
               </div>
@@ -405,7 +410,7 @@ export default function EditProfilePage() {
                 <div className="flex items-center justify-between text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200/40 rounded-xl px-3.5 py-2">
                   <span className="flex items-center gap-1.5">
                     <Flame size={14} className="text-amber-500 fill-amber-500/10" />
-                    Chuỗi học
+                    {t("profileEdit.streak")}
                   </span>
                   <span className="text-zinc-955 font-black">
                     {stats?.streak || 0} ngày
@@ -415,7 +420,7 @@ export default function EditProfilePage() {
                 <div className="flex items-center justify-between text-xs font-bold text-zinc-700 bg-zinc-50 border border-zinc-200/40 rounded-xl px-3.5 py-2">
                   <span className="flex items-center gap-1.5">
                     <Globe size={14} className="text-indigo-500" />
-                    Xếp hạng
+                    {t("profileEdit.rank")}
                   </span>
                   <span className="text-zinc-955 font-black">
                     {rank ? `#${rank}` : "N/A"}
@@ -436,7 +441,7 @@ export default function EditProfilePage() {
           onClick={handleReset}
           className="h-10 px-6 hover:bg-zinc-50 text-zinc-650 hover:text-zinc-955 font-bold text-xs rounded-full transition-all cursor-pointer"
         >
-          Reset
+          {t("profileEdit.reset")}
         </button>
 
         <button 
@@ -447,10 +452,10 @@ export default function EditProfilePage() {
           {saving ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Saving...</span>
+              <span>{t("profileEdit.saving")}</span>
             </>
           ) : (
-            <span>Save Changes</span>
+            <span>{t("profileEdit.save")}</span>
           )}
         </button>
       </div>
@@ -464,9 +469,9 @@ export default function EditProfilePage() {
               <div className="mx-auto w-12 h-12 bg-red-50 text-[#b7152b] rounded-full flex items-center justify-center mb-3">
                 <Key size={22} />
               </div>
-              <h3 className="text-lg font-black text-zinc-955">Change Password</h3>
+              <h3 className="text-lg font-black text-zinc-955">{t("profileEdit.passwordTitle")}</h3>
               <p className="text-xs text-zinc-500 font-semibold">
-                Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.
+                {t("profileEdit.passwordHint")}
               </p>
             </div>
 
@@ -474,7 +479,7 @@ export default function EditProfilePage() {
               
               {/* Current Password */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">Mật khẩu hiện tại</label>
+                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">{t("settings.currentPassword")}</label>
                 <input 
                   type="password"
                   value={currentPassword}
@@ -486,7 +491,7 @@ export default function EditProfilePage() {
 
               {/* New Password */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">Mật khẩu mới</label>
+                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">{t("settings.newPassword")}</label>
                 <input 
                   type="password"
                   value={newPassword}
@@ -498,7 +503,7 @@ export default function EditProfilePage() {
 
               {/* Confirm New Password */}
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">Xác nhận mật khẩu mới</label>
+                <label className="text-[10px] font-black text-zinc-455 uppercase tracking-wider">{t("settings.confirmPassword")}</label>
                 <input 
                   type="password"
                   value={newPasswordConfirmation}
@@ -536,7 +541,7 @@ export default function EditProfilePage() {
                   }}
                   className="h-10 px-4 hover:bg-zinc-50 text-zinc-650 hover:text-zinc-955 font-bold text-xs rounded-full transition-all cursor-pointer"
                 >
-                  Hủy
+                  {t("profileEdit.cancel")}
                 </button>
                 <button
                   type="submit"
@@ -546,10 +551,10 @@ export default function EditProfilePage() {
                   {pwLoading ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Đang xử lý...</span>
+                      <span>{t("profileEdit.processing")}</span>
                     </>
                   ) : (
-                    <span>Xác nhận</span>
+                    <span>{t("profileEdit.confirm")}</span>
                   )}
                 </button>
               </div>

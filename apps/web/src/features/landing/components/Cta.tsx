@@ -3,8 +3,10 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { useLanguage } from "@/shared/i18n/language";
 
 export const Cta = () => {
+  const { t } = useLanguage();
   return (
     <section className="bg-white py-20 lg:py-24" id="cta">
       <div className="mx-auto max-w-5xl px-6 lg:px-8">
@@ -15,16 +17,15 @@ export const Cta = () => {
 
           <div className="relative z-10 flex flex-col items-center">
             <h2 className="text-3xl font-extrabold tracking-tight text-zinc-900 sm:text-4xl mb-4">
-              Ready to test your limits?
+              {t("landing.ctaTitle")}
             </h2>
             <p className="text-zinc-600 text-sm md:text-base leading-relaxed max-w-xl mb-8">
-              Stop passively tapping through flashcards. Join the ranks of serious learners 
-              and forge your fluency in the arena.
+              {t("landing.ctaDescription")}
             </p>
             
             <Link href="/login">
               <button className="flex h-14 items-center justify-center gap-2 rounded-full bg-[#b7152b] text-white px-8 font-semibold text-base hover:bg-[#a01226] active:scale-[0.98] transition-all cursor-pointer shadow-lg shadow-red-100 group">
-                Register Now
+                {t("landing.register")}
                 <ArrowRight size={18} className="transition-transform duration-300 group-hover:translate-x-1" />
               </button>
             </Link>
