@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../stores/auth.store";
 import { useLanguage } from "@/shared/i18n/language";
@@ -63,6 +64,7 @@ export function GoogleSignInButton({ mode = "login", disabled = false }: GoogleS
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recentAccount, setRecentAccount] = useState<RecentGoogleAccount | null>(null);
+  const displayedError = error ?? (!GOOGLE_CLIENT_ID ? t("google.notConfigured") : null);
 
   const handleCredential = useCallback(async (credential: string) => {
     setIsLoading(true);
@@ -130,10 +132,12 @@ export function GoogleSignInButton({ mode = "login", disabled = false }: GoogleS
     }
   }, [completeGoogleLogin, mode, router, t]);
 
-  credentialCallbackRef.current = (response) => {
-    if (response.credential) void handleCredential(response.credential);
-    else setError(t("google.missingCredential"));
-  };
+  useEffect(() => {
+    credentialCallbackRef.current = (response) => {
+      if (response.credential) void handleCredential(response.credential);
+      else setError(t("google.missingCredential"));
+    };
+  }, [handleCredential, t]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -161,7 +165,6 @@ export function GoogleSignInButton({ mode = "login", disabled = false }: GoogleS
     if (!host) return;
 
     if (!GOOGLE_CLIENT_ID) {
-      setError(t("google.notConfigured"));
       return;
     }
 
@@ -227,13 +230,16 @@ export function GoogleSignInButton({ mode = "login", disabled = false }: GoogleS
         className={`flex min-h-12 w-full items-center justify-center overflow-hidden ${disabled || isLoading ? "pointer-events-none opacity-60" : ""}`}
       />
       {isLoading && <p className="mt-2 text-center text-sm text-zinc-500">{t("google.connecting")}</p>}
-      {error && <p role="alert" className="mt-2 text-center text-sm text-red-600">{error}</p>}
+      {displayedError && <p role="alert" className="mt-2 text-center text-sm text-red-600">{displayedError}</p>}
       {recentAccount && (
         <div className="mt-3 flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-2.5">
           {recentAccount.avatarUrl ? (
-            <img
+            <Image
               src={recentAccount.avatarUrl}
               alt=""
+              width={40}
+              height={40}
+              unoptimized
               referrerPolicy="no-referrer"
               className="h-10 w-10 shrink-0 rounded-full object-cover"
             />

@@ -52,7 +52,7 @@ export default function SettingsPage() {
     dailyGoal: user?.learning_goal_minutes || 15,
     preferredLanguage: language,
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(Boolean(user));
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
   const [pageError, setPageError] = useState("");
@@ -71,7 +71,6 @@ export default function SettingsPage() {
     let cancelled = false;
     const loadSettings = async () => {
       if (!user) {
-        setLoading(false);
         return;
       }
       try {
@@ -96,10 +95,9 @@ export default function SettingsPage() {
         if (!cancelled) setLoading(false);
       }
     };
-    setLoading(Boolean(user));
     void loadSettings();
     return () => { cancelled = true; };
-  }, [user?.id, t]);
+  }, [user, t]);
 
   const saveProfile = async () => {
     setPageError("");

@@ -170,10 +170,13 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
   useEffect(() => {
     const query = headerSearchQuery.trim();
     if (query.length < 1) {
-      setHeaderSearchItems([]);
-      setHeaderSearchLoading(false);
-      setHeaderSearchFailed(false);
-      return;
+      const timer = window.setTimeout(() => {
+        setHeaderSearchItems([]);
+        setHeaderSearchLoading(false);
+        setHeaderSearchFailed(false);
+        setHeaderSearchActiveIndex(0);
+      }, 0);
+      return () => window.clearTimeout(timer);
     }
 
     let active = true;
@@ -219,7 +222,7 @@ export const Header = ({ onMenuClick }: HeaderProps) => {
       controller.abort();
       window.clearTimeout(timer);
     };
-  }, [getCourseSearchIndex, headerSearchQuery]);
+  }, [getCourseSearchIndex, headerSearchQuery, language]);
 
   useEffect(() => {
     let cancelled = false;

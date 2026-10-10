@@ -290,7 +290,7 @@ export const DictionaryView = () => {
     return () => {
       active = false;
     };
-  }, [selectedEntry]);
+  }, [selectedEntry, language]);
 
   const handleFavoriteToggle = async (entry: DictionaryEntry, e: React.MouseEvent) => {
     e.stopPropagation();

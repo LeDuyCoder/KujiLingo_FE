@@ -14,6 +14,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const { user, updateUser } = useAuthStore();
+  const userId = user?.id;
   const setLanguage = useLanguage().setLanguage;
   const router = useRouter();
   const pathname = usePathname();
@@ -33,7 +34,7 @@ export default function DashboardLayout({
   }, [user?.preferred_language, setLanguage]);
 
   useEffect(() => {
-    if (!mounted || !user) return;
+    if (!mounted || !userId) return;
     let active = true;
     axiosClient.get("/api/v1/auth/me").then((response) => {
       if (!active) return;
@@ -44,7 +45,7 @@ export default function DashboardLayout({
       }
     }).catch(() => undefined);
     return () => { active = false; };
-  }, [mounted, user?.id, setLanguage, updateUser]);
+  }, [mounted, userId, setLanguage, updateUser]);
 
   useEffect(() => {
     if (mounted && !user) {

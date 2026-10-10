@@ -32,7 +32,10 @@ export function AppDialogProvider({ children }: { children: ReactNode }) {
   const titleId = useId();
   const descriptionId = useId();
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   const close = useCallback((result: boolean) => {
     resolver.current?.(result);

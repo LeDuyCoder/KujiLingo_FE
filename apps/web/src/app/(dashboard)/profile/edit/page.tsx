@@ -23,7 +23,7 @@ interface UserStats {
 export default function EditProfilePage() {
   const router = useRouter();
   const { user, updateUser } = useAuthStore();
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [rank, setRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);

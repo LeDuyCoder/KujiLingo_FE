@@ -193,7 +193,7 @@ export default function MyWordsPage() {
     } finally {
       setFoldersLoading(false);
     }
-  }, [selectedFolderId]);
+  }, [selectedFolderId, t]);
 
   // 2. Fetch contents of selected folder
   const fetchFolderContents = useCallback(async (folderId: string) => {
@@ -210,7 +210,7 @@ export default function MyWordsPage() {
     } finally {
       setContentsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (accessToken) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import Image from "next/image";
 import { Award, BookOpen, Flame, LoaderCircle, Pencil, Plus, Trophy, X, Zap } from "lucide-react";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { Select } from "@/shared/components/ui/Select";
@@ -32,7 +33,7 @@ function AchievementIcon({ icon, type }: Pick<Achievement, "icon" | "type">) {
     <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-amber-50 text-2xl">
       <span className={showImage ? "invisible" : ""}>{fallback}</span>
       {showImage && (
-          <img src={imageSource!} alt="" onError={() => setFailedIcon(trimmedIcon)} className="absolute inset-0 h-full w-full object-contain p-1" />
+          <Image src={imageSource!} alt="" width={40} height={40} unoptimized onError={() => setFailedIcon(trimmedIcon)} className="absolute inset-0 h-full w-full object-contain p-1" />
       )}
     </span>
   );
