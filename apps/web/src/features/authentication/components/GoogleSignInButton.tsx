@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../stores/auth.store";
 import { useLanguage } from "@/shared/i18n/language";
@@ -14,23 +15,15 @@ type GoogleIdentityServices = {
       initialize: (options: {
         client_id: string;
         callback: (response: GoogleCredentialResponse) => void;
-        use_fedcm_for_button: boolean;
       }) => void;
-      renderButton: (
-        parent: HTMLElement,
-        options: {
-          type: "standard";
-          theme: "outline";
-          size: "large";
-          text: "continue_with";
-          shape: "pill";
-          width: number;
-          logo_alignment: "left";
-          locale: "vi" | "en";
-        },
-      ) => void;
+      prompt: (momentListener?: (notification: GooglePromptNotification) => void) => void;
     };
   };
+};
+
+type GooglePromptNotification = {
+  isNotDisplayed: () => boolean;
+  isSkippedMoment: () => boolean;
 };
 
 declare global {
@@ -59,8 +52,8 @@ export function GoogleSignInButton({ mode = "login", disabled = false }: GoogleS
   const router = useRouter();
   const { language, t } = useLanguage();
   const completeGoogleLogin = useAuthStore((state) => state.completeGoogleLogin);
-  const buttonHostRef = useRef<HTMLDivElement>(null);
   const credentialCallbackRef = useRef<(response: GoogleCredentialResponse) => void>(() => undefined);
+  const googleReadyRef = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recentAccount, setRecentAccount] = useState<RecentGoogleAccount | null>(null);
@@ -161,43 +154,28 @@ export function GoogleSignInButton({ mode = "login", disabled = false }: GoogleS
   }, []);
 
   useEffect(() => {
-    const host = buttonHostRef.current;
-    if (!host) return;
-
     if (!GOOGLE_CLIENT_ID) {
       return;
     }
 
-    const initializeButton = () => {
+    const initializeGoogle = () => {
       const google = window.google;
-      const element = buttonHostRef.current;
-      if (!google || !element) return;
+      if (!google || googleReadyRef.current) return;
 
       google.accounts.id.initialize({
         client_id: GOOGLE_CLIENT_ID,
         callback: (response) => credentialCallbackRef.current(response),
-        use_fedcm_for_button: true,
       });
-      element.replaceChildren();
-      google.accounts.id.renderButton(element, {
-        type: "standard",
-        theme: "outline",
-        size: "large",
-        text: "continue_with",
-        shape: "pill",
-        width: Math.min(400, Math.max(200, Math.floor(element.getBoundingClientRect().width))),
-        logo_alignment: "left",
-        locale: language === "vi" ? "vi" : "en",
-      });
+      googleReadyRef.current = true;
     };
 
     if (window.google?.accounts.id) {
-      initializeButton();
+      initializeGoogle();
       return;
     }
 
     let script = document.getElementById(GOOGLE_SCRIPT_ID) as HTMLScriptElement | null;
-    const handleLoad = () => initializeButton();
+    const handleLoad = () => initializeGoogle();
     const handleError = () => setError(t("google.loadError"));
 
     if (script) {
@@ -221,40 +199,64 @@ export function GoogleSignInButton({ mode = "login", disabled = false }: GoogleS
     };
   }, [language, t]);
 
+  const startGoogleSignIn = () => {
+    setError(null);
+    const google = window.google;
+    if (!googleReadyRef.current || !google?.accounts.id) {
+      setError(t("google.loadError"));
+      return;
+    }
+
+    google.accounts.id.prompt((notification) => {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+        setError(t("google.promptUnavailable"));
+      }
+    });
+  };
+
+  const googleMark = (
+    <svg aria-hidden="true" viewBox="0 0 48 48" className="h-5 w-5 shrink-0">
+      <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.9 6.1-15Z" />
+      <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4 1.9-6.9 1.9-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z" />
+      <path fill="#FBBC05" d="M12.6 27.5a12 12 0 0 1 0-7.1v-5.3H5.8a20 20 0 0 0 0 17.7l6.8-5.3Z" />
+      <path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8A19.4 19.4 0 0 0 24 4 20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z" />
+    </svg>
+  );
+
   return (
     <div className="w-full">
-      <div
-        ref={buttonHostRef}
+      <button
+        type="button"
+        onClick={startGoogleSignIn}
+        disabled={disabled || isLoading || !GOOGLE_CLIENT_ID}
         aria-label={t("google.buttonLabel")}
-        aria-disabled={disabled || isLoading}
-        className={`flex min-h-12 w-full items-center justify-center overflow-hidden ${disabled || isLoading ? "pointer-events-none opacity-60" : ""}`}
-      />
+        className="relative flex min-h-[52px] w-full items-center justify-center rounded-full border border-zinc-300 bg-white px-12 text-sm text-zinc-700 transition hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {recentAccount ? (
+          <span className="flex min-w-0 items-center justify-center gap-2.5 text-center">
+            {recentAccount.avatarUrl ? (
+              <Image src={recentAccount.avatarUrl} alt="" width={32} height={32} unoptimized referrerPolicy="no-referrer" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+            ) : (
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-xs font-semibold text-zinc-600">
+                {(recentAccount.displayName || recentAccount.email).charAt(0).toUpperCase()}
+              </span>
+            )}
+            <span className="min-w-0 leading-tight">
+              <span className="block truncate font-medium">{t("google.continueAs")} {recentAccount.displayName || recentAccount.email}</span>
+              {recentAccount.displayName && <span className="block truncate text-zinc-500">{recentAccount.email}</span>}
+            </span>
+            <ChevronDown aria-hidden="true" size={16} className="shrink-0 text-zinc-500" />
+          </span>
+        ) : (
+          <span className="flex items-center justify-center gap-3">
+            {googleMark}
+            <span>{t("google.buttonLabel")}</span>
+          </span>
+        )}
+        {recentAccount && <span className="absolute right-4">{googleMark}</span>}
+      </button>
       {isLoading && <p className="mt-2 text-center text-sm text-zinc-500">{t("google.connecting")}</p>}
       {displayedError && <p role="alert" className="mt-2 text-center text-sm text-red-600">{displayedError}</p>}
-      {recentAccount && (
-        <div className="mt-3 flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-2.5">
-          {recentAccount.avatarUrl ? (
-            <Image
-              src={recentAccount.avatarUrl}
-              alt=""
-              width={40}
-              height={40}
-              unoptimized
-              referrerPolicy="no-referrer"
-              className="h-10 w-10 shrink-0 rounded-full object-cover"
-            />
-          ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-100 text-sm font-semibold text-zinc-600">
-              {(recentAccount.displayName || recentAccount.email).charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div className="min-w-0 text-left">
-            <p className="text-xs text-zinc-500">{t("google.recentAccount")}</p>
-            {recentAccount.displayName && <p className="truncate text-sm font-medium text-zinc-800">{recentAccount.displayName}</p>}
-            <p className="truncate text-sm text-zinc-600">{recentAccount.email}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
