@@ -6,7 +6,6 @@ import { BookOpen, LoaderCircle, Pencil, Plus, RotateCcw, Trash2, X } from "luci
 import { axiosClient } from "@/shared/api/axiosClient";
 import { useAppDialog } from "@/shared/components/ui/AppDialogProvider";
 import { useLanguage } from "@/shared/i18n/language";
-import { useLanguage } from "@/shared/i18n/language";
 
 type Course = { id: string; title: string | null; description: string | null; image: string | null; order_no: number | null; lesson_count: number; deleted_at?: string | null };
 type CourseForm = { title: string; description: string; image: string; order_no: string };

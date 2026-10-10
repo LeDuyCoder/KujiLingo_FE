@@ -3062,7 +3062,9 @@ const useLanguageStore = create<LanguageState>()(
 );
 
 export function translate(language: AppLanguage, key: string) {
-  return messages[language][key] ?? messages.vi[key] ?? key;
+  const localizedMessages: Record<string, string> = messages[language];
+  const fallbackMessages: Record<string, string> = messages.vi;
+  return localizedMessages[key] ?? fallbackMessages[key] ?? key;
 }
 
 export function useLanguage() {
