@@ -676,7 +676,7 @@ export const DictionaryView = () => {
         }`}>
           {selectedEntryId && (
             <div className="lg:flex lg:min-h-[calc(100dvh-8rem)] lg:items-start lg:justify-center">
-            <div className="dictionary-detail-scrollbar relative max-h-[calc(100dvh-1.5rem)] w-full max-w-[450px] overflow-y-auto rounded-2xl border border-zinc-100 bg-white p-4 pt-5 pb-8 shadow-xl lg:max-h-[calc(100dvh-8rem)] lg:max-w-none lg:rounded-3xl lg:p-8 lg:shadow-sm">
+            <div className="thin-scrollbar relative max-h-[calc(100dvh-1.5rem)] w-full max-w-[450px] overflow-y-auto rounded-2xl border border-zinc-100 bg-white p-4 pt-5 pb-8 shadow-xl lg:max-h-[calc(100dvh-8rem)] lg:max-w-none lg:rounded-3xl lg:p-8 lg:shadow-sm">
               {/* Close button */}
               <button
                 onClick={() => {
