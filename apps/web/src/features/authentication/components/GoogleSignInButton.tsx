@@ -1,190 +1,180 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../stores/auth.store";
 import { useLanguage } from "@/shared/i18n/language";
-
-type GoogleCredentialResponse = { credential: string };
-
-type GoogleIdentityServices = {
-  accounts: {
-    id: {
-      initialize: (options: {
-        client_id: string;
-        callback: (response: GoogleCredentialResponse) => void;
-      }) => void;
-      renderButton: (parent: HTMLElement, options: {
-        type: "standard";
-        theme: "outline";
-        size: "large";
-        text: "continue_with";
-        shape: "pill";
-        logo_alignment: "left";
-        locale: string;
-        width: number;
-      }) => void;
-    };
-  };
-};
-
-declare global {
-  interface Window {
-    google?: GoogleIdentityServices;
-  }
-}
 
 type GoogleSignInButtonProps = {
   mode?: "login" | "register";
   disabled?: boolean;
 };
 
+type GoogleSession = {
+  access_token: string;
+  refresh_token: string;
+  user: {
+    id: string;
+    email: string;
+    display_name: string;
+    role: string;
+    is_premium: boolean;
+    jlpt_target_level?: string | null;
+    learning_goal_minutes?: number;
+    avatar_url?: string | null;
+    preferred_language?: "vi" | "en";
+  };
+};
+
+type GoogleAuthMessage = {
+  type: "kujilingo:google-auth";
+  session?: GoogleSession;
+  error?: string;
+};
+
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000").replace(/\/+$/, "");
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-const GOOGLE_SCRIPT_ID = "google-identity-services-script";
+
+function isGoogleAuthMessage(value: unknown): value is GoogleAuthMessage {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as GoogleAuthMessage;
+  if (candidate.type !== "kujilingo:google-auth") return false;
+  if (typeof candidate.error === "string") return true;
+
+  const session = candidate.session;
+  return Boolean(
+    session &&
+    typeof session.access_token === "string" &&
+    typeof session.refresh_token === "string" &&
+    session.user &&
+    typeof session.user.id === "string" &&
+    typeof session.user.email === "string" &&
+    typeof session.user.display_name === "string" &&
+    typeof session.user.role === "string" &&
+    typeof session.user.is_premium === "boolean",
+  );
+}
 
 export function GoogleSignInButton({ mode = "login", disabled = false }: GoogleSignInButtonProps) {
   const router = useRouter();
-  const { language, t } = useLanguage();
-  const completeGoogleLogin = useAuthStore((state) => state.completeGoogleLogin);
-  const credentialCallbackRef = useRef<(response: GoogleCredentialResponse) => void>(() => undefined);
-  const buttonContainerRef = useRef<HTMLDivElement>(null);
-  const googleReadyRef = useRef(false);
+  const { t } = useLanguage();
+  const popupRef = useRef<Window | null>(null);
+  const completedRef = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const displayedError = error ?? (!GOOGLE_CLIENT_ID ? t("google.notConfigured") : null);
 
-  const handleCredential = useCallback(async (credential: string) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const sendCredential = async (requestMode: "login" | "register") => {
-        const response = await fetch(`${API_URL}/auth/google/signin/credential`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ credential, mode: requestMode }),
-        });
-        const result = await response.json();
-        return { response, result };
-      };
-
-      let { response, result } = await sendCredential(mode);
-
-      // Older API deployments may still reject first-time Google sign-ins in
-      // login mode. Retry those explicitly as registration; newer APIs create
-      // the account during the first request and never need this fallback.
-      const errorCode = String(result?.error?.code || "");
-      const errorMessage = errorCode === "GOOGLE_ACCOUNT_NOT_FOUND"
-        ? "No account was found for this Google email."
-        : `${errorCode} ${result?.error?.message || result?.message || ""}`;
-      if (
-        mode === "login" &&
-        /no account|account.*not found|user.*not found|create an account first|không tìm thấy tài khoản|chưa có tài khoản/i.test(errorMessage)
-      ) {
-        ({ response, result } = await sendCredential("register"));
-      }
-
-      if (!response.ok || !result.success || !result.data) {
-        throw new Error(t("google.genericError"));
-      }
-
-      const session = result.data;
-      if (!session.access_token || !session.refresh_token || !session.user?.email) {
-        throw new Error(t("google.invalidResponse"));
-      }
-
-      completeGoogleLogin({
-        ...session,
-        user: {
-          ...session.user,
-          jlpt_target_level: session.user.jlpt_target_level ?? undefined,
-        },
-      });
-      router.push("/courses");
-    } catch (signInError) {
-      setError(signInError instanceof Error ? signInError.message : t("google.genericError"));
-    } finally {
+  useEffect(() => {
+    const finishSignIn = (value: unknown) => {
+      if (!isGoogleAuthMessage(value)) return false;
+      completedRef.current = true;
+      popupRef.current?.close();
+      popupRef.current = null;
       setIsLoading(false);
-    }
-  }, [completeGoogleLogin, mode, router, t]);
 
-  useEffect(() => {
-    credentialCallbackRef.current = (response) => {
-      if (response.credential) void handleCredential(response.credential);
-      else setError(t("google.missingCredential"));
-    };
-  }, [handleCredential, t]);
-
-  useEffect(() => {
-    if (!GOOGLE_CLIENT_ID) {
-      return;
-    }
-
-    const initializeGoogle = () => {
-      const google = window.google;
-      if (!google || googleReadyRef.current) return;
-
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: (response) => credentialCallbackRef.current(response),
-      });
-      googleReadyRef.current = true;
-      const buttonContainer = buttonContainerRef.current;
-      if (buttonContainer) {
-        google.accounts.id.renderButton(buttonContainer, {
-          type: "standard",
-          theme: "outline",
-          size: "large",
-          text: "continue_with",
-          shape: "pill",
-          logo_alignment: "left",
-          locale: language,
-          width: Math.min(Math.max(buttonContainer.clientWidth, 120), 400),
+      if (value.session) {
+        useAuthStore.getState().completeGoogleLogin({
+          ...value.session,
+          user: {
+            ...value.session.user,
+            jlpt_target_level: value.session.user.jlpt_target_level ?? undefined,
+          },
         });
+        router.replace("/courses");
+      } else {
+        setError(value.error || t("google.genericError"));
       }
+      return true;
     };
 
-    if (window.google?.accounts.id) {
-      initializeGoogle();
-      return;
-    }
+    const handleMessage = (event: MessageEvent<unknown>) => {
+      if (event.origin !== new URL(API_URL).origin || event.source !== popupRef.current) return;
+      if (completedRef.current || !isGoogleAuthMessage(event.data)) return;
+      event.source?.postMessage({ type: "kujilingo:google-auth-ack" }, event.origin);
+      finishSignIn(event.data);
+    };
 
-    let script = document.getElementById(GOOGLE_SCRIPT_ID) as HTMLScriptElement | null;
-    const handleLoad = () => initializeGoogle();
-    const handleError = () => setError(t("google.loadError"));
-
-    if (script) {
-      script.addEventListener("load", handleLoad);
-      script.addEventListener("error", handleError);
-    } else {
-      script = document.createElement("script");
-      script.id = GOOGLE_SCRIPT_ID;
-      script.src = `https://accounts.google.com/gsi/client?hl=${language}`;
-      script.async = true;
-      script.defer = true;
-      script.referrerPolicy = "strict-origin-when-cross-origin";
-      script.addEventListener("load", handleLoad);
-      script.addEventListener("error", handleError);
-      document.head.appendChild(script);
+    window.addEventListener("message", handleMessage);
+    const channel = typeof BroadcastChannel === "undefined"
+      ? null
+      : new BroadcastChannel("kujilingo-google-auth");
+    if (channel) {
+      channel.onmessage = (event: MessageEvent<unknown>) => {
+        if (!completedRef.current && popupRef.current) finishSignIn(event.data);
+      };
     }
 
     return () => {
-      script?.removeEventListener("load", handleLoad);
-      script?.removeEventListener("error", handleError);
+      window.removeEventListener("message", handleMessage);
+      channel?.close();
     };
-  }, [language, t]);
+  }, [router, t]);
+
+  useEffect(() => {
+    if (!isLoading || !popupRef.current) return;
+
+    const popup = popupRef.current;
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => {
+      if (popupRef.current !== popup) return;
+      if (popup.closed) {
+        popupRef.current = null;
+        setIsLoading(false);
+        if (!completedRef.current) setError(t("google.popupClosed"));
+        return;
+      }
+      if (Date.now() - startedAt > 5 * 60 * 1000) {
+        popup.close();
+        popupRef.current = null;
+        setIsLoading(false);
+        setError(t("google.genericError"));
+      }
+    }, 500);
+
+    return () => window.clearInterval(timer);
+  }, [isLoading, t]);
+
+  const startGoogleSignIn = () => {
+    if (disabled || isLoading) return;
+
+    setError(null);
+    completedRef.current = false;
+    const authUrl = `${API_URL}/auth/google/signin?mode=${mode}`;
+    const width = 500;
+    const height = 650;
+    const left = Math.max(0, window.screenX + (window.outerWidth - width) / 2);
+    const top = Math.max(0, window.screenY + (window.outerHeight - height) / 2);
+    const popup = window.open(
+      authUrl,
+      "kujilingo-google-auth",
+      `popup=yes,width=${width},height=${height},left=${left},top=${top}`,
+    );
+
+    if (!popup) {
+      setError(t("google.popupBlocked"));
+      return;
+    }
+
+    popupRef.current = popup;
+    setIsLoading(true);
+  };
 
   return (
     <div className="w-full">
-      <div
-        ref={buttonContainerRef}
+      <button
+        type="button"
+        onClick={startGoogleSignIn}
+        disabled={disabled || isLoading}
         aria-label={t("google.buttonLabel")}
-        aria-disabled={disabled || isLoading || !GOOGLE_CLIENT_ID}
-        className={`flex min-h-[52px] w-full items-center justify-center overflow-hidden rounded-full [&_iframe]:max-w-full ${disabled || isLoading ? "pointer-events-none opacity-60" : ""}`}
-      />
-      {isLoading && <p className="mt-2 text-center text-sm text-zinc-500">{t("google.connecting")}</p>}
-      {displayedError && <p role="alert" className="mt-2 text-center text-sm text-red-600">{displayedError}</p>}
+        className="flex min-h-[52px] w-full items-center justify-center gap-3 rounded-full border border-zinc-300 bg-white px-6 text-sm text-zinc-700 transition hover:bg-zinc-50 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        <svg aria-hidden="true" viewBox="0 0 48 48" className="h-5 w-5 shrink-0">
+          <path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.6c3.9-3.6 6.1-8.9 6.1-15Z" />
+          <path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.9l-6.6-5.1c-1.8 1.2-4 1.9-6.9 1.9-5.3 0-9.8-3.6-11.4-8.4H5.8v5.3A20 20 0 0 0 24 44Z" />
+          <path fill="#FBBC05" d="M12.6 27.5a12 12 0 0 1 0-7.1v-5.3H5.8a20 20 0 0 0 0 17.7l6.8-5.3Z" />
+          <path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.8-5.8A19.4 19.4 0 0 0 24 4 20 20 0 0 0 5.8 15.1l6.8 5.3C14.2 15.6 18.7 12 24 12Z" />
+        </svg>
+        <span>{isLoading ? t("google.connecting") : t("google.buttonLabel")}</span>
+      </button>
+      {error && <p role="alert" className="mt-3 text-center text-sm text-red-600">{error}</p>}
     </div>
   );
 }
