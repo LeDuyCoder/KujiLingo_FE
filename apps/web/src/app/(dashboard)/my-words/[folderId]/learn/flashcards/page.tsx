@@ -15,6 +15,7 @@ import { useLanguage } from "@/shared/i18n/language";
 
 interface Vocabulary {
   id: string;
+  source?: "system" | "user";
   kanji: string | null;
   hiragana: string | null;
   meaning: string | null;
@@ -81,8 +82,8 @@ export default function FlashcardsPage() {
         if (folderRes.data?.success) {
           const folder = folderRes.data.data;
           setFolderName(folder.name || "Folder");
-          const systemWords = folder.system_vocabularies || [];
-          const userWords = folder.user_vocabularies || [];
+          const systemWords = (folder.system_vocabularies || []).map((word: Vocabulary) => ({ ...word, source: "system" as const }));
+          const userWords = (folder.user_vocabularies || []).map((word: Vocabulary) => ({ ...word, source: "user" as const }));
           const allWords = [...systemWords, ...userWords];
           
           if (allWords.length < 10) {
@@ -136,7 +137,9 @@ export default function FlashcardsPage() {
     // Call API in background
     try {
        await axiosClient.post("/learning-progress/review", {
-         vocabulary_id: currentCard.id,
+         ...(currentCard.source === "user"
+           ? { user_vocabulary_id: currentCard.id }
+           : { vocabulary_id: currentCard.id }),
          correct: correct
        });
     } catch(e) {
@@ -253,6 +256,8 @@ export default function FlashcardsPage() {
   }
 
   const currentCard = cards[currentIndex];
+  const frontText = currentCard?.kanji || currentCard?.hiragana || "No Word";
+  const frontTextLength = Math.max(1, Array.from(frontText).length);
   
   // Calculate stats
   const totalAnswered = correctCount + wrongCount;
@@ -267,27 +272,35 @@ export default function FlashcardsPage() {
     <div className="min-h-screen bg-[#f8fafc] text-zinc-900 font-sans flex flex-col">
       
       {/* Top Header */}
-      <header className="h-16 bg-white border-b border-zinc-200 px-6 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#b7152b] text-white rounded-lg flex items-center justify-center font-bold text-lg">
+      <header className="sticky top-0 z-10 flex min-h-16 w-full flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-zinc-200 bg-white px-4 py-2 sm:h-16 sm:flex-nowrap sm:px-6 sm:py-0">
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#b7152b] text-lg font-bold text-white">
             K
           </div>
-          <span className="font-extrabold text-lg tracking-tight">KujiLingo</span>
+          <span className="text-base font-extrabold tracking-tight sm:text-lg">KujiLingo</span>
         </div>
         
-        <div className="flex items-center text-xs font-semibold text-zinc-500 gap-1.5">
-          <span>{t("flashcards.folders")}</span>
-          <ChevronRight size={14} />
-          <span>{folderName}</span>
-          <ChevronRight size={14} />
-          <span className="text-zinc-900 font-bold">{t("flashcards.session")}</span>
+        <div className="order-3 flex min-w-0 basis-full items-center gap-1 overflow-hidden whitespace-nowrap text-[10px] font-semibold text-zinc-500 sm:order-none sm:basis-auto sm:flex-1 sm:justify-center sm:gap-1.5 sm:text-xs">
+          <span className="shrink-0">{t("flashcards.folders")}</span>
+          <ChevronRight className="shrink-0" size={12} />
+          <span className="max-w-[32vw] truncate sm:max-w-[160px]">{folderName}</span>
+          <ChevronRight className="shrink-0" size={12} />
+          <span className="truncate font-bold text-zinc-900">{t("flashcards.session")}</span>
         </div>
 
-        <div className="flex items-center gap-4 text-zinc-500">
-          <button className="hover:text-zinc-900 transition-colors">
+        <div className="ml-auto flex shrink-0 items-center gap-1.5 text-zinc-500 sm:gap-3">
+          <button
+            type="button"
+            aria-label={t("flashcards.openSettings")}
+            className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
             <Settings size={20} />
           </button>
-          <Link href={`/my-words/${folderId}/learn`} className="hover:text-zinc-900 transition-colors">
+          <Link
+            href={`/my-words/${folderId}/learn`}
+            aria-label={t("flashcards.closeSession")}
+            className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors hover:bg-zinc-100 hover:text-zinc-900"
+          >
             <X size={20} />
           </Link>
         </div>
@@ -420,9 +433,12 @@ export default function FlashcardsPage() {
               <div className={`relative w-full h-full transition-transform duration-500 transform-style-3d shadow-xl hover:shadow-2xl rounded-[40px] ${isFlipped ? 'rotate-y-180' : ''}`}>
                 
                 {/* Front */}
-                <div className="absolute inset-0 w-full h-full bg-white rounded-[40px] flex flex-col items-center justify-center backface-hidden p-8">
-                  <span className="text-6xl sm:text-7xl font-extrabold text-zinc-900 mb-6">
-                    {currentCard?.kanji || currentCard?.hiragana || "No Word"}
+                <div className="absolute inset-0 w-full h-full [container-type:inline-size] bg-white rounded-[40px] flex flex-col items-center justify-center backface-hidden p-8">
+                  <span
+                    className="max-w-full whitespace-nowrap text-center font-extrabold leading-none text-zinc-900 mb-6"
+                    style={{ fontSize: `min(4.5rem, ${100 / frontTextLength}cqi)` }}
+                  >
+                    {frontText}
                   </span>
                   {currentCard?.kanji && (
                     <span className="text-xl sm:text-2xl text-zinc-500 font-medium tracking-widest">
@@ -432,16 +448,16 @@ export default function FlashcardsPage() {
                 </div>
 
                 {/* Back */}
-                <div className="absolute inset-0 w-full h-full bg-white rounded-[40px] flex flex-col items-center justify-center backface-hidden p-8 rotate-y-180">
-                  <span className="text-3xl sm:text-4xl font-extrabold text-zinc-900 mb-6 text-center">
+                <div className="absolute inset-0 w-full h-full overflow-x-hidden overflow-y-auto bg-white rounded-[40px] flex flex-col items-center justify-center backface-hidden p-4 sm:p-8 rotate-y-180">
+                  <span className="max-w-full shrink-0 break-words text-center text-xl leading-tight font-extrabold text-zinc-900 mb-3 sm:mb-6 sm:text-4xl">
                     {currentCard?.meaning || "No meaning provided"}
                   </span>
-                  <div className="flex flex-col items-center text-zinc-500 font-medium space-y-2 text-lg">
+                  <div className="flex shrink-0 flex-col items-center text-zinc-500 font-medium space-y-1 text-sm sm:space-y-2 sm:text-lg">
                      <span>{currentCard?.kanji}</span>
                      <span>{currentCard?.hiragana}</span>
                   </div>
                   {currentCard?.note && (
-                    <div className="mt-8 px-6 py-4 bg-yellow-50 text-yellow-800 rounded-2xl text-sm max-w-sm text-center">
+                    <div className="mt-3 w-full max-w-sm shrink-0 break-words rounded-2xl bg-yellow-50 px-3 py-2.5 text-center text-xs text-yellow-800 sm:mt-8 sm:px-6 sm:py-4 sm:text-sm">
                       <span className="font-bold block mb-1">{t("flashcards.note")}</span>
                       {currentCard.note}
                     </div>

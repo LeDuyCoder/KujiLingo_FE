@@ -12,6 +12,7 @@ import { useLanguage } from "@/shared/i18n/language";
 
 type Vocabulary = {
   id: string;
+  source?: "system" | "user";
   kanji: string | null;
   hiragana: string | null;
   romaji: string | null;
@@ -101,8 +102,8 @@ export default function PracticePage() {
           return;
         }
 
-        const sys = folder.system_vocabularies || [];
-        const usr = folder.user_vocabularies || [];
+        const sys = (folder.system_vocabularies || []).map((word: Vocabulary) => ({ ...word, source: "system" as const }));
+        const usr = (folder.user_vocabularies || []).map((word: Vocabulary) => ({ ...word, source: "user" as const }));
         const all: Vocabulary[] = [...sys, ...usr];
         
         if (all.length === 0) {
@@ -200,7 +201,7 @@ export default function PracticePage() {
     }
   };
 
-  const submitAnswer = async (isCorrect: boolean, vocabId: string) => {
+  const submitAnswer = async (isCorrect: boolean, vocabulary: Vocabulary) => {
     if (isCorrect) {
       setScore(s => s + 100 + (streak * 10));
       setCorrectCount(c => c + 1);
@@ -211,7 +212,9 @@ export default function PracticePage() {
     }
     try {
       await axiosClient.post('/api/v1/learning-progress/review', {
-        vocabulary_id: vocabId,
+        ...(vocabulary.source === "user"
+          ? { user_vocabulary_id: vocabulary.id }
+          : { vocabulary_id: vocabulary.id }),
         correct: isCorrect
       });
     } catch {}
@@ -233,7 +236,7 @@ export default function PracticePage() {
                     );
                       
     setCheckResult(isCorrect ? 'correct' : 'wrong');
-    submitAnswer(isCorrect, q.word.id);
+    submitAnswer(isCorrect, q.word);
     setTimeout(handleNext, 1500);
   };
 
@@ -242,7 +245,7 @@ export default function PracticePage() {
     const q = questions[currentIdx];
     const isCorrect = selectedId === q.word.id;
     setCheckResult(isCorrect ? 'correct' : 'wrong');
-    submitAnswer(isCorrect, q.word.id);
+    submitAnswer(isCorrect, q.word);
     setTimeout(handleNext, 1500);
   };
 
@@ -350,11 +353,11 @@ export default function PracticePage() {
       
       if (isCorrect) {
         setIsChecking(true);
-        submitAnswer(true, q.word.id);
+        submitAnswer(true, q.word);
         setTimeout(handleNext, 2500);
       } else {
         // Submit answer as wrong but don't advance, allowing user to retry
-        submitAnswer(false, q.word.id);
+        submitAnswer(false, q.word);
       }
     };
 
@@ -461,7 +464,7 @@ export default function PracticePage() {
     setIsChecking(true);
     const isCorrect = userWord === targetWord;
     setCheckResult(isCorrect ? 'correct' : 'wrong');
-    submitAnswer(isCorrect, q.word.id);
+    submitAnswer(isCorrect, q.word);
     setTimeout(handleNext, 1500);
   };
 

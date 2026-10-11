@@ -818,7 +818,7 @@ export default function MyWordsPage() {
 
   return (
     <>
-      <div className="space-y-8 pb-16 animate-fade-in-up">
+      <div className="space-y-6 sm:space-y-8 pb-16 animate-fade-in-up">
         {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-zinc-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 animate-fade-in">
@@ -828,27 +828,27 @@ export default function MyWordsPage() {
       )}
 
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-zinc-100 p-8 rounded-3xl shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white border border-zinc-100 p-4 sm:p-6 lg:p-8 rounded-3xl shadow-sm">
         <div>
-          <h1 className="text-3xl font-extrabold text-zinc-950 font-sans tracking-tight">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-950 font-sans tracking-tight">
             {t("words.title")}
           </h1>
           <p className="text-zinc-500 text-sm mt-1.5 font-medium">
             {t("words.subtitle")}
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex w-full min-w-0 items-center gap-2 md:w-auto md:gap-3">
+          <div className="relative min-w-0 flex-1 md:flex-none">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
             <input
               type="text"
               placeholder={t("words.searchFolders")}
               value={folderSearch}
               onChange={(e) => { setFolderSearch(e.target.value); setFolderPage(1); }}
-              className="w-48 md:w-64 pl-10 pr-4 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] transition-all font-semibold"
+              className="w-full md:w-64 pl-10 pr-3 md:pr-4 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] transition-all font-semibold"
             />
           </div>
-          <Button onClick={openCreateFolderModal} className="w-auto h-10 px-4 flex items-center gap-2 text-sm">
+          <Button onClick={openCreateFolderModal} className="w-auto h-10 shrink-0 whitespace-nowrap px-3 sm:px-4 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
             <Plus size={16} />
             {t("words.newFolder")}
           </Button>
@@ -1070,12 +1070,12 @@ export default function MyWordsPage() {
 
       {/* Selected Folder Contents Section */}
       {selectedFolderId && (
-        <div className="bg-white border border-zinc-100 rounded-3xl p-6 lg:p-8 shadow-sm space-y-6">
+        <div className="bg-white border border-zinc-100 rounded-3xl p-4 sm:p-6 lg:p-8 shadow-sm space-y-5 sm:space-y-6">
           
           {/* Section Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-extrabold text-zinc-950 tracking-tight">
+            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+              <h2 className="min-w-0 break-words text-lg sm:text-xl font-extrabold text-zinc-950 tracking-tight">
                 {folderContents?.name || "Folder Contents"}
               </h2>
               <span className="px-2.5 py-0.5 text-xs font-extrabold rounded-full bg-red-50 text-[#b7152b] border border-red-100/50">
@@ -1083,21 +1083,21 @@ export default function MyWordsPage() {
               </span>
             </div>
             
-            <div className="flex items-center gap-3">
-              <div className="relative">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap md:w-auto md:items-center md:gap-3">
+              <div className="relative col-span-2 min-w-0 w-full sm:col-span-1 sm:flex-1 md:w-48 md:flex-none">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400" size={16} />
                 <input
                   type="text"
                   placeholder={t("words.filter")}
                   value={wordSearch}
                   onChange={(e) => setWordSearch(e.target.value)}
-                  className="w-48 pl-10 pr-4 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] transition-all font-semibold"
+                  className="w-full pl-10 pr-3 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] transition-all font-semibold"
                 />
               </div>
 
               <button
                 onClick={() => setIsAddWordOpen(true)}
-                className="w-auto h-10 px-4 rounded-xl border border-red-200 hover:bg-red-50/50 text-[#b7152b] text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap"
+                className="w-full sm:w-auto h-10 px-2 sm:px-4 rounded-xl border border-red-200 hover:bg-red-50/50 text-[#b7152b] text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap"
               >
                 <Plus size={14} />
                 {t("words.addWord")}
@@ -1107,11 +1107,11 @@ export default function MyWordsPage() {
                 const isLearnDisabled = folderWordCount < 10;
                 
                 if (isLearnDisabled) {
-                  return (
-                    <div className="relative flex items-center group">
+                    return (
+                    <div className="relative flex w-full items-center justify-center group sm:w-auto">
                       <button
                         disabled
-                        className="w-auto h-10 px-4 rounded-xl bg-zinc-200 text-zinc-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap cursor-not-allowed"
+                        className="w-full sm:w-auto h-10 px-2 sm:px-4 rounded-xl bg-zinc-200 text-zinc-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap cursor-not-allowed"
                       >
                         <Play size={14} fill="currentColor" />
                         {t("words.learn")}
@@ -1129,7 +1129,7 @@ export default function MyWordsPage() {
                 return (
                   <Link
                     href={`/my-words/${selectedFolderId}/learn`}
-                    className="w-auto h-10 px-4 rounded-xl bg-[#b7152b] hover:bg-[#9a1022] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap"
+                    className="w-full sm:w-auto h-10 px-2 sm:px-4 rounded-xl bg-[#b7152b] hover:bg-[#9a1022] text-white text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm whitespace-nowrap"
                   >
                     <Play size={14} fill="currentColor" />
                     {t("words.learn")}
@@ -1155,8 +1155,82 @@ export default function MyWordsPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+              <div className="space-y-3 md:hidden">
+                {paginatedItems.map((word) => (
+                  <article key={word.id} className="rounded-2xl border border-zinc-100 bg-white p-3.5 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-2">
+                        {word.is_favorited && <Star size={13} className="mt-1 shrink-0 fill-amber-500 text-amber-500" />}
+                        <div className="min-w-0">
+                          <p className="break-words text-base font-extrabold tracking-tight text-zinc-900">{word.kanji}</p>
+                          <p className="mt-0.5 break-words text-xs font-semibold text-zinc-400">
+                            {word.hiragana} {word.romaji ? `(${word.romaji})` : `(${getRomaji(word.kanji, word.hiragana)})`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1.5">
+                        <button
+                          onClick={() => openEditMeaningModal(word)}
+                          className="rounded-lg border border-zinc-200 bg-zinc-50 p-2 text-zinc-500 hover:border-red-100 hover:bg-red-50 hover:text-[#b7152b]"
+                          title={t("words.editMeaning")}
+                          aria-label={`${t("words.editMeaning")}: ${word.kanji}`}
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleToggleFavorite(word.id)}
+                          disabled={actionProcessing[word.id + "_fav"]}
+                          className={`rounded-lg border p-2 transition-colors ${word.is_favorited ? "border-amber-200 bg-amber-50 text-amber-500" : "border-zinc-200 bg-zinc-50 text-zinc-500 hover:bg-zinc-100"}`}
+                          title={word.is_favorited ? "Bỏ yêu thích" : "Yêu thích"}
+                          aria-label={word.is_favorited ? "Bỏ yêu thích" : "Yêu thích"}
+                        >
+                          <Heart size={14} fill={word.is_favorited ? "currentColor" : "none"} />
+                        </button>
+                        <button
+                          onClick={() => handleRemoveWord(word.id, word.isUserVocab)}
+                          className="rounded-lg border border-zinc-200 p-2 text-zinc-500 transition-colors hover:border-red-100 hover:bg-red-50 hover:text-red-600"
+                          title={t("words.removeFromFolder")}
+                          aria-label={`${t("words.removeFromFolder")}: ${word.kanji}`}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-3 border-t border-zinc-100 pt-3">
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-400">{t("words.meaning")}</p>
+                        <p className="mt-1 break-words text-sm font-semibold text-zinc-700">{word.meaning}</p>
+                        {!word.isUserVocab && word.jlpt && (
+                          <span className="mt-1 inline-flex rounded border border-blue-100 bg-blue-50 px-1.5 py-0.5 text-[8px] font-extrabold uppercase text-blue-600">
+                            {word.jlpt}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <p className="text-[10px] font-extrabold uppercase tracking-wider text-zinc-400">{t("words.note")}</p>
+                          {word.isUserVocab && (
+                            <button
+                              onClick={() => openEditNoteModal(word as UserVocabulary)}
+                              className="rounded p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-700"
+                              title={t("words.editNote")}
+                              aria-label={`${t("words.editNote")}: ${word.kanji}`}
+                            >
+                              <Edit3 size={12} />
+                            </button>
+                          )}
+                        </div>
+                        <p className="mt-1 break-words text-xs text-zinc-500">
+                          {word.isUserVocab ? word.note || t("words.noNote") : t("words.platformWord")}
+                        </p>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              <div className="hidden overflow-x-auto md:block">
+                <table className="w-full min-w-[680px] text-left border-collapse">
                   <thead>
                     <tr className="border-b border-zinc-100 text-[10px] font-extrabold uppercase text-zinc-400 tracking-wider">
                       <th className="py-3 px-4">{t("words.wordReading")}</th>

@@ -293,31 +293,6 @@ export default function LearnFolderPage() {
                 </div>
               </div>
 
-              {/* Mini Games */}
-              <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm hover:shadow-md hover:border-zinc-200 transition-all flex flex-col justify-between group cursor-pointer">
-                <div>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
-                      <Gamepad2 size={24} />
-                    </div>
-                    <span className="px-2.5 py-1 text-[10px] font-extrabold uppercase bg-zinc-100 text-zinc-500 rounded-lg">{t("learn.fun")}</span>
-                  </div>
-                  <h3 className="text-lg font-extrabold text-zinc-900 mb-1">{t("learn.miniGames")}</h3>
-                  <p className="text-xs text-zinc-500 font-semibold line-clamp-2">
-                    {t("learn.miniGamesHint")}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between mt-6">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500">
-                    <Clock size={14} />
-                    10 {t("learn.minutes")}
-                  </div>
-                  <button className="px-4 py-1.5 text-xs font-bold text-blue-600 border border-blue-200 rounded-xl hover:bg-blue-50 transition-colors">
-                    {t("learn.play")}
-                  </button>
-                </div>
-              </div>
-
               {/* Kanji Writing */}
               <div className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm hover:shadow-md hover:border-violet-200 transition-all flex flex-col justify-between group">
                 <div>
@@ -344,6 +319,35 @@ export default function LearnFolderPage() {
                     {t("learn.start")}
                   </Link>
                 </div>
+              </div>
+
+              {/* Mini Games — coming soon */}
+              <div aria-disabled="true" className="relative flex cursor-not-allowed flex-col justify-between overflow-hidden rounded-3xl border border-zinc-100 bg-white p-6 shadow-sm">
+                <div className="pointer-events-none flex flex-1 select-none flex-col justify-between opacity-45 grayscale blur-[1px]">
+                  <div>
+                    <div className="mb-4 flex items-start justify-between">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                        <Gamepad2 size={24} />
+                      </div>
+                    </div>
+                    <h3 className="mb-1 text-lg font-extrabold text-zinc-900">{t("learn.miniGames")}</h3>
+                    <p className="line-clamp-2 text-xs font-semibold text-zinc-500">
+                      {t("learn.miniGamesHint")}
+                    </p>
+                  </div>
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500">
+                      <Clock size={14} />
+                      10 {t("learn.minutes")}
+                    </div>
+                    <button disabled className="cursor-not-allowed rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-1.5 text-xs font-bold text-zinc-400">
+                      {t("learn.play")}
+                    </button>
+                  </div>
+                </div>
+                <span className="absolute right-5 top-5 rounded-lg border border-zinc-200 bg-white/95 px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wide text-zinc-500 shadow-sm">
+                  {t("learn.comingSoon")}
+                </span>
               </div>
 
             </div>
