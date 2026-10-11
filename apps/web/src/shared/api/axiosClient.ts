@@ -1,5 +1,6 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/features/authentication/stores/auth.store';
+import { getCurrentAppLanguage } from '@/shared/i18n/language';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -42,6 +43,8 @@ axiosClient.interceptors.request.use(
     if (accessToken && config.headers) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
+
+    config.headers.set('Accept-Language', getCurrentAppLanguage());
 
     // Safely configure Content-Type: only for requests with data
     if (config.data) {

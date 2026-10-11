@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { 
   Folder as FolderIcon, 
   Search, 
@@ -34,14 +34,28 @@ import {
   Music,
   Smile,
   Coffee,
-  Play
+  Play,
+  FileSpreadsheet,
+  Download,
+  Upload,
+  Pencil
 } from "lucide-react";
 import { Button } from "@/shared/components/ui/Button";
 import Link from "next/link";
 import { useAuthStore } from "@/features/authentication/stores/auth.store";
 import { axiosClient } from "@/shared/api/axiosClient";
 import { convertHiraganaToRomaji } from "@/shared/utils/romaji";
-import { useLanguage } from "@/shared/i18n/language";
+import { getCurrentAppLanguage, useLanguage } from "@/shared/i18n/language";
+import * as XLSX from "xlsx";
+
+function normalizeVocabularyImportHeader(value: unknown) {
+  return String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[đĐ]/g, "d")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
 
 interface Folder {
   id: string;
@@ -69,6 +83,13 @@ interface UserVocabulary {
   meaning: string;
   note?: string;
   is_favorited?: boolean;
+}
+
+interface EditableVocabulary {
+  id: string;
+  kanji: string;
+  meaning: string;
+  isUserVocab: boolean;
 }
 
 interface FolderContents {
@@ -135,11 +156,17 @@ export default function MyWordsPage() {
   const [customWordRomaji, setCustomWordRomaji] = useState("");
   const [customWordMeaning, setCustomWordMeaning] = useState("");
   const [customWordNote, setCustomWordNote] = useState("");
+  const [isImportingVocabulary, setIsImportingVocabulary] = useState(false);
+  const [vocabularyImportError, setVocabularyImportError] = useState<string | null>(null);
+  const importVocabularyInputRef = useRef<HTMLInputElement>(null);
 
   // Edit Note Modal
   const [isEditNoteOpen, setIsEditNoteOpen] = useState(false);
   const [wordToEditNote, setWordToEditNote] = useState<UserVocabulary | null>(null);
   const [editNoteText, setEditNoteText] = useState("");
+  const [wordToEditMeaning, setWordToEditMeaning] = useState<EditableVocabulary | null>(null);
+  const [editMeaningText, setEditMeaningText] = useState("");
+  const [isEditMeaningOpen, setIsEditMeaningOpen] = useState(false);
 
   // Custom Confirm Modal
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -410,6 +437,97 @@ export default function MyWordsPage() {
     }
   };
 
+  const downloadVocabularyTemplate = () => {
+    const sheet = XLSX.utils.aoa_to_sheet([
+      ["kanji", "hiragana", "romaji", "meaning", "note"],
+      ["頑張る", "がんばる", "ganbaru", "cố gắng", "Dùng khi động viên ai đó"],
+    ]);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, sheet, "Vocabulary");
+    XLSX.writeFile(workbook, "kujilingo-vocabulary-template.xlsx");
+  };
+
+  const handleVocabularyExcelImport = async (file: File) => {
+    if (!selectedFolderId) return;
+    setVocabularyImportError(null);
+    setIsImportingVocabulary(true);
+
+    try {
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error(t("words.importExcelFileTooLarge"));
+      }
+
+      const workbook = XLSX.read(await file.arrayBuffer(), { type: "array" });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      if (!firstSheet) throw new Error(t("words.importExcelEmpty"));
+
+      const rows = XLSX.utils.sheet_to_json<unknown[]>(firstSheet, {
+        header: 1,
+        defval: "",
+        raw: false,
+      });
+      const headers = (rows[0] || []).map(normalizeVocabularyImportHeader);
+      const getColumn = (aliases: string[]) => headers.findIndex(header => aliases.includes(header));
+      const kanjiColumn = getColumn(["kanji", "word", "vocabulary", "vocabularykanjikana", "tuvung", "tuvungkanjikana"]);
+      const meaningColumn = getColumn(["meaning", "meaningvi", "meaningen", "nghia", "ynghia"]);
+      const hiraganaColumn = getColumn(["hiragana", "reading", "readinghiragana", "cachdoc", "cachdochiragana"]);
+      const romajiColumn = getColumn(["romaji"]);
+      const noteColumn = getColumn(["note", "personalnote", "ghichu", "ghichucanhan"]);
+
+      if (kanjiColumn < 0 || meaningColumn < 0) {
+        throw new Error(t("words.importExcelHeadersMissing"));
+      }
+
+      const importedEntries: Array<{
+        kanji: string;
+        hiragana?: string;
+        romaji?: string;
+        meaning: string;
+        note?: string;
+      }> = [];
+      for (let index = 1; index < rows.length; index += 1) {
+        const row = rows[index] || [];
+        const cell = (column: number) => column < 0 ? "" : String(row[column] ?? "").trim();
+        const kanji = cell(kanjiColumn);
+        const meaning = cell(meaningColumn);
+        if (!kanji && !meaning) continue;
+        if (!kanji || !meaning) {
+          throw new Error(t("words.importExcelRowInvalid").replace("{row}", String(index + 1)));
+        }
+        importedEntries.push({
+          kanji,
+          hiragana: cell(hiraganaColumn) || undefined,
+          romaji: cell(romajiColumn) || undefined,
+          meaning,
+          note: cell(noteColumn) || undefined,
+        });
+      }
+
+      if (importedEntries.length === 0) throw new Error(t("words.importExcelEmpty"));
+      if (importedEntries.length > 250) throw new Error(t("words.importExcelTooManyRows"));
+
+      const response = await axiosClient.post(`/folders/${selectedFolderId}/user-vocabularies/import`, {
+        entries: importedEntries,
+      });
+      if (!response.data?.success) throw new Error(t("words.importExcelFailed"));
+
+      const importedCount = Number(response.data.data?.importedCount || 0);
+      const skippedCount = Number(response.data.data?.skippedCount || 0);
+      showToast(
+        t("words.importExcelComplete")
+          .replace("{imported}", String(importedCount))
+          .replace("{skipped}", String(skippedCount))
+      );
+      setIsAddWordOpen(false);
+      await Promise.all([fetchFolderContents(selectedFolderId), fetchFolders()]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t("words.importExcelFailed");
+      setVocabularyImportError(message);
+    } finally {
+      setIsImportingVocabulary(false);
+    }
+  };
+
   const handleRemoveWord = (wordId: string, isUserVocab: boolean) => {
     if (!selectedFolderId) return;
     showConfirm(
@@ -533,6 +651,42 @@ export default function MyWordsPage() {
     } catch (err) {
       console.error("Error updating word note:", err);
       showToast(t("words.noteUpdateError"));
+    }
+  };
+
+  const openEditMeaningModal = (word: EditableVocabulary) => {
+    setWordToEditMeaning(word);
+    setEditMeaningText(word.meaning || "");
+    setIsEditMeaningOpen(true);
+  };
+
+  const handleUpdateMeaning = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!wordToEditMeaning || !selectedFolderId || !editMeaningText.trim()) return;
+
+    try {
+      if (wordToEditMeaning.isUserVocab) {
+        await axiosClient.put(`/user-vocabularies/${wordToEditMeaning.id}`, {
+          meaning: editMeaningText.trim(),
+        });
+      } else {
+        await axiosClient.patch(
+          `/folders/${selectedFolderId}/system-vocabularies/${wordToEditMeaning.id}/meaning`,
+          {
+            meaning: editMeaningText.trim(),
+            language: getCurrentAppLanguage(),
+          }
+        );
+      }
+
+      showToast(t("words.meaningUpdated"));
+      setIsEditMeaningOpen(false);
+      setWordToEditMeaning(null);
+      setEditMeaningText("");
+      await fetchFolderContents(selectedFolderId);
+    } catch (error) {
+      console.error("Error updating vocabulary meaning:", error);
+      showToast(t("words.meaningUpdateError"));
     }
   };
 
@@ -1073,6 +1227,14 @@ export default function MyWordsPage() {
                         {/* Actions */}
                         <td className="py-4 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => openEditMeaningModal(word)}
+                              className="p-1.5 rounded-lg border border-zinc-200 bg-zinc-50 text-zinc-400 hover:text-[#b7152b] hover:bg-red-50 hover:border-red-100 transition-colors"
+                              title={t("words.editMeaning")}
+                              aria-label={`${t("words.editMeaning")}: ${word.kanji}`}
+                            >
+                              <Pencil size={13} />
+                            </button>
                             {/* Star toggles Favorites */}
                             <button
                               onClick={() => handleToggleFavorite(word.id)}
@@ -1344,7 +1506,7 @@ export default function MyWordsPage() {
       {/* ADD WORD MODAL (WITH SYSTEM SEARCH OR CUSTOM CREATE TABS) */}
       {isAddWordOpen && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-6 border border-zinc-100 max-h-[90vh] overflow-y-auto animate-scale-up">
+          <div className="thin-scrollbar bg-white rounded-3xl w-full max-w-lg p-6 shadow-2xl space-y-6 border border-zinc-100 max-h-[90vh] overflow-y-auto animate-scale-up">
             
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-zinc-100 pb-4">
@@ -1485,6 +1647,53 @@ export default function MyWordsPage() {
 
             {/* TAB CONTENT: Create Custom User Vocab */}
             {addWordTab === "custom" && (
+              <div className="space-y-4">
+              <div className="rounded-2xl border border-dashed border-zinc-300 bg-zinc-50/70 p-4">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-xl bg-emerald-50 p-2 text-emerald-700">
+                    <FileSpreadsheet size={18} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-bold text-zinc-800">{t("words.importExcelTitle")}</p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">{t("words.importExcelHint")}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={downloadVocabularyTemplate}
+                        disabled={isImportingVocabulary}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 bg-white px-3 py-2 text-[11px] font-bold text-zinc-700 hover:bg-zinc-100 disabled:opacity-50"
+                      >
+                        <Download size={13} />
+                        {t("words.downloadExcelTemplate")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => importVocabularyInputRef.current?.click()}
+                        disabled={isImportingVocabulary}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-[#b7152b] px-3 py-2 text-[11px] font-bold text-white hover:bg-[#9f1024] disabled:opacity-50"
+                      >
+                        {isImportingVocabulary ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                        {isImportingVocabulary ? t("words.importExcelLoading") : t("words.importExcelButton")}
+                      </button>
+                      <input
+                        ref={importVocabularyInputRef}
+                        type="file"
+                        accept=".xlsx,.xls,.csv"
+                        className="hidden"
+                        onChange={event => {
+                          const file = event.target.files?.[0];
+                          event.target.value = "";
+                          if (file) void handleVocabularyExcelImport(file);
+                        }}
+                      />
+                    </div>
+                    {vocabularyImportError && (
+                      <p role="alert" className="mt-2 text-[11px] font-semibold text-rose-600">{vocabularyImportError}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <form onSubmit={handleAddCustomWord} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -1560,6 +1769,7 @@ export default function MyWordsPage() {
                   </Button>
                 </div>
               </form>
+              </div>
             )}
           </div>
         </div>
@@ -1598,6 +1808,52 @@ export default function MyWordsPage() {
                 <button
                   type="button"
                   onClick={() => setIsEditNoteOpen(false)}
+                  className="px-4 py-2 border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-colors"
+                >
+                  {t("profileEdit.cancel")}
+                </button>
+                <Button type="submit" className="w-auto h-9 text-xs px-4">
+                  {t("words.update")}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {isEditMeaningOpen && wordToEditMeaning && (
+        <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl space-y-5 border border-zinc-100 animate-scale-up">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-extrabold text-zinc-950 font-sans">{t("words.editMeaning")}</h3>
+                <p className="text-zinc-400 text-[11px] font-semibold mt-0.5">{wordToEditMeaning.kanji}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditMeaningOpen(false)}
+                className="p-1.5 rounded-lg text-zinc-400 hover:bg-zinc-50 hover:text-zinc-700"
+                aria-label={t("profileEdit.cancel")}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUpdateMeaning} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-extrabold text-zinc-400 uppercase tracking-wider">{t("words.meaning")}</label>
+                <textarea
+                  rows={4}
+                  required
+                  maxLength={500}
+                  value={editMeaningText}
+                  onChange={event => setEditMeaningText(event.target.value)}
+                  className="w-full px-3 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#b7152b]/15 focus:border-[#b7152b] font-semibold resize-y"
+                />
+              </div>
+              <div className="flex items-center justify-end gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setIsEditMeaningOpen(false)}
                   className="px-4 py-2 border border-zinc-200 text-zinc-700 text-xs font-bold rounded-xl hover:bg-zinc-50 transition-colors"
                 >
                   {t("profileEdit.cancel")}
