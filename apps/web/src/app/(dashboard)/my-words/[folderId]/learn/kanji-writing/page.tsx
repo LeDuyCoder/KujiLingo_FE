@@ -85,6 +85,7 @@ export default function KanjiWritingPage() {
   const [showHint, setShowHint] = useState(false);
   const [targetStrokes, setTargetStrokes] = useState<TargetStroke[]>([]);
   const [completedStrokeIndexes, setCompletedStrokeIndexes] = useState<number[]>([]);
+  const [completedUserStrokes, setCompletedUserStrokes] = useState<Point[][]>([]);
   const [strokeDataStatus, setStrokeDataStatus] = useState<"loading" | "ready" | "error">("loading");
   const [strokeFeedback, setStrokeFeedback] = useState<"accepted" | "rejected" | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0, fontSize: 0 });
@@ -138,6 +139,7 @@ export default function KanjiWritingPage() {
       setStrokeDataStatus("loading");
       setTargetStrokes([]);
       setCompletedStrokeIndexes([]);
+      setCompletedUserStrokes([]);
       setStrokeFeedback(null);
       temporaryUserStrokeRef.current = [];
 
@@ -211,7 +213,7 @@ export default function KanjiWritingPage() {
       const pixelRatio = window.devicePixelRatio || 1;
       canvas.width = Math.round(bounds.width * pixelRatio);
       canvas.height = Math.round(bounds.height * pixelRatio);
-      const fontSize = Math.min(96, Math.max(48, window.innerWidth * 0.14));
+      const fontSize = Math.min(108, Math.max(60, bounds.width * 0.25));
       setCanvasSize((size) => size.width === bounds.width && size.height === bounds.height && size.fontSize === fontSize
         ? size
         : { width: bounds.width, height: bounds.height, fontSize });
@@ -221,7 +223,7 @@ export default function KanjiWritingPage() {
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       context.lineCap = "round";
       context.lineJoin = "round";
-      context.lineWidth = 8;
+      context.lineWidth = 10;
       context.strokeStyle = "#18181b";
     };
 
@@ -234,6 +236,8 @@ export default function KanjiWritingPage() {
   const clearCanvas = useCallback(() => {
     drawingRef.current = false;
     temporaryUserStrokeRef.current = [];
+    setCompletedStrokeIndexes([]);
+    setCompletedUserStrokes([]);
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
     if (canvas && context) {
@@ -290,9 +294,17 @@ export default function KanjiWritingPage() {
     const userStroke = temporaryUserStrokeRef.current;
     const strokeIndex = completedStrokeIndexes.length;
     const target = positionedTargetStrokes[strokeIndex];
-    const strokeTolerance = target ? Math.max(8, Math.min(18, target.cellSize * 0.08)) : 8;
+    const strokeTolerance = target ? Math.max(12, Math.min(24, target.cellSize * 0.12)) : 12;
+    const drawnDistance = userStroke.slice(1).reduce((distance, point, index) => {
+      const previousPoint = userStroke[index]!;
+      return distance + Math.hypot(point.x - previousPoint.x, point.y - previousPoint.y);
+    }, 0);
     const result = target
-      ? validateStroke(userStroke, target.positionedPoints, strokeTolerance)
+      ? showHint
+        ? validateStroke(userStroke, target.positionedPoints, strokeTolerance)
+        : drawnDistance >= 3
+          ? { accepted: true as const }
+          : { accepted: false as const, reason: "too-short" as const }
       : { accepted: false as const, reason: "accuracy" as const };
 
     context.save();
@@ -303,6 +315,7 @@ export default function KanjiWritingPage() {
 
     if (result.accepted) {
       setCompletedStrokeIndexes((indexes) => [...indexes, strokeIndex]);
+      setCompletedUserStrokes((strokes) => [...strokes, userStroke]);
       setStrokeFeedback("accepted");
     } else {
       setStrokeFeedback("rejected");
@@ -350,7 +363,7 @@ export default function KanjiWritingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 pb-12">
+    <div className="-mx-2 max-w-4xl space-y-6 pb-12 sm:mx-auto">
       <div className="flex items-center gap-2 text-sm font-semibold text-zinc-500">
         <Link href={`/my-words/${folderId}/learn`} className="inline-flex items-center gap-1.5 transition hover:text-zinc-900">
           <ArrowLeft size={16} /> {t("kanjiWriting.mode")}
@@ -430,7 +443,7 @@ export default function KanjiWritingPage() {
             </div>
           </div>
         ) : (
-          <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,0.85fr)_minmax(320px,1.15fr)]">
+          <div className="grid gap-6 p-3 sm:p-7 lg:grid-cols-[minmax(0,0.85fr)_minmax(320px,1.15fr)]">
             <div className="flex flex-col justify-center">
               <p className="text-xs font-extrabold uppercase tracking-wider text-zinc-400">{t("kanjiWriting.writeFor")}</p>
               <p className="mt-2 text-3xl font-extrabold text-zinc-900">{currentClue?.reading}</p>
@@ -476,12 +489,12 @@ export default function KanjiWritingPage() {
                   <button
                     type="button"
                     onClick={() => setShowHint((visible) => !visible)}
-                    className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold transition ${showHint ? "bg-violet-50 text-violet-700" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"}`}
+                    className={`inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold transition ${showHint ? "bg-violet-50 text-violet-700" : "text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800"}`}
                   >
                     {showHint ? <EyeOff size={14} /> : <Eye size={14} />}
                     {showHint ? t("kanjiWriting.hideHint") : t("kanjiWriting.showHint")}
                   </button>
-                  <button type="button" onClick={clearCanvas} className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-bold text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800">
+                  <button type="button" onClick={clearCanvas} className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-800">
                     <Eraser size={14} /> {t("kanjiWriting.clear")}
                   </button>
                 </div>
@@ -501,7 +514,7 @@ export default function KanjiWritingPage() {
                     viewBox={`0 0 ${canvasSize.width} ${canvasSize.height}`}
                     preserveAspectRatio="none"
                   >
-                    {positionedTargetStrokes.map((stroke, index) => {
+                    {showHint ? positionedTargetStrokes.map((stroke, index) => {
                       const cell = characterCells[stroke.characterIndex]!;
                       const completed = completedStrokeIndexes.includes(index);
                       return (
@@ -511,14 +524,24 @@ export default function KanjiWritingPage() {
                           transform={`translate(${cell.x} ${cell.y}) scale(${cell.size / 109})`}
                           fill="none"
                           stroke={completed ? "#18181b" : "#8b5cf6"}
-                          strokeWidth="8"
+                          strokeWidth="10"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          opacity={completed ? 1 : showHint ? 0.28 : 0}
+                          opacity={completed ? 1 : 0.28}
                           style={{ transition: "stroke 280ms ease, opacity 280ms ease" }}
                         />
                       );
-                    })}
+                    }) : completedUserStrokes.map((stroke, index) => (
+                      <polyline
+                        key={`user-stroke-${index}`}
+                        points={stroke.map((point) => `${point.x},${point.y}`).join(" ")}
+                        fill="none"
+                        stroke="#18181b"
+                        strokeWidth="8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    ))}
                   </svg>
                 )}
                 <canvas
@@ -536,14 +559,17 @@ export default function KanjiWritingPage() {
                     {strokeFeedback === "accepted" ? t("kanjiWriting.accepted") : t("kanjiWriting.tryAgain")}
                   </span>
                 )}
-                {!isRevealed && (
-                  <span className="pointer-events-none absolute bottom-3 right-3 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-semibold text-zinc-400 shadow-sm">
+              </div>
+              {!isRevealed && (
+                <div className="mt-3 flex min-h-11 items-center gap-2 rounded-xl border border-violet-100 bg-violet-50 px-3 py-2 text-xs font-semibold leading-relaxed text-violet-700 sm:text-sm">
+                  <PenLine size={16} className="shrink-0" />
+                  <span>
                     {strokeDataStatus === "ready" && completedStrokeIndexes.length === positionedTargetStrokes.length
                       ? t("kanjiWriting.allStrokesComplete")
                       : showHint ? t("kanjiWriting.traceInOrder") : t("kanjiWriting.drawHint")}
                   </span>
-                )}
-              </div>
+                </div>
+              )}
               <p className="mt-2 text-right text-[10px] text-zinc-400">
                 {t("kanjiWriting.strokeData")}: <a href="https://kanjivg.tagaini.net/" target="_blank" rel="noreferrer" className="underline hover:text-zinc-600">KanjiVG</a> · CC BY-SA 3.0
               </p>

@@ -24,6 +24,7 @@ import { useLanguage } from "@/shared/i18n/language";
 
 interface Vocabulary {
   id: string;
+  source?: "system" | "user";
   kanji: string | null;
   hiragana: string | null;
   meaning: string | null;
@@ -76,8 +77,8 @@ export default function QuizPage() {
           setFolderName(folder.name);
           
           let allVocabs: Vocabulary[] = [
-            ...(folder.system_vocabularies || []),
-            ...(folder.user_vocabularies || [])
+            ...(folder.system_vocabularies || []).map((vocab: Vocabulary) => ({ ...vocab, source: "system" as const })),
+            ...(folder.user_vocabularies || []).map((vocab: Vocabulary) => ({ ...vocab, source: "user" as const }))
           ];
           
           if (allVocabs.length < 4) {
@@ -163,7 +164,9 @@ export default function QuizPage() {
 
     try {
       await axiosClient.post("/learning-progress/review", {
-        vocabulary_id: currentQuestion.vocab.id,
+        ...(currentQuestion.vocab.source === "user"
+          ? { user_vocabulary_id: currentQuestion.vocab.id }
+          : { vocabulary_id: currentQuestion.vocab.id }),
         correct: isCorrect
       });
     } catch (e) {
@@ -245,7 +248,7 @@ export default function QuizPage() {
   return (
     <div className="min-h-screen bg-[#FDFDFD] flex flex-col">
       {/* Top Header */}
-      <div className="px-6 py-4 bg-white border-b border-zinc-100">
+      <div className="bg-white border-b border-zinc-100 px-4 py-3 sm:px-6 sm:py-4">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumb & Controls */}
           <div className="flex items-center justify-between mb-4">
@@ -270,25 +273,25 @@ export default function QuizPage() {
           <p className="text-sm text-zinc-500 font-medium mb-6">{t("folderQuiz.description")}</p>
 
           {/* Progress Bar Header */}
-          <div className="flex items-center justify-between bg-white border-t border-zinc-100 pt-4 pb-2 text-sm font-bold text-zinc-700">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <ListOrdered size={16} className="text-[#b7152b]" />
-                <span>{t("folderQuiz.question")} {currentIndex + 1} <span className="text-zinc-400">/ {questions.length}</span></span>
+          <div className="border-t border-zinc-100 bg-white pb-2 pt-4 text-sm font-bold text-zinc-700">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-3 text-[10px] sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-4 sm:text-sm">
+              <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+                <ListOrdered size={15} className="shrink-0 text-[#b7152b]" />
+                <span className="truncate">{t("folderQuiz.question")} {currentIndex + 1} <span className="text-zinc-400">/ {questions.length}</span></span>
               </div>
-              <div className="flex items-center gap-2">
-                <Clock size={16} className="text-zinc-500" />
+              <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+                <Clock size={15} className="shrink-0 text-zinc-500" />
                 <span>{formatTime(timeLeft)}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Target size={16} className="text-indigo-500" />
-                <span>{t("folderQuiz.accuracyLabel")} {accuracy}%</span>
+              <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+                <Target size={15} className="shrink-0 text-indigo-500" />
+                <span className="truncate">{t("folderQuiz.accuracyLabel")} {accuracy}%</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Star size={16} className="text-amber-500" />
+              <div className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+                <Star size={15} className="shrink-0 text-amber-500" />
                 <span>{t("folderQuiz.scoreLabel")} {score} {t("folderQuiz.points")}</span>
               </div>
-              <div className="px-3 py-1 bg-[#b7152b] text-white rounded-full text-xs flex items-center gap-1 shadow-sm">
+              <div className="col-span-2 flex w-fit items-center gap-1 rounded-full bg-[#b7152b] px-3 py-1 text-xs text-white shadow-sm sm:col-span-1">
                 <Flame size={12} fill="currentColor" />
                 {t("folderQuiz.streak")} x{currentCombo}
               </div>
@@ -338,7 +341,7 @@ export default function QuizPage() {
 
         {/* Center Panel: Question */}
         <div className="lg:col-span-6">
-          <div className="bg-white rounded-3xl p-8 lg:p-10 border border-zinc-100 shadow-sm flex flex-col h-full min-h-[500px]">
+          <div className="bg-white rounded-3xl p-5 sm:p-8 lg:p-10 border border-zinc-100 shadow-sm flex flex-col h-full min-h-[500px]">
             <div className="flex items-center justify-between mb-8">
               <span className="px-4 py-1.5 bg-zinc-100 text-zinc-600 font-bold text-xs rounded-full">
                 Q. {currentIndex + 1}
@@ -403,20 +406,21 @@ export default function QuizPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between mt-10">
+            <div className="mt-8 flex items-stretch gap-3 sm:mt-10 sm:items-center sm:justify-between sm:gap-4">
               <button 
                 onClick={handleSkip}
                 disabled={isSubmitted}
-                className="text-zinc-500 font-bold text-sm hover:text-zinc-900 transition-colors disabled:opacity-50"
+                className="min-w-0 flex-1 rounded-xl px-2 py-3 text-left text-xs font-bold leading-tight text-zinc-500 transition-colors hover:text-zinc-900 disabled:opacity-50 sm:flex-none sm:px-0 sm:py-0 sm:text-sm"
               >
                 {t("folderQuiz.skip")}
               </button>
               <button 
                 onClick={handleSubmit}
                 disabled={!selectedAnswer || isSubmitted}
-                className="px-8 py-4 bg-[#b7152b] hover:bg-[#9a1022] text-white font-bold rounded-2xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm"
+                className="flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-[#b7152b] px-2.5 py-3 text-xs font-bold leading-tight text-white shadow-sm transition-colors hover:bg-[#9a1022] disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none sm:gap-2 sm:px-8 sm:py-4 sm:text-sm"
               >
-                {t("folderQuiz.submit")} <CheckCircle2 size={18} />
+                <span className="min-w-0 text-center">{t("folderQuiz.submit")}</span>
+                <CheckCircle2 size={16} className="shrink-0 sm:h-[18px] sm:w-[18px]" />
               </button>
             </div>
           </div>
